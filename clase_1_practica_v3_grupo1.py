@@ -7,10 +7,18 @@ import urllib.error
 
 
 # ============================================================
-# CONFIGURACIÓN SSL
+# CONFIGURACIÓN GENERAL
 # ============================================================
 
 ssl_context = ssl.create_default_context()
+
+GEMINI_MODELS = [
+    "gemini-3.8-flash"
+]
+
+OPENAI_MODEL = "gpt-4o-mini"
+
+API_TIMEOUT = 120
 
 
 # ============================================================
@@ -20,21 +28,35 @@ ssl_context = ssl.create_default_context()
 def cargar_env_local():
     """
     Lee el archivo .env ubicado en la misma carpeta
-    que este script, sin requerir librerías externas.
+    que este script.
+
+    No requiere instalar librerías externas.
     """
+
     env_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         ".env"
     )
 
-    if os.path.exists(env_path):
-        with open(env_path, "r", encoding="utf-8-sig") as f:
-            for line in f:
-                line = line.strip()
+    if not os.path.exists(env_path):
+        return
 
-                if line and not line.startswith("#") and "=" in line:
-                    k, v = line.split("=", 1)
-                    os.environ[k.strip()] = v.strip().strip("'\"")
+    with open(env_path, "r", encoding="utf-8-sig") as archivo:
+        for linea in archivo:
+            linea = linea.strip()
+
+            if not linea or linea.startswith("#"):
+                continue
+
+            if "=" not in linea:
+                continue
+
+            clave, valor = linea.split("=", 1)
+
+            clave = clave.strip()
+            valor = valor.strip().strip("'\"")
+
+            os.environ[clave] = valor
 
 
 cargar_env_local()
@@ -58,22 +80,20 @@ y quería saber si los resultados ya están disponibles.
 
 
 # ============================================================
-# PASO 2 - CONEXIÓN A APIs REALES (GEMINI / OPENAI)
+# PASO 2 - CONEXIÓN A GOOGLE GEMINI
 # ============================================================
 
 def llamar_gemini_api(prompt: str, api_key: str) -> str:
     """
-    Invoca la API de Google Gemini utilizando urllib.
-    No requiere instalar librerías externas.
-    """
+    Consulta Google Gemini mediante su API REST.
 
-    modelos = [
-        "gemini-3.8-flash"
-    ]
+    Prueba los modelos configurados en GEMINI_MODELS.
+    """
 
     errores = []
 
-    for modelo in modelos:
+    for modelo in GEMINI_MODELS:
+
         url = (
             "https://generativelanguage.googleapis.com/"
             f"v1beta/models/{modelo}:generateContent"
@@ -83,17 +103,19 @@ def llamar_gemini_api(prompt: str, api_key: str) -> str:
             "contents": [
                 {
                     "parts": [
-                        {"text": prompt}
+                        {
+                            "text": prompt
+                        }
                     ]
                 }
             ]
         }
 
-        data = json.dumps(payload).encode("utf-8")
+        datos = json.dumps(payload).encode("utf-8")
 
-        req = urllib.request.Request(
+        solicitud = urllib.request.Request(
             url,
-            data=data,
+            data=datos,
             headers={
                 "Content-Type": "application/json",
                 "x-goog-api-key": api_key
@@ -103,49 +125,72 @@ def llamar_gemini_api(prompt: str, api_key: str) -> str:
 
         try:
             with urllib.request.urlopen(
-                req,
+                solicitud,
                 context=ssl_context,
-                timeout=30
-            ) as resp:
+                timeout=API_TIMEOUT
+            ) as respuesta:
 
-                res_data = json.loads(
-                    resp.read().decode("utf-8")
+                resultado = json.loads(
+                    respuesta.read().decode("utf-8")
                 )
 
-                return (
-                    res_data["candidates"][0]
-                    ["content"]["parts"][0]["text"]
+                partes = (
+                    resultado["candidates"][0]
+                    ["content"]["parts"]
                 )
 
-        except urllib.error.HTTPError as e:
-            detalle = e.read().decode(
+                texto = "".join(
+                    parte.get("text", "")
+                    for parte in partes
+                ).strip()
+
+                if not texto:
+                    raise RuntimeError(
+                        "Gemini devolvió una respuesta vacía."
+                    )
+
+                return texto
+
+        except urllib.error.HTTPError as error:
+
+            detalle = error.read().decode(
                 "utf-8",
                 errors="replace"
             )
+
             errores.append(
-                f"{modelo}: HTTP {e.code} - {detalle[:300]}"
+                f"{modelo}: HTTP {error.code} - "
+                f"{detalle[:400]}"
             )
 
-        except Exception as e:
+        except Exception as error:
+
             errores.append(
-                f"{modelo}: {type(e).__name__}: {e}"
+                f"{modelo}: "
+                f"{type(error).__name__}: {error}"
             )
 
     raise RuntimeError(
-        "No se pudo conectar con Google Gemini. "
+        "No se pudo obtener una respuesta de Gemini. "
         + " | ".join(errores)
     )
 
 
+# ============================================================
+# PASO 2 - CONEXIÓN A OPENAI
+# ============================================================
+
 def llamar_openai_api(prompt: str, api_key: str) -> str:
     """
-    Invoca la API de OpenAI utilizando urllib.
+    Consulta OpenAI mediante su API REST.
+
+    Utiliza el modelo configurado en OPENAI_MODEL.
     """
 
     url = "https://api.openai.com/v1/chat/completions"
 
     payload = {
-        "model": "gpt-4o-mini",
+        "model": OPENAI_MODEL,
         "messages": [
             {
                 "role": "user",
@@ -155,11 +200,11 @@ def llamar_openai_api(prompt: str, api_key: str) -> str:
         "temperature": 0.7
     }
 
-    data = json.dumps(payload).encode("utf-8")
+    datos = json.dumps(payload).encode("utf-8")
 
-    req = urllib.request.Request(
+    solicitud = urllib.request.Request(
         url,
-        data=data,
+        data=datos,
         headers={
             "Content-Type": "application/json",
             "Authorization": f"Bearer {api_key}"
@@ -167,36 +212,109 @@ def llamar_openai_api(prompt: str, api_key: str) -> str:
         method="POST"
     )
 
-    with urllib.request.urlopen(
-        req,
-        context=ssl_context,
-        timeout=30
-    ) as resp:
+    try:
+        with urllib.request.urlopen(
+            solicitud,
+            context=ssl_context,
+            timeout=API_TIMEOUT
+        ) as respuesta:
 
-        res_data = json.loads(
-            resp.read().decode("utf-8")
+            resultado = json.loads(
+                respuesta.read().decode("utf-8")
+            )
+
+            texto = resultado["choices"][0]["message"]["content"]
+
+            if not texto:
+                raise RuntimeError(
+                    "OpenAI devolvió una respuesta vacía."
+                )
+
+            return texto.strip()
+
+    except urllib.error.HTTPError as error:
+
+        detalle = error.read().decode(
+            "utf-8",
+            errors="replace"
         )
 
-        return res_data["choices"][0]["message"]["content"]
+        raise RuntimeError(
+            f"OpenAI HTTP {error.code}: {detalle[:500]}"
+        ) from error
 
 
 # ============================================================
-# PASO 2 Y 3 - CONSULTA AL LLM Y AUDITORÍA
+# SELECCIÓN DEL PROVEEDOR
+# ============================================================
+
+def obtener_proveedores_disponibles():
+    """
+    Determina qué proveedor utilizar.
+
+    AI_PROVIDER puede ser:
+        auto
+        gemini
+        openai
+
+    En modo auto:
+        1. Intenta Gemini.
+        2. Si falla, intenta OpenAI.
+        3. Si no hay claves, usa simulación.
+    """
+
+    proveedor = os.getenv(
+        "AI_PROVIDER",
+        "auto"
+    ).strip().lower()
+
+    if proveedor not in ("auto", "gemini", "openai"):
+        raise ValueError(
+            "AI_PROVIDER debe ser auto, gemini u openai."
+        )
+
+    gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
+    openai_key = os.getenv("OPENAI_API_KEY", "").strip()
+
+    gemini_valida = (
+        bool(gemini_key)
+        and gemini_key != "tu_api_key_de_gemini_aqui"
+    )
+
+    openai_valida = (
+        bool(openai_key)
+        and openai_key != "sk-tu_api_key_de_openai_aqui"
+    )
+
+    proveedores = []
+
+    if proveedor in ("auto", "gemini") and gemini_valida:
+        proveedores.append(
+            ("Google Gemini", llamar_gemini_api, gemini_key)
+        )
+
+    if proveedor in ("auto", "openai") and openai_valida:
+        proveedores.append(
+            ("OpenAI", llamar_openai_api, openai_key)
+        )
+
+    return proveedores
+
+
+# ============================================================
+# PASO 2 Y 3 - PROMPT INGENUO Y AUDITORÍA
 # ============================================================
 
 def ejecutar_prompt_ingenuo_con_llm(mensaje: str) -> dict:
     """
-    Envía el mensaje del paciente a un LLM real si existe
+    Envía el mensaje del paciente a un LLM real si hay
     una API Key configurada.
 
-    Si no hay API Key, utiliza una respuesta simulada.
+    Si no hay claves, ejecuta una simulación.
 
-    El objetivo es demostrar el riesgo de alucinaciones
-    cuando el modelo no tiene acceso a los sistemas reales.
+    El objetivo de la actividad es observar los riesgos
+    de utilizar un LLM sin información verificada.
     """
-
-    gemini_key = os.getenv("GEMINI_API_KEY")
-    openai_key = os.getenv("OPENAI_API_KEY")
 
     prompt_ingenuo = f"""
     Sos el asistente de atención al paciente de una
@@ -213,33 +331,44 @@ def ejecutar_prompt_ingenuo_con_llm(mensaje: str) -> dict:
     de campo visual ya están disponibles.
     """
 
-    origen_respuesta = "SIMULACIÓN (Sin API Key)"
+    origen_respuesta = "SIMULACIÓN (Sin API Key válida)"
+
     respuesta_texto = ""
 
+    errores = []
+
     try:
-        if gemini_key and gemini_key != "tu_api_key_de_gemini_aqui":
+        proveedores = obtener_proveedores_disponibles()
 
-            origen_respuesta = "API REAL - Google Gemini"
+        for nombre, funcion, api_key in proveedores:
 
-            respuesta_texto = llamar_gemini_api(
-                prompt_ingenuo,
-                gemini_key
-            )
+            print(f"\nConsultando API de {nombre}...")
 
-        elif openai_key and openai_key != "sk-tu_api_key_de_openai_aqui":
+            try:
+                respuesta_texto = funcion(
+                    prompt_ingenuo,
+                    api_key
+                )
 
-            origen_respuesta = "API REAL - OpenAI"
+                origen_respuesta = f"API REAL - {nombre}"
 
-            respuesta_texto = llamar_openai_api(
-                prompt_ingenuo,
-                openai_key
-            )
+                print(f"Respuesta recibida de {nombre}.")
 
-        else:
-            origen_respuesta = "SIMULACIÓN (Sin API Key válida)"
+                break
 
-            # Respuesta deliberadamente inventada para
-            # demostrar el riesgo de alucinaciones.
+            except Exception as error:
+
+                detalle = (
+                    f"{nombre}: "
+                    f"{type(error).__name__}: {error}"
+                )
+
+                errores.append(detalle)
+
+                print(f"Error consultando {nombre}.")
+
+        if not proveedores:
+
             respuesta_texto = (
                 "Hola Juan, tu turno fue reprogramado "
                 "exitosamente para el viernes a las 10:00 hs. "
@@ -247,14 +376,24 @@ def ejecutar_prompt_ingenuo_con_llm(mensaje: str) -> dict:
                 "visual ya están disponibles para retirar."
             )
 
-    except Exception as e:
+        elif not respuesta_texto:
+
+            origen_respuesta = "ERROR AL LLAMAR A LAS APIs"
+
+            respuesta_texto = (
+                "No se pudo obtener una respuesta "
+                "de los proveedores de IA configurados."
+            )
+
+    except Exception as error:
+
         origen_respuesta = (
-            f"ERROR AL LLAMAR A LA API "
-            f"({type(e).__name__}): {e}"
+            f"ERROR DE CONFIGURACIÓN: "
+            f"{type(error).__name__}: {error}"
         )
 
         respuesta_texto = (
-            "Error de conexión con el proveedor de IA."
+            "No se pudo ejecutar la consulta al LLM."
         )
 
     return {
@@ -264,7 +403,10 @@ def ejecutar_prompt_ingenuo_con_llm(mensaje: str) -> dict:
 
         "respuesta_generada_por_llm": respuesta_texto.strip(),
 
+        "errores_conexion": errores,
+
         "diagnostico_alucinacion": {
+
             "disponibilidad_verificada": False,
 
             "resultados_verificados": False,
@@ -293,17 +435,17 @@ def generar_ficha_peas_clinica() -> dict:
     Genera la Ficha PEAS del asistente inteligente
     de una clínica especializada en oftalmología.
 
-    PEAS:
-        P - Performance: Métricas y criterios de éxito.
-        E - Environment: Usuarios y entorno.
-        A - Actuators: Herramientas y acciones.
-        S - Sensors: Datos de entrada.
+    P - Performance: Métricas y criterios de éxito.
+    E - Environment: Usuarios y entorno.
+    A - Actuators: Herramientas y acciones.
+    S - Sensors: Datos de entrada.
     """
 
     return {
         "sistema": "Asistente Inteligente de Clínica Oftalmológica",
 
         "mapa_conceptual_6_piezas": {
+
             "1_Usuario (Entorno / Environment)": (
                 "Pacientes y personal administrativo de la clínica "
                 "(WhatsApp, Email, Sistema de Turnos)"
@@ -337,6 +479,7 @@ def generar_ficha_peas_clinica() -> dict:
         },
 
         "PEAS_clasico": {
+
             "Performance (Métricas)": (
                 "Tiempo de respuesta inicial < 5 segundos, "
                 "0 turnos duplicados, "
@@ -394,24 +537,28 @@ if __name__ == "__main__":
     )
 
     print("\n[PASO 2 Y 3] Auditoría del Prompt:")
+
     print(json.dumps(
         resultado,
         indent=2,
         ensure_ascii=False
     ))
 
-    # Aviso cuando se ejecuta en modo simulación
+    # Aviso si se ejecutó una simulación
     if "SIMULACIÓN" in resultado["proveedor_ejecutado"]:
+
         print("\nAVISO: Ejecutando en modo simulación.")
+
         print(
-            "Para utilizar Gemini, configurá GEMINI_API_KEY "
-            "en el archivo .env"
+            "Para conectar una IA real, configurá "
+            "GEMINI_API_KEY u OPENAI_API_KEY en .env"
         )
 
     # PASO 4 Y 5 - Ficha PEAS
     peas = generar_ficha_peas_clinica()
 
     print("\n[PASO 4 Y 5] Ficha PEAS:")
+
     print(json.dumps(
         peas,
         indent=2,
