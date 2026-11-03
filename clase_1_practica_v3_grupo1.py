@@ -18,6 +18,8 @@ GEMINI_MODELS = [
 
 OPENAI_MODEL = "gpt-4o-mini"
 
+GROQ_MODEL = "openai/gpt-oss-20b"
+
 API_TIMEOUT = 120
 
 
@@ -245,57 +247,96 @@ def llamar_openai_api(prompt: str, api_key: str) -> str:
 
 
 # ============================================================
+# PASO 2 - CONEXIÓN A GROQ
+# ============================================================
+
+def llamar_groq_api(prompt: str, api_key: str) -> str:
+    """
+    Consulta Groq utilizando su SDK oficial.
+    """
+
+    from groq import Groq
+
+    cliente = Groq(
+        api_key=api_key,
+        timeout=API_TIMEOUT
+    )
+
+    respuesta = cliente.chat.completions.create(
+        model=GROQ_MODEL,
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        temperature=0.7
+    )
+
+    texto = respuesta.choices[0].message.content
+
+    if not texto:
+        raise RuntimeError(
+            "Groq devolvió una respuesta vacía."
+        )
+
+    return texto.strip()
+
+# ============================================================
 # SELECCIÓN DEL PROVEEDOR
 # ============================================================
 
 def obtener_proveedores_disponibles():
     """
-    Determina qué proveedor utilizar.
+    Detecta automáticamente los proveedores según las
+    API Keys configuradas en el archivo .env.
 
-    AI_PROVIDER puede ser:
-        auto
-        gemini
-        openai
+    Prioridad:
+        1. Groq
+        2. Gemini
+        3. OpenAI
 
-    En modo auto:
-        1. Intenta Gemini.
-        2. Si falla, intenta OpenAI.
-        3. Si no hay claves, usa simulación.
+    Si no encuentra ninguna clave válida,
+    devuelve una lista vacía para usar simulación.
     """
 
-    proveedor = os.getenv(
-        "AI_PROVIDER",
-        "auto"
-    ).strip().lower()
-
-    if proveedor not in ("auto", "gemini", "openai"):
-        raise ValueError(
-            "AI_PROVIDER debe ser auto, gemini u openai."
+    configuraciones = [
+        (
+            "Groq",
+            "GROQ_API_KEY",
+            llamar_groq_api
+        ),
+        (
+            "Google Gemini",
+            "GEMINI_API_KEY",
+            llamar_gemini_api
+        ),
+        (
+            "OpenAI",
+            "OPENAI_API_KEY",
+            llamar_openai_api
         )
-
-    gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
-    openai_key = os.getenv("OPENAI_API_KEY", "").strip()
-
-    gemini_valida = (
-        bool(gemini_key)
-        and gemini_key != "tu_api_key_de_gemini_aqui"
-    )
-
-    openai_valida = (
-        bool(openai_key)
-        and openai_key != "sk-tu_api_key_de_openai_aqui"
-    )
+    ]
 
     proveedores = []
 
-    if proveedor in ("auto", "gemini") and gemini_valida:
-        proveedores.append(
-            ("Google Gemini", llamar_gemini_api, gemini_key)
-        )
+    for nombre, variable, funcion in configuraciones:
 
-    if proveedor in ("auto", "openai") and openai_valida:
+        api_key = os.getenv(variable, "").strip()
+
+        if not api_key:
+            continue
+
+        # Ignorar valores de ejemplo.
+        if (
+            api_key.startswith("tu_")
+            or api_key.startswith("sk-tu_")
+            or api_key.startswith("gsk_tu_")
+        ):
+            continue
+
         proveedores.append(
-            ("OpenAI", llamar_openai_api, openai_key)
+            (nombre, funcion, api_key)
         )
 
     return proveedores
@@ -457,7 +498,7 @@ def generar_ficha_peas_clinica() -> dict:
             ),
 
             "3_Modelo": (
-                "LLM (Simulado o Gemini/OpenAI)"
+                "LLM (Simulado o Groq/Gemini/OpenAI)"
             ),
 
             "4_Herramientas (Actuadores / Actuators)": (
@@ -551,7 +592,8 @@ if __name__ == "__main__":
 
         print(
             "Para conectar una IA real, configurá "
-            "GEMINI_API_KEY u OPENAI_API_KEY en .env"
+            "GROQ_API_KEY, GEMINI_API_KEY "
+            "u OPENAI_API_KEY en .env"
         )
 
     # PASO 4 Y 5 - Ficha PEAS
