@@ -101,16 +101,16 @@ Ningún modelo falló por ser malo: falló porque **no tiene acceso a los datos 
 
 | Criterio | Respuesta aplicada a la clínica | Veredicto |
 |---|---|---|
-| **Valor** | Cada pedido de turno o de resultados le lleva a la administrativa unos 3–5 minutos: leer, abrir el adjunto, buscar en la agenda, cargar y responder. Con ~80–120 mensajes por día son 4 a 8 horas de trabajo repetitivo, y los pedidos que llegan de noche o el fin de semana esperan al día siguiente. Un turno mal cargado, por ejemplo el jueves equivocado, termina en un paciente que se presenta sin turno o en un hueco perdido en la agenda. | **ALTO** |
-| **Factibilidad** | Lo que se pide al LLM es acotado: clasificar 4–5 intenciones y extraer DNI, fecha, profesional y estudio de un texto corto. Los modelos actuales lo hacen bien con salida JSON estructurada. Todo lo demás (agenda, cobertura, estado del estudio) son consultas a bases de datos, tecnología conocida. No hace falta inventar nada. | **VIABLE** |
+| **Valor** | Cada pedido de turno o de resultados le lleva a la administrativa unos 3–5 minutos: leer, abrir el adjunto, buscar en la agenda, cargar y responder. Con ~80–120 mensajes por día son 4 a 10 horas de trabajo repetitivo, y los pedidos que llegan de noche o el fin de semana esperan al día siguiente. Un turno mal cargado, por ejemplo el jueves equivocado, termina en un paciente que se presenta sin turno o en un hueco perdido en la agenda. | **ALTO** |
+| **Factibilidad** | Lo que se pide al LLM es acotado: clasificar 5 intenciones (más una categoría `otra`) y extraer DNI, fecha, profesional y estudio de un texto corto. Los modelos actuales lo hacen bien con salida JSON estructurada. Todo lo demás (agenda, cobertura, estado del estudio) son consultas a bases de datos, tecnología conocida. No hace falta inventar nada. | **VIABLE** |
 | **Disponibilidad de datos** | La clínica ya tiene la información que le faltó al modelo en A.2: la agenda en el sistema de turnos, el padrón de pacientes, el estado de los estudios y los convenios con obras sociales, aunque algunos estén en planillas. El historial de WhatsApp sirve como set de prueba real. Para el MVP usamos datos ficticios con la misma estructura, sin información médica real. | **DISPONIBLES** (desordenados) |
-| **Riesgo** | Depende de la operación. Consultar disponibilidad es tolerable: si se equivoca, se re-pregunta. Modificar o cancelar un turno es más delicado: libera el horario de otro paciente o deja a uno sin atención. Informar resultados a quien no corresponde es **crítico**, por la privacidad de datos de salud (Ley 25.326). A.2 mostró el riesgo concreto: Gemini ofreció mandar un PDF de resultados sin validar identidad. Se controla con validación de identidad por código, confirmación explícita antes de escribir y la regla de que el sistema nunca interpreta resultados médicos. | **MODERADO, controlable** |
+| **Riesgo** | Depende de la operación. Consultar disponibilidad es tolerable: si se equivoca, se re-pregunta. Modificar o cancelar un turno es más delicado: libera el horario de otro paciente o deja a uno sin atención. Informar resultados a quien no corresponde es **crítico**, por la privacidad de datos de salud (Ley 25.326). A.2 mostró el riesgo concreto: Gemini ofreció mandar un PDF de resultados sin validar identidad. Se controla con validación de identidad (DNI + fecha de nacimiento contra el padrón), confirmación explícita antes de escribir y la regla de que el sistema nunca interpreta resultados médicos. | **MODERADO, controlable** |
 
 **Conclusión:** la oportunidad queda en el cuadrante "Alto valor / Alta factibilidad", la zona prioritaria. El riesgo está concentrado en las operaciones de escritura y en los datos médicos, y ahí va la lógica determinista.
 
 ### A.4 — Mapa inicial del sistema (seis piezas)
 
-## Mapa inicial — Asistente de turnos y resultados (Clínica Oftalmológica Visión Sur)
+#### Mapa inicial — Asistente de turnos y resultados (Clínica Oftalmológica Visión Sur)
 
 - **Usuario:** pacientes de la clínica (particulares y de obras sociales) que escriben por WhatsApp o mail. Usuario secundario: el personal administrativo, que recibe las derivaciones que el sistema no puede resolver.
 - **Datos:** el mensaje libre del paciente (texto con fechas relativas, varias intenciones juntas y, a veces, la foto de la orden o la credencial) + las fuentes de verdad internas: agenda de profesionales, padrón de pacientes (DNI, fecha de nacimiento, obra social), turnos registrados, estado de los estudios y política de reprogramación/convenios.
@@ -134,7 +134,7 @@ Ningún modelo falló por ser malo: falló porque **no tiene acceso a los datos 
 **Quién lo sufre y con qué frecuencia:**
 
 - *Pacientes:* todos los días. Esperan respuesta para algo tan simple como mover un turno o saber si su estudio está listo.
-- *Administrativas:* todo el día. Pasan entre 4 y 8 horas diarias en tareas repetitivas y quedan menos disponibles para la atención presencial.
+- *Administrativas:* todo el día. Pasan entre 4 y 10 horas diarias en tareas repetitivas y quedan menos disponibles para la atención presencial.
 
 **Consecuencia concreta de no resolverlo hoy:**
 
