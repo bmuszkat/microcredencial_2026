@@ -120,3 +120,24 @@ Ningún modelo falló por ser malo: falló porque **no tiene acceso a los datos 
 - **Salida:** un mensaje al paciente con información verificada (horarios reales, cargo según la política, estado real del estudio), la operación registrada en el sistema de turnos con su comprobante, o la derivación a una administrativa con el pedido ya resumido.
 
 **Modelo vs. sistema:** el modelo es una sola de las seis piezas. En A.2 el modelo aislado inventó horarios, políticas y coberturas; en este sistema el LLM solo interpreta y redacta, mientras que las herramientas consultan las fuentes de verdad y las reglas deciden qué se puede hacer.
+
+## Parte B — Concepto de solución
+
+### B.1 — Señal de dolor
+
+**Señal principal: volumen repetitivo + latencia humana.**
+
+- **Volumen repetitivo:** ~80–120 mensajes por día, de los cuales la gran mayoría son cuatro pedidos que se repiten (sacar, reprogramar o cancelar turno y "¿ya está mi estudio?"). Cada uno se resuelve siguiendo los mismos pasos: leer, identificar al paciente, consultar agenda o estado, cargar, responder.
+- **Latencia humana:** las dos administrativas también atienden la recepción presencial y el teléfono. En las horas pico (8–10 h y 16–18 h) los mensajes esperan horas, y los que llegan de noche o el fin de semana (~25% del total) no se responden hasta el día hábil siguiente.
+- **Carga cognitiva (secundaria):** cada mensaje obliga a interpretar fechas relativas ("el jueves", "a la mañana"), cruzar la obra social con el convenio y recordar la política de reprogramación. Ahí aparecen los errores de carga.
+
+**Quién lo sufre y con qué frecuencia:**
+
+- *Pacientes:* todos los días. Esperan respuesta para algo tan simple como mover un turno o saber si su estudio está listo.
+- *Administrativas:* todo el día. Pasan entre 4 y 8 horas diarias en tareas repetitivas y quedan menos disponibles para la atención presencial.
+
+**Consecuencia concreta de no resolverlo hoy:**
+
+- **Turnos perdidos:** el paciente que no logra reprogramar a tiempo no se presenta. Queda un hueco en la agenda que nadie reasigna, con pérdida directa de facturación.
+- **Errores de carga:** un turno cargado en el día equivocado hace que el paciente se presente sin turno o que se superponga con otro.
+- **Llamadas repetidas:** el paciente que no recibe respuesta vuelve a escribir o llama, y la carga sobre la recepción crece todavía más.
