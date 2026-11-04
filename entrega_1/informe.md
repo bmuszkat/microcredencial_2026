@@ -94,3 +94,16 @@ ChatGPT no alucinó datos, pero habló como si fuera el sistema: inventó cómo 
 #### Conclusión
 
 Ningún modelo falló por ser malo: falló porque **no tiene acceso a los datos reales del dominio**. Gemini llenó el vacío inventando horarios, políticas, resultados y coberturas, y lo dijo con total seguridad. ChatGPT evitó los datos, pero igual inventó reglas y estados del sistema. En los dos casos, un paciente podría actuar sobre información falsa: no reprogramar por miedo a un cargo inexistente, ir a buscar un estudio que no está listo o pagar algo que suponía cubierto. Eso es alucinación, y es el problema que resuelve el diseño: **la IA interpreta, la base de datos es la autoridad**.
+
+### A.3 — Aplicación de los 4 criterios de viabilidad
+
+> Los volúmenes y tiempos son estimaciones del equipo para una clínica de este tamaño; se validarán con datos reales en las próximas entregas.
+
+| Criterio | Respuesta aplicada a la clínica | Veredicto |
+|---|---|---|
+| **Valor** | Cada pedido de turno o de resultados le lleva a la administrativa unos 3–5 minutos: leer, abrir el adjunto, buscar en la agenda, cargar y responder. Con ~80–120 mensajes por día son 4 a 8 horas de trabajo repetitivo, y los pedidos que llegan de noche o el fin de semana esperan al día siguiente. Un turno mal cargado, por ejemplo el jueves equivocado, termina en un paciente que se presenta sin turno o en un hueco perdido en la agenda. | **ALTO** |
+| **Factibilidad** | Lo que se pide al LLM es acotado: clasificar 4–5 intenciones y extraer DNI, fecha, profesional y estudio de un texto corto. Los modelos actuales lo hacen bien con salida JSON estructurada. Todo lo demás (agenda, cobertura, estado del estudio) son consultas a bases de datos, tecnología conocida. No hace falta inventar nada. | **VIABLE** |
+| **Disponibilidad de datos** | La clínica ya tiene la información que le faltó al modelo en A.2: la agenda en el sistema de turnos, el padrón de pacientes, el estado de los estudios y los convenios con obras sociales, aunque algunos estén en planillas. El historial de WhatsApp sirve como set de prueba real. Para el MVP usamos datos ficticios con la misma estructura, sin información médica real. | **DISPONIBLES** (desordenados) |
+| **Riesgo** | Depende de la operación. Consultar disponibilidad es tolerable: si se equivoca, se re-pregunta. Modificar o cancelar un turno es más delicado: libera el horario de otro paciente o deja a uno sin atención. Informar resultados a quien no corresponde es **crítico**, por la privacidad de datos de salud (Ley 25.326). A.2 mostró el riesgo concreto: Gemini ofreció mandar un PDF de resultados sin validar identidad. Se controla con validación de identidad por código, confirmación explícita antes de escribir y la regla de que el sistema nunca interpreta resultados médicos. | **MODERADO, controlable** |
+
+**Conclusión:** la oportunidad queda en el cuadrante "Alto valor / Alta factibilidad", la zona prioritaria. El riesgo está concentrado en las operaciones de escritura y en los datos médicos, y ahí va la lógica determinista.
