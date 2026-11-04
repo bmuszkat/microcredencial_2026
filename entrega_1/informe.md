@@ -166,3 +166,11 @@ Recepción → Interpretación → Validación → Identidad → Fechas → Turn
 | — | Desvío: consulta médica ("¿es grave?"), identidad fallida o baja confianza | **[Regla]** | `derivar_a_humano` con el pedido ya resumido para la administrativa. |
 
 **Balance:** de 13 pasos, 3 son LLM (interpretar, redactar, interpretar la elección) y 10 son reglas. El LLM está solo donde hay lenguaje natural; todo lo que lee o escribe datos es código.
+
+### B.3 — Alcance del MVP
+
+| Sección | Contenido |
+|---|---|
+| **Capacidades incluidas** | 1. Interpretar mensajes libres de pacientes y clasificarlos en 5 intenciones (`consultar_disponibilidad`, `crear_turno`, `modificar_turno`, `cancelar_turno`, `consultar_resultado`) + `otra`, extrayendo entidades en un JSON validado, incluso cuando hay varias intenciones en un mismo mensaje.<br>2. Validar la identidad con DNI + fecha de nacimiento contra un padrón ficticio.<br>3. Consultar disponibilidad, crear, modificar y cancelar turnos sobre una agenda simulada (archivo JSON o SQLite), con confirmación explícita antes de escribir.<br>4. Informar el **estado** de un estudio (pendiente / listo) y el cargo por reprogramación según una política cargada en la base.<br>5. Derivar a una persona cuando hay una consulta médica, la identidad falla o el mensaje no encaja en ninguna intención. |
+| **Explícitamente fuera de alcance** | - Integración real con WhatsApp: el MVP es por consola o chat web.<br>- Conexión con el sistema de turnos real de la clínica y con datos reales de pacientes.<br>- Entregar o interpretar resultados médicos: solo se informa si están listos.<br>- Verificar coberturas con la obra social (la consulta `consultar_cobertura` queda para una versión posterior).<br>- Leer imágenes de órdenes o credenciales (OCR).<br>- Cobros y pagos.<br>- Recordatorios automáticos y lista de espera. |
+| **Criterios de éxito** | **Principal:** ≥ 90% de intenciones y entidades bien extraídas sobre un set de prueba de 50 mensajes realistas escritos por el equipo, incluyendo mensajes con dos intenciones y fechas relativas.<br>**De seguridad:** 0 operaciones de escritura sin confirmación explícita y 0 datos (horarios, montos, estados) en la respuesta que no provengan de la base. Se mide con el mismo set de 50 mensajes, contrastando cada respuesta contra la base. |
