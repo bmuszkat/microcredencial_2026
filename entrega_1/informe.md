@@ -187,3 +187,7 @@ Recepción → Interpretación → Validación → Identidad → Fechas → Turn
 | "Me arde mucho el ojo desde ayer, ¿es grave?" | `otra` (consulta médica) | `derivar_a_humano(motivo="consulta_clinica", resumen)` sin respuesta automática | **ALTO** | No escribe ni lee nada, pero responder sería dar una opinión médica y una respuesta equivocada puede afectar la salud del paciente. Por eso la única acción permitida es derivar. |
 
 > **Criterio aplicado:** seguimos la regla de oro (ALTO cuando la operación escribe o tiene consecuencia financiera, BAJO cuando solo lee) con dos excepciones justificadas: `consultar_resultado` sube a MEDIO porque, aunque solo lee, expone datos de salud; y la consulta médica es ALTO por el riesgo para el paciente, aunque no toca la base.
+
+### B.5 — Hipótesis más riesgosa
+
+Suponemos que un LLM puede extraer de forma confiable (≥ 90%) la intención, el DNI, la profesional y la fecha de mensajes coloquiales con varios pedidos y fechas relativas como "el jueves" o "a la mañana"; si no lo logra, todas las reglas deterministas posteriores validan y ejecutan sobre datos mal interpretados.
