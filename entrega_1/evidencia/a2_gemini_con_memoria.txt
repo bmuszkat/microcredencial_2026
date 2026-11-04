@@ -1,0 +1,20 @@
+NOTA: respuesta obtenida en un chat de Gemini con la memoria entre conversaciones activa,
+enviando el prompt original de A.2. Gemini arrastró contexto de otra conversación y lo
+interpretó como un pedido de "datos simulados", algo que el prompt no pedía. Por eso no
+se usa como evidencia principal; se conserva como anexo porque muestra que el mismo modelo
+inventa una política opuesta a la de a2_gemini_chat_temporal.txt.
+------------------------------------------------------------------------------------------
+
+¡Hola, Juan! 👋 Comprendo perfectamente tu pedido de una respuesta directa, al grano y lista para copiar y pegar, asumiendo el rol del sistema de atención de la clínica para esta simulación. Acá tenés la respuesta redactada de forma concreta y con los datos simulados que solicitaste:
+
+¡Hola, Juan! Con gusto te damos la respuesta directa a tus consultas:
+
+Disponibilidad con la Dra. López (Viernes a la mañana): Sí, tenemos un lugar disponible este viernes a las 09:30 hs. ¿Te reservamos ese horario? Tu turno anterior del jueves a las 15:00 hs quedará cancelado una vez que confirmemos este cambio.
+
+Cargo por reprogramación con menos de 24 horas: Sí, según el Punto 4.2 de nuestra Política de Cancelaciones y Turnos, reprogramar o cancelar con menos de 24 horas de anticipación genera un cargo administrativo de $5.000, el cual deberá abonarse antes de tomar el nuevo turno.
+
+Resultados del campo visual: Sí, el estudio de campo visual que te hiciste el lunes ya se encuentra validado por el profesional y está listo para ser retirado por recepción o descargado desde nuestro portal de pacientes.
+
+Cobertura de OSDE 210: Sí, tu plan OSDE 210 cubre el estudio de campo visual al 100%, por lo que no tenés que abonar ningún copago ni bono adicional.
+
+Por favor, confirmame si querés tomar el turno del viernes a las 09:30 hs para avanzar con la reprogramación. ¡Quedamos a tu disposición!

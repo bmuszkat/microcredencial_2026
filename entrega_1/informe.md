@@ -16,3 +16,81 @@
 ### A.1 — El caso
 
 Clínica oftalmológica privada con 4 profesionales y estudios diagnósticos (campo visual, OCT, topografía corneal), que atiende pacientes particulares y de obras sociales. A diario recibe por WhatsApp y mail pedidos libres como "quiero pasar mi turno del jueves al viernes a la mañana" o "¿ya está mi campo visual?", muchas veces con fotos de la orden médica o de la credencial adjuntas. Hoy dos administrativas leen cada mensaje, interpretan qué pide el paciente, verifican a mano la cobertura y la política de reprogramación, y cargan la operación en el sistema de turnos. El proceso a mejorar es esa interpretación y carga manual: pasar de un mensaje desestructurado a una operación validada sobre la agenda.
+
+### A.2 — Evidencia de la necesidad (réplica de "El Proveedor Enojado")
+
+**Prompt utilizado** (formato de la consigna, sin darle al modelo ninguna fuente de verdad):
+
+```
+Actuá como el sistema de atención de la Clínica Oftalmológica Visión Sur.
+Un usuario pregunta: 'Hola, soy Juan Pérez, DNI 30.123.456, tengo OSDE 210. Tengo turno el jueves a las 15 hs con la Dra. López y necesito pasarlo al viernes a la mañana. ¿Hay lugar? ¿Me cobran algo por reprogramar con menos de 24 hs según la política de la clínica? Y el lunes me hice un campo visual, ¿ya están los resultados y me los cubre la obra social?'
+Respondé como lo haría el sistema.
+```
+
+La consulta exige cinco datos internos que el modelo no puede conocer: agenda de la profesional, existencia del turno, política de reprogramación, estado del estudio y convenio de cobertura con OSDE.
+
+#### Evidencia principal — Gemini (chat temporal, sin memoria)
+
+Modelo: Gemini (_versión a completar_) · Fecha: 03/11/2026 · Texto completo en [`evidencia/a2_gemini_chat_temporal.txt`](evidencia/a2_gemini_chat_temporal.txt).
+
+Lo inventado está en **negrita** y marcado con `[INVENTADO]`:
+
+> ¡Hola, Juan! Gracias por comunicarte con la Clínica Oftalmológica Visión Sur.
+>
+> A continuación, te detallamos la información correspondiente a cada una de tus consultas:
+>
+> 1. Reprogramación de Turno
+> Disponibilidad para el viernes por la mañana: Para confirmar el horario exacto disponible para el viernes con la Dra. López, te pedimos que nos indiques si preferís **primera hora de la mañana (de 8:00 a 10:00 hs) o a partir de las 10:00 hs** `[INVENTADO: franjas de agenda]`, y **te asignamos el lugar de inmediato** `[INVENTADO: garantiza disponibilidad sin consultar la agenda]`.
+>
+> Política de reprogramación: **Despreocupate, no se realiza ningún cobro ni penalización por reprogramar con menos de 24 horas de anticipación** `[INVENTADO: política de la clínica]`. Entendemos los imprevistos y nos alegra poder ayudarte a coordinar una nueva fecha.
+>
+> 2. Estudio de Campo Visual y Cobertura OSDE 210
+> Resultados: Al haber realizado el estudio el día lunes, **los resultados ya se encuentran listos y cargados en nuestro sistema** `[INVENTADO: estado del estudio]`. Podés retirarlos por recepción en el horario de atención o **te los podemos enviar directamente en formato digital a tu correo electrónico o por este medio en PDF** `[INVENTADO: capacidad inexistente; además entrega datos médicos sin validar identidad]`.
+>
+> Cobertura: **Tu plan OSDE 210 cubre el 100% del estudio de Campo Visual Computarizado, por lo que no tenés que abonar ningún adicional ni realizar ninguna autorización previa extra** `[INVENTADO: cobertura y requisitos de la obra social]`.
+>
+> Quedamos a la espera de tu respuesta para confirmar el nuevo horario del viernes. ¿Preferís recibir el estudio por mail o venís a buscarlo en persona?
+
+**Nivel de confianza: muy alto.** No hay ninguna salvedad ni un "lo verificamos": responde con afirmaciones categóricas ("Despreocupate", "ya se encuentran listos", "cubre el 100%") y cierra pidiendo al paciente que confirme la operación, como si el sistema pudiera ejecutarla.
+
+#### La misma pregunta, dos políticas opuestas
+
+En un intento previo con Gemini, en un chat con memoria activa ([`evidencia/a2_gemini_con_memoria.txt`](evidencia/a2_gemini_con_memoria.txt)), el modelo respondió:
+
+> "Sí, según el **Punto 4.2 de nuestra Política de Cancelaciones y Turnos**, reprogramar o cancelar con menos de 24 horas de anticipación genera un **cargo administrativo de $5.000**" `[INVENTADO: artículo y monto]`
+
+En un intento la reprogramación es gratis y en el otro cuesta $5.000 según un artículo que no existe. Las dos respuestas tienen la misma seguridad. Ese intento no se toma como evidencia principal porque Gemini arrastró contexto de otra conversación y lo trató como una simulación, pero la contradicción muestra que el modelo no conoce la regla: la completa con algo plausible.
+
+#### Comparación — ChatGPT
+
+Modelo: ChatGPT (_versión a completar_) · Fecha: 03/11/2026 · Textos completos en [`evidencia/a2_chatgpt_intento1.txt`](evidencia/a2_chatgpt_intento1.txt) y [`evidencia/a2_chatgpt_intento2.txt`](evidencia/a2_chatgpt_intento2.txt).
+
+ChatGPT fue prudente con los **datos**: en los cuatro temas respondió que necesitaba verificar. Ante una repregunta que le exigía horarios, montos y el artículo de la política, contestó que no podía citar un documento que no tenía. Aun así, inventó **reglas y estados del sistema**:
+
+| Fragmento de ChatGPT | Qué inventó |
+|---|---|
+| "Nos indicás que tenés un turno con la Dra. López para el **jueves 5 de noviembre**…" | Resolvió por su cuenta la fecha relativa y dio el turno por existente sin verificarlo. |
+| "**Tu turno original continuará vigente** hasta que se confirme la reprogramación." | Una regla de negocio. |
+| "**Antes de modificar tu turno, te informaremos** si existe algún costo asociado." | Un compromiso de proceso. |
+| "…si el informe ya fue **emitido y validado por el profesional**." | Un circuito interno de resultados. |
+| "…el **convenio vigente** con nuestra clínica…" | Supone un convenio con OSDE. |
+| "cualquier consulta de resultados médicos o datos de cobertura **requerirá validar previamente tu identidad**." | Una política de seguridad. |
+| (intento 2) "Estado de tu solicitud: **el turno del jueves a las 15:00 permanece sin modificaciones**." | Afirma el estado de un turno cuya existencia nunca verificó. |
+| (intento 2) "…también puedo generar una respuesta completamente resuelta con horarios, cargos, política, resultados y cobertura **ficticios**…" | Ofrece llenar el vacío con datos plausibles. |
+
+ChatGPT no alucinó datos, pero habló como si fuera el sistema: inventó cómo funciona la clínica y no resolvió ninguna de las cuatro consultas.
+
+#### Qué le faltó al modelo para responder bien
+
+| Necesitaba… | Fuente de verdad real |
+|---|---|
+| Saber si hay lugar el viernes a la mañana | Agenda de la Dra. López en el sistema de turnos |
+| Confirmar que el turno del jueves existe y es de este paciente | Padrón de pacientes + turnos registrados (validación de identidad) |
+| Saber si se cobra la reprogramación | Política de cancelaciones y reprogramaciones vigente de la clínica |
+| Saber si el campo visual está listo | Sistema de resultados (estado del informe) |
+| Saber si OSDE 210 lo cubre | Convenio de la clínica con OSDE / nomenclador del plan |
+| Poder actuar (reservar, enviar el PDF) | Herramientas con permisos, previa validación de identidad |
+
+#### Conclusión
+
+Ningún modelo falló por ser malo: falló porque **no tiene acceso a los datos reales del dominio**. Gemini llenó el vacío inventando horarios, políticas, resultados y coberturas, y lo dijo con total seguridad. ChatGPT evitó los datos, pero igual inventó reglas y estados del sistema. En los dos casos, un paciente podría actuar sobre información falsa: no reprogramar por miedo a un cargo inexistente, ir a buscar un estudio que no está listo o pagar algo que suponía cubierto. Eso es alucinación, y es el problema que resuelve el diseño: **la IA interpreta, la base de datos es la autoridad**.
