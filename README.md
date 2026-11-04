@@ -12,8 +12,8 @@ el sistema de turnos.
 
 ## Integrantes
 
-- Nombre Apellido
-- ...
+- Brian Muszkat
+- Brian Kanelson
 
 ## Entregas
 
@@ -24,5 +24,5 @@ el sistema de turnos.
 ## Estructura del repo
 
 - `entrega_1/informe.md` — Partes A y B de la Entrega 1
-- `clase_1_practica*.py` — prácticas de la Clase 1 (prompt ingenuo contra LLM real)
+- `main.py` — prácticas de la Clase 1 (prompt ingenuo contra LLM real)
 - `.env.example` — plantilla de variables; el `.env` real no se sube (está en `.gitignore`)
