@@ -141,3 +141,28 @@ Ningún modelo falló por ser malo: falló porque **no tiene acceso a los datos 
 - **Turnos perdidos:** el paciente que no logra reprogramar a tiempo no se presenta. Queda un hueco en la agenda que nadie reasigna, con pérdida directa de facturación.
 - **Errores de carga:** un turno cargado en el día equivocado hace que el paciente se presente sin turno o que se superponga con otro.
 - **Llamadas repetidas:** el paciente que no recibe respuesta vuelve a escribir o llama, y la carga sobre la recepción crece todavía más.
+
+### B.2 — User journey
+
+Escenario: el mismo mensaje de A.2 (Juan quiere pasar su turno del jueves al viernes a la mañana, pregunta si le cobran y si su campo visual está listo).
+
+Recepción → Interpretación → Validación → Identidad → Fechas → Turno existente → Consultas al backend → Respuesta con opciones → Elección → Confirmación → Ejecución → Comprobante
+
+| # | Paso | Tipo | Justificación |
+|---|---|---|---|
+| 1 | Llega el mensaje por WhatsApp y se registra con número y hora | **[Regla]** | Es recepción técnica (webhook); no hay nada que interpretar. |
+| 2 | Detectar intenciones (`modificar_turno` + `consultar_resultado`) y extraer entidades (DNI, profesional, "jueves 15 hs", "viernes a la mañana", "campo visual") | **[LLM]** | Texto libre con dos pedidos mezclados y expresiones coloquiales: es exactamente lo que el código no puede parsear. |
+| 3 | Validar el JSON del LLM: intención dentro de la lista cerrada, DNI de 7–8 dígitos, campos obligatorios presentes | **[Regla]** | Validar formato es determinista; si el JSON falla o la intención es "otra", se deriva a una persona. |
+| 4 | Validar identidad: DNI + fecha de nacimiento contra el padrón (si falta la fecha, se pide con un mensaje fijo) | **[Regla]** | Es un dato exacto y crítico (privacidad de salud); un LLM no puede "decidir" quién es el paciente. |
+| 5 | Convertir "jueves" y "viernes a la mañana" en fecha y franja (06/11, 08:00–13:00) | **[Regla]** | En A.2 ChatGPT eligió las fechas por su cuenta; el calendario se resuelve con código, el LLM solo extrajo el texto. |
+| 6 | Verificar que exista un turno del jueves 15:00 con la Dra. López para ese DNI | **[Regla]** | Consulta a la base; si no existe, se informa en lugar de suponerlo, como hizo ChatGPT. |
+| 7 | Consultar disponibilidad del viernes a la mañana, el cargo según la política (<24 h) y el estado del campo visual | **[Regla]** | Son las fuentes de verdad que le faltaron al modelo en A.2; el LLM no las toca. |
+| 8 | Redactar la respuesta: horarios libres reales, cargo según política, estado del estudio | **[LLM]** | Redactar en lenguaje natural y amable es tarea del LLM, pero solo con los datos del paso 7, inyectados en el prompt. |
+| 9 | Verificar que cada horario y monto del texto coincida con lo que devolvió el backend | **[Regla]** | Guardrail contra la alucinación de A.2: si el texto menciona un dato que no vino de la base, se reemplaza por una plantilla fija. |
+| 10 | Interpretar la elección del paciente ("dale, el de las 9 y media") | **[LLM]** | Respuesta libre, que se mapea a una de las opciones ofrecidas; nunca a un horario nuevo. |
+| 11 | Pedir confirmación explícita: "¿Confirmás el cambio al viernes 06/11 09:30? Respondé SÍ" | **[Regla]** | La operación escribe en la agenda; solo un "SÍ" exacto la habilita. |
+| 12 | Ejecutar `modificar_turno`: revalidar disponibilidad, liberar el jueves, ocupar el viernes, registrar log | **[Regla]** | Transacción atómica y auditable; el LLM no escribe en la base. |
+| 13 | Enviar el comprobante con fecha, hora, profesional y cargo | **[Regla]** | Plantilla fija con datos de la base: un comprobante no puede tener variaciones. |
+| — | Desvío: consulta médica ("¿es grave?"), identidad fallida o baja confianza | **[Regla]** | `derivar_a_humano` con el pedido ya resumido para la administrativa. |
+
+**Balance:** de 13 pasos, 3 son LLM (interpretar, redactar, interpretar la elección) y 10 son reglas. El LLM está solo donde hay lenguaje natural; todo lo que lee o escribe datos es código.
