@@ -31,7 +31,7 @@ La consulta exige cinco datos internos que el modelo no puede conocer: agenda de
 
 #### Evidencia principal — Gemini (chat temporal, sin memoria)
 
-Modelo: Gemini (_versión a completar_) · Fecha: 03/11/2026 · Texto completo en [`evidencia/a2_gemini_chat_temporal.txt`](evidencia/a2_gemini_chat_temporal.txt).
+Modelo: Gemini 3 (modo automático) · Fecha: 03/11/2026 · Texto completo en [`evidencia/a2_gemini_chat_temporal.txt`](evidencia/a2_gemini_chat_temporal.txt).
 
 Lo inventado está en **negrita** y marcado con `[INVENTADO]`:
 
@@ -63,7 +63,7 @@ En un intento la reprogramación es gratis y en el otro cuesta $5.000 según un 
 
 #### Comparación — ChatGPT
 
-Modelo: ChatGPT (_versión a completar_) · Fecha: 03/11/2026 · Textos completos en [`evidencia/a2_chatgpt_intento1.txt`](evidencia/a2_chatgpt_intento1.txt) y [`evidencia/a2_chatgpt_intento2.txt`](evidencia/a2_chatgpt_intento2.txt).
+Modelo: ChatGPT (modelo por defecto de la versión web) · Fecha: 03/11/2026 · Textos completos en [`evidencia/a2_chatgpt_intento1.txt`](evidencia/a2_chatgpt_intento1.txt) y [`evidencia/a2_chatgpt_intento2.txt`](evidencia/a2_chatgpt_intento2.txt).
 
 ChatGPT fue prudente con los **datos**: en los cuatro temas respondió que necesitaba verificar. Ante una repregunta que le exigía horarios, montos y el artículo de la política, contestó que no podía citar un documento que no tenía. Aun así, inventó **reglas y estados del sistema**:
 
