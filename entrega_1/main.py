@@ -29,14 +29,15 @@ API_TIMEOUT = 120
 
 def cargar_env_local():
     """
-    Lee el archivo .env ubicado en la misma carpeta
-    que este script.
+    Lee el archivo .env ubicado en la raíz del repo
+    (un nivel arriba de este script).
 
     No requiere instalar librerías externas.
     """
 
+    # El .env vive en la raíz del repo (un nivel arriba de entrega_1/).
     env_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
         ".env"
     )
 
