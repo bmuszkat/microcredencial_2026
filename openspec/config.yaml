@@ -1,0 +1,23 @@
+schema: spec-driven
+
+context: |
+  Proyecto académico (ORT, Microcredencial #2 — Diseño de Aplicaciones Inteligentes).
+  Caso: asistente de turnos y resultados para una clínica oftalmológica (ver entrega_1/informe.md).
+  Escribir todos los artefactos en español rioplatense.
+  Python 3.12. Dependencias mínimas: pydantic, python-dotenv, pytest. Llamadas HTTP con urllib (stdlib).
+  Proveedor de LLM configurable por .env (groq, openai, anthropic, gemini); el grupo usa Groq (openai/gpt-oss-20b).
+  Repositorio público: nunca escribir API keys en código ni en artefactos; solo .env (ignorado) y .env.example sin valores.
+  Los valores de intención deben coincidir EXACTAMENTE con la Matriz de Intenciones de la Entrega 1 (B.4):
+  consultar_disponibilidad, crear_turno, modificar_turno, cancelar_turno, consultar_resultado, otra.
+  Patrón: "la IA interpreta, la base de datos es la autoridad" — el LLM solo extrae; las reglas de negocio van en código.
+  Cada entrega vive en su carpeta (entrega_N/) con el informe que pide la consigna.
+
+rules:
+  proposal:
+    - Citar qué punto de la consigna de la entrega cubre cada capacidad
+    - Listar explícitamente qué queda fuera de alcance (y para qué entrega queda)
+  design:
+    - Justificar cada decisión con referencia a la Entrega 1 cuando aplique
+  tasks:
+    - Cada tarea debe poder cerrarse con un commit separado
+    - Incluir tareas de documentación (informe, resultados, README), no solo de código
