@@ -8,7 +8,7 @@
 ## 2. Proveedor LLM (spec `proveedor-llm`)
 
 - [x] 2.1 Crear `entrega_2/clinica/config.py` (carga del `.env` de la raíz, `key_valida`, `detectar_proveedor` con `LLM_PROVIDER` y orden Groq → OpenAI → Anthropic → Gemini) con tests en `entrega_2/tests/test_config.py` que cubran: placeholder = no configurada, proveedor explícito sin key = error, selección automática; verificar con `pytest entrega_2/tests -q`
-- [ ] 2.2 Crear `entrega_2/clinica/llm.py` (HTTP con urllib a Groq, OpenAI, Anthropic y Gemini; temperatura 0; JSON; reintentos 429/503 sin reintentar 400/401/403) con un test de reintentos que simule 429 → OK sin red; verificar con `pytest` y con una llamada real a Groq que devuelva texto
+- [x] 2.2 Crear `entrega_2/clinica/llm.py` (HTTP con urllib a Groq, OpenAI, Anthropic y Gemini; temperatura 0; JSON; reintentos 429/503 sin reintentar 400/401/403) con un test de reintentos que simule 429 → OK sin red; verificar con `pytest` y con una llamada real a Groq que devuelva texto
 
 ## 3. Contrato y reglas (spec `extraccion-mensajes`)
 
