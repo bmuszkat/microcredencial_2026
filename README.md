@@ -61,9 +61,11 @@ python -m pytest entrega_2    # pruebas del contrato, las reglas y el flujo (no 
 │   │   ├── reglas.py         ← reglas de negocio en código (formato del DNI)
 │   │   └── extractor.py      ← el flujo: mensaje → LLM → json.loads → contrato → reglas
 │   ├── prompts/
-│   │   └── extraccion_v1.txt ← system prompt versionado (few-shot)
+│   │   ├── extraccion_v1.txt       ← system prompt versionado (few-shot)
+│   │   └── extraccion_zeroshot.txt ← el v1 sin ejemplos, para comparar técnicas
 │   ├── datos/
 │   │   └── lote_prueba.json  ← los 4 casos: típico, ambiguo, manipulación, caso límite
+│   ├── evidencia/            ← salidas de las corridas reales contra Groq
 │   └── tests/                ← pruebas automáticas sin API
 └── openspec/                 ← specs y cambios (desarrollo guiado por especificaciones)
 ```
