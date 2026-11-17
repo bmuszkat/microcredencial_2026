@@ -12,7 +12,7 @@
 
 ## 3. Contrato y reglas (spec `extraccion-mensajes`)
 
-- [ ] 3.1 Crear `entrega_2/clinica/contrato.py` (`ExtraccionPaciente`: `intenciones` lista de los 6 valores de la Matriz E1, mínimo 1 y sin repetidos; entidades opcionales; `es_consulta_medica` bool; `extra="forbid"`) con tests de casos válidos e inválidos (intención inventada, lista vacía, campo extra, tipo incorrecto); verificar con `pytest`
+- [x] 3.1 Crear `entrega_2/clinica/contrato.py` (`ExtraccionPaciente`: `intenciones` lista de los 6 valores de la Matriz E1, mínimo 1 y sin repetidos; entidades opcionales; `es_consulta_medica` bool; `extra="forbid"`) con tests de casos válidos e inválidos (intención inventada, lista vacía, campo extra, tipo incorrecto); verificar con `pytest`
 - [ ] 3.2 Crear `entrega_2/clinica/reglas.py` (`validar_dni`: 7 u 8 dígitos; null no genera error) con tests; verificar con `pytest`
 
 ## 4. Prompt v1 y extractor
