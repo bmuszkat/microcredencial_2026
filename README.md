@@ -29,13 +29,14 @@ Requisitos: Python 3.10 o superior. Todos los comandos se corren **desde la raí
 ```bash
 pip install -r requirements.txt
 cp .env.example .env          # completar la API key del proveedor (ver abajo)
+                              # (en el cmd de Windows: copy .env.example .env)
 
 python entrega_2/app.py       # corre el lote de prueba con el prompt v1
 python entrega_2/app.py v2    # lo mismo con otra versión (si existe entrega_2/prompts/extraccion_v2.txt)
 python -m pytest entrega_2    # pruebas del contrato, las reglas y el flujo (no usan la API)
 ```
 
-**Proveedor de LLM:** se elige en el `.env` con `LLM_PROVIDER` (`groq`, `openai`, `anthropic` o `gemini`) y la key correspondiente. El grupo usa **Groq** con el modelo `openai/gpt-oss-20b` (key gratuita en https://console.groq.com). Si `LLM_PROVIDER` no está definido, se usa el primer proveedor con key; sin ninguna key, `app.py` corre en **modo simulación** con respuestas de ejemplo.
+**Proveedor de LLM:** alcanza con completar en el `.env` **una** key de Groq, OpenAI, Anthropic o Gemini: se usa el primer proveedor que tenga key (en ese orden). Para forzar uno en particular, definir `LLM_PROVIDER`. El grupo usa **Groq** con el modelo `openai/gpt-oss-20b` (key gratuita en https://console.groq.com). Sin ninguna key, `app.py` corre en **modo simulación** con respuestas de ejemplo.
 
 > La API key nunca se escribe en el código: vive solo en el `.env`, que está en el `.gitignore`.
 
