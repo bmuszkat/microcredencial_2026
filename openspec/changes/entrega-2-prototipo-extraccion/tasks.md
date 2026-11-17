@@ -24,7 +24,7 @@
 
 - [x] 5.1 Crear `entrega_2/datos/lote_prueba.json` con 4 casos (típico, ambiguo/incompleto, manipulación, caso límite de consulta médica), cada uno con `tipo`, `mensaje`, `observar` y `simulacion`; verificar que el JSON parsea y que las 4 simulaciones cumplen el contrato (test)
 - [x] 5.2 Crear `entrega_2/app.py` (corre el lote, imprime cada resultado, la tabla en Markdown y la demostración de respuestas rotas; acepta versión de prompt por argumento; aviso de modo simulación) y verificar que `python entrega_2/app.py` corre de punta a punta sin key (renombrando temporalmente `.env`) y con la key de Groq
-- [ ] 5.3 Actualizar el `README.md` (sección "Cómo correrlo": instalación, `.env`, `python entrega_2/app.py`, `pytest`; estructura de `entrega_2/`; link a la Entrega 2) y verificar que los comandos documentados corren tal cual desde la raíz
+- [x] 5.3 Actualizar el `README.md` (sección "Cómo correrlo": instalación, `.env`, `python entrega_2/app.py`, `pytest`; estructura de `entrega_2/`; link a la Entrega 2) y verificar que los comandos documentados corren tal cual desde la raíz
 
 ## 6. Corrida real y documentación de la entrega
 

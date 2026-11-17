@@ -89,6 +89,9 @@ def main() -> None:
     # La consola de Windows no usa UTF-8 por defecto: sin esto las tildes salen rotas.
     sys.stdout.reconfigure(encoding="utf-8")
     version = sys.argv[1] if len(sys.argv) > 1 else PROMPT_VERSION
+    if not (RAIZ_ENTREGA / "prompts" / f"extraccion_{version}.txt").exists():
+        print(f"❌ No existe el prompt '{version}' (se busca entrega_2/prompts/extraccion_{version}.txt).")
+        sys.exit(1)
 
     try:
         proveedor = detectar_proveedor()
