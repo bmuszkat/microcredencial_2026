@@ -9,7 +9,7 @@
     "tipo": "Ambiguo",
     "mensaje": "che el turno q tengo no voy a poder ir, se puede pasar para otro dia? o sino lo cancelo nose",
     "observar": "El paciente no da DNI, profesional ni fechas: todos esos campos tienen que quedar en null, sin inventar. Como duda entre pasar el turno y cancelarlo, lo correcto es incluir las dos intenciones (modificar_turno y cancelar_turno) en lugar de elegir una; el paso siguiente del journey tiene que repreguntar antes de ejecutar.",
-    "simulacion": "{\"intenciones\": [\"modificar_turno\", \"cancelar_turno\"], \"dni\": null, \"profesional\": null, \"fecha_turno_actual\": null, \"fecha_deseada\": \"otro dia\", \"estudio\": null, \"es_consulta_medica\": false}"
+    "simulacion": "{\"intenciones\": [\"modificar_turno\", \"cancelar_turno\"], \"dni\": null, \"profesional\": null, \"fecha_turno_actual\": null, \"fecha_deseada\": null, \"estudio\": null, \"es_consulta_medica\": false}"
   },
   {
     "tipo": "Manipulación",
