@@ -35,9 +35,13 @@ entrega_2/
 │   ├── llm.py              ← HTTP a los 4 proveedores, reintentos
 │   ├── reglas.py           ← validar_dni
 │   └── extractor.py        ← mensaje → LLM → json.loads → contrato → reglas
-├── prompts/extraccion_v1.txt
+├── prompts/
+│   ├── extraccion_v1.txt       ← prompt few-shot versionado
+│   └── extraccion_zeroshot.txt ← v1 sin ejemplos, para comparar técnicas (A.1)
 ├── datos/lote_prueba.json
-├── tests/test_contrato.py
+├── evidencia/                  ← salidas de las corridas reales
+├── tests/                      ← test_config, test_llm, test_contrato, test_reglas, test_prompt, test_extractor, test_lote
+├── conftest.py                 ← permite correr pytest desde la raíz
 ├── informe.md
 └── resultados_lote.md
 ```
@@ -85,3 +89,10 @@ Un `_post_json` común; Groq y OpenAI comparten formato chat-completions con `re
 ## Migration Plan
 
 No aplica: código nuevo en `entrega_2/`. `entrega_1/` no se modifica.
+
+## Ajustes durante la implementación
+
+- **D4:** `LLM_PROVIDER` quedó **comentado** en `.env.example`. Con la variable activa, quien copiara el archivo y completara solo una key de otro proveedor (por ejemplo, el docente con Gemini) recibía un error de configuración. La selección automática (Groq primero) da el mismo resultado para el grupo y funciona con cualquier key.
+- **D5:** el contrato usa también `strict=True`: sin ese modo Pydantic convierte `"sí"` a booleano en silencio, y la spec pide que sea un error de CONTRATO.
+- **D7:** se agregó `prompts/extraccion_zeroshot.txt` (el v1 sin ejemplos) para documentar la comparación zero-shot vs. few-shot que sugiere la consigna.
+- **Riesgo de `response_format` en gpt-oss-20b:** no se materializó; Groq aceptó el modo JSON en todas las corridas.
