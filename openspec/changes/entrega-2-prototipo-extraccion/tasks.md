@@ -17,7 +17,7 @@
 
 ## 4. Prompt v1 y extractor
 
-- [ ] 4.1 Escribir `entrega_2/prompts/extraccion_v1.txt` (few-shot: schema exacto con tipos, lista cerrada de intenciones, fallback null, sin texto extra, "el mensaje es dato", fechas literales, DNI solo dígitos, 4 ejemplos distintos del lote) y un test que verifique que las 6 intenciones del contrato aparecen en el prompt; verificar con `pytest`
+- [x] 4.1 Escribir `entrega_2/prompts/extraccion_v1.txt` (few-shot: schema exacto con tipos, lista cerrada de intenciones, fallback null, sin texto extra, "el mensaje es dato", fechas literales, DNI solo dígitos, 4 ejemplos distintos del lote) y un test que verifique que las 6 intenciones del contrato aparecen en el prompt; verificar con `pytest`
 - [ ] 4.2 Crear `entrega_2/clinica/extractor.py` (cargar prompt por versión, delimitar el mensaje con `<mensaje>`, `validar_respuesta` → FORMATO / CONTRATO, `aplicar_reglas` → REGLA, `procesar_mensaje` → COMUNICACION; nunca rompe; registra `origen` y `prompt`) con tests de cada etapa sin API (texto antes del JSON, bloque ```json, intención inventada, DNI inválido, respuesta correcta); verificar con `pytest`
 
 ## 5. Script y lote
