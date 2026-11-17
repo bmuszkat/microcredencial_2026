@@ -28,7 +28,7 @@
 
 ## 6. Corrida real y documentación de la entrega
 
-- [ ] 6.1 Correr el lote con Groq (`openai/gpt-oss-20b`) y volcar la tabla en `entrega_2/resultados_lote.md` (input resumido, salida del modelo, ¿JSON válido?, tipo de error si falló) con proveedor, modelo, fecha y versión de prompt; verificar que la tabla tiene las 4 filas con datos de la corrida real (origen "API REAL — groq")
+- [x] 6.1 Correr el lote con Groq (`openai/gpt-oss-20b`) y volcar la tabla en `entrega_2/resultados_lote.md` (input resumido, salida del modelo, ¿JSON válido?, tipo de error si falló) con proveedor, modelo, fecha y versión de prompt; verificar que la tabla tiene las 4 filas con datos de la corrida real (origen "API REAL — groq")
 - [ ] 6.2 Escribir `entrega_2/informe.md`: A.1 (few-shot justificado en ≥2 oraciones, con referencia a la Entrega 1), A.2 (prompt v1 completo y cómo cumple las 4 reglas), B.2 (contrato de entrada/salida, API y técnica, y por qué `intenciones` es lista) y C.2 (reflexión de 3–4 líneas con al menos una mejora concreta para el prompt v2); verificar contra la rúbrica que cada punto de A.1, A.2, B.2 y C.2 está cubierto
 - [ ] 6.3 Verificación final: `pytest` en verde, `git log` con commits separados por archivo entregable, `git grep` sin patrones de API key (`gsk_`, `sk-`, `AIza`, `sk-ant-`) en el historial y valores de `intenciones` idénticos en prompt, contrato e informe de la Entrega 1
 
