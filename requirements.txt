@@ -2,3 +2,4 @@
 pydantic>=2.0        # contrato de datos: valida el JSON que devuelve el LLM
 python-dotenv>=1.0   # lee las API keys desde el archivo .env
 pytest>=8.0          # pruebas automáticas (no llaman a la API)
+groq>=1.0            # SDK de Groq: solo lo usa entrega_1/main.py (la Entrega 2 llama por HTTP)
