@@ -3,7 +3,7 @@
 ## 1. Base del proyecto
 
 - [x] 1.1 Crear `requirements.txt` en la raíz (`pydantic>=2.0`, `python-dotenv>=1.0`, `pytest>=8.0`) y verificar con `pip install -r requirements.txt` que instala sin errores
-- [ ] 1.2 Actualizar `.env.example` (agregar `LLM_PROVIDER`, `GROQ_MODEL=openai/gpt-oss-20b`, opción Anthropic con `ANTHROPIC_API_KEY`/`ANTHROPIC_MODEL`, placeholders sin valores reales) y verificar con `git diff` que no contiene ninguna key real y que `.env` sigue ignorado (`git check-ignore .env`)
+- [x] 1.2 Actualizar `.env.example` (agregar `LLM_PROVIDER`, `GROQ_MODEL=openai/gpt-oss-20b`, opción Anthropic con `ANTHROPIC_API_KEY`/`ANTHROPIC_MODEL`, placeholders sin valores reales) y verificar con `git diff` que no contiene ninguna key real y que `.env` sigue ignorado (`git check-ignore .env`)
 
 ## 2. Proveedor LLM (spec `proveedor-llm`)
 
