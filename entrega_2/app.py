@@ -87,7 +87,11 @@ def demostrar_errores() -> None:
 
 def main() -> None:
     # La consola de Windows no usa UTF-8 por defecto: sin esto las tildes salen rotas.
-    sys.stdout.reconfigure(encoding="utf-8")
+    # Algunos entornos (IDLE, ciertos IDE) reemplazan stdout y no permiten reconfigurarlo.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except (AttributeError, ValueError):
+        pass
     version = sys.argv[1] if len(sys.argv) > 1 else PROMPT_VERSION
     if not (RAIZ_ENTREGA / "prompts" / f"extraccion_{version}.txt").exists():
         print(f"❌ No existe el prompt '{version}' (se busca entrega_2/prompts/extraccion_{version}.txt).")
