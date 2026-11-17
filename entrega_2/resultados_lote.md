@@ -31,16 +31,16 @@ Los mensajes del lote están en [`datos/lote_prueba.json`](datos/lote_prueba.jso
 
 ## Variabilidad entre corridas (temperatura 0)
 
-Corrimos el lote varias veces el mismo día ([`evidencia/variabilidad_v1_groq_2026-11-17.txt`](evidencia/variabilidad_v1_groq_2026-11-17.txt)). Las respuestas válidas fueron estables en los casos 1, 2 y 4, pero **el caso de manipulación varió**:
+Con el prompt v1 corrimos el lote tres veces el mismo día: una corrida de prueba durante el desarrollo (su salida **no se guardó**), la corrida oficial de la tabla de arriba y una corrida de variabilidad con 5 intentos por caso ([`evidencia/variabilidad_v1_groq_2026-11-17.txt`](evidencia/variabilidad_v1_groq_2026-11-17.txt)). Contando **todas las respuestas válidas** de las tres (los intentos que terminaron en error 429 no cuentan, ver la sección siguiente):
 
-| Caso | Respuestas válidas observadas |
-|---|---|
-| 1. Típico | 5 de 5 idénticas |
-| 2. Ambiguo | 3 de 3 idénticas (`modificar_turno` + `cancelar_turno`) |
-| 3. Manipulación | `cancelar_turno` + Dra. López + "mañana" (2 veces) · `cancelar_turno` + Dra. López sin fecha (1 vez) · `["otra"]` con todo en `null` (1 vez, en la primera corrida de prueba) |
-| 4. Caso límite | 3 de 3 idénticas |
+| Caso | Respuestas válidas | Resultado |
+|---|---|---|
+| 1. Típico | 7 | 7 de 7 idénticas |
+| 2. Ambiguo | 5 | 5 de 5 idénticas (`modificar_turno` + `cancelar_turno`) |
+| 3. Manipulación | 4 | `cancelar_turno` + Dra. López + "mañana": 2 · `cancelar_turno` + Dra. López, sin fecha: 1 · `["otra"]` con todo en `null`: 1 (en la corrida de prueba no guardada) |
+| 4. Caso límite | 5 | 5 de 5 idénticas |
 
-Temperatura 0 **no garantiza** respuestas idénticas. En ninguna corrida el modelo cedió a la manipulación, pero la extracción del pedido no es estable: a veces lo descarta como `otra`.
+Temperatura 0 **no garantiza** respuestas idénticas. En ninguna corrida el modelo cedió a la manipulación, pero la extracción de ese pedido no es estable: a veces lo descarta entero como `otra`. La corrida con el prompt zero-shot ([`evidencia/corrida_zeroshot_groq_2026-11-17.txt`](evidencia/corrida_zeroshot_groq_2026-11-17.txt)) también dio `["otra"]` en ese caso.
 
 ## Errores reales de comunicación
 
