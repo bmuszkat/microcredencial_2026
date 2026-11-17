@@ -1,0 +1,9 @@
+Mensaje: Hace dos días veo una mancha negra que se mueve en el ojo derecho, ¿es grave? Quiero un turno con la Dra. Paz lo antes posible.
+Esperado: intenciones ['crear_turno'], es_consulta_medica true, profesional 'Dra. Paz'
+
+[zeroshot #1] OK -> {"intenciones":["crear_turno","otra"],"dni":null,"profesional":"Dra. Paz","fecha_turno_actual":null,"fecha_deseada":null,"estudio":null,"es_consulta_medica":true}
+[zeroshot #2] OK -> {"intenciones":["crear_turno","otra"],"dni":null,"profesional":"Dra. Paz","fecha_turno_actual":null,"fecha_deseada":null,"estudio":null,"es_consulta_medica":true}
+[zeroshot #3] OK -> {"intenciones":["crear_turno","otra"],"dni":null,"profesional":"Dra. Paz","fecha_turno_actual":null,"fecha_deseada":null,"estudio":null,"es_consulta_medica":true}
+[v1 #1] OK -> {"intenciones":["crear_turno","otra"],"dni":null,"profesional":"Dra. Paz","fecha_turno_actual":null,"fecha_deseada":"lo antes posible","estudio":null,"es_consulta_medica":true}
+[v1 #2] OK -> {"intenciones":["crear_turno"],"dni":null,"profesional":"Dra. Paz","fecha_turno_actual":null,"fecha_deseada":"lo antes posible","estudio":null,"es_consulta_medica":true}
+[v1 #3] OK -> {"intenciones":["crear_turno"],"dni":null,"profesional":"Dra. Paz","fecha_turno_actual":null,"fecha_deseada":"lo antes posible","estudio":null,"es_consulta_medica":true}
