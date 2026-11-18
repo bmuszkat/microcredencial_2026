@@ -1,0 +1,24 @@
+#1 {"intenciones":["otra"],"dni":null,"profesional":null,"fecha_turno_actual":null,"fecha_deseada":null,"estudio":null,"es_consulta_medica":false}
+#2 HTTP 429 -> {"error":{"message":"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_[OCULTO]` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 5786, Requested 2554. Please try again in 2.55s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing","type":"tokens","code":"rate_limit_exceeded"}}
+
+#3 HTTP 400 -> {"error":{"message":"Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.","type":"invalid_request_error","code":"json_validate_failed","failed_generation":""}}
+
+#4 HTTP 429 -> {"error":{"message":"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_[OCULTO]` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6182, Requested 2554. Please try again in 5.52s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing","type":"tokens","code":"rate_limit_exceeded"}}
+
+#5 HTTP 400 -> {"error":{"message":"Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.","type":"invalid_request_error","code":"json_validate_failed","failed_generation":""}}
+
+#6 HTTP 429 -> {"error":{"message":"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_[OCULTO]` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6599, Requested 2554. Please try again in 8.6475s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing","type":"tokens","code":"rate_limit_exceeded"}}
+
+#7 HTTP 429 -> {"error":{"message":"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_[OCULTO]` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6057, Requested 2115. Please try again in 1.289999999s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing","type":"tokens","code":"rate_limit_exceeded"}}
+
+#8 {"intenciones":["otra"],"dni":null,"profesional":null,"fecha_turno_actual":null,"fecha_deseada":null,"estudio":null,"es_consulta_medica":false}
+#9 HTTP 429 -> {"error":{"message":"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_[OCULTO]` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7262, Requested 2554. Please try again in 13.62s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing","type":"tokens","code":"rate_limit_exceeded"}}
+
+#10 HTTP 429 -> {"error":{"message":"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_[OCULTO]` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6717, Requested 2554. Please try again in 9.532499999s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing","type":"tokens","code":"rate_limit_exceeded"}}
+
+
+RESUMEN: {
+ "['otra']": 2,
+ "HTTP 429": 6,
+ "HTTP 400": 2
+}

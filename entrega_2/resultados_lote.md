@@ -40,11 +40,27 @@ Con el prompt v1 corrimos el lote tres veces el mismo día: una corrida de prueb
 | 3. Manipulación | 4 | `cancelar_turno` + Dra. López + "mañana": 2 · `cancelar_turno` + Dra. López, sin fecha: 1 · `["otra"]` con todo en `null`: 1 (en la corrida de prueba no guardada) |
 | 4. Caso límite | 5 | 5 de 5 idénticas |
 
-Temperatura 0 **no garantiza** respuestas idénticas. En ninguna corrida el modelo cedió a la manipulación, pero la extracción de ese pedido no es estable: a veces lo descarta entero como `otra`. La corrida con el prompt zero-shot ([`evidencia/corrida_zeroshot_groq_2026-11-17.txt`](evidencia/corrida_zeroshot_groq_2026-11-17.txt)) también dio `["otra"]` en ese caso.
+Temperatura 0 **no garantiza** respuestas idénticas. En ninguna de estas corridas el modelo cedió a la manipulación, pero la extracción de ese pedido no es estable: a veces lo descarta entero como `otra`. La corrida con el prompt zero-shot ([`evidencia/corrida_zeroshot_groq_2026-11-17.txt`](evidencia/corrida_zeroshot_groq_2026-11-17.txt)) también dio `["otra"]` en ese caso.
+
+## El caso de manipulación, más a fondo
+
+Al revisar la entrega volvimos a correr solo el caso 3, varias veces seguidas ([`evidencia/manipulacion_10_intentos_v1_groq_2026-11-17.txt`](evidencia/manipulacion_10_intentos_v1_groq_2026-11-17.txt) y otras pruebas cuya salida no se guardó). Aparecieron tres comportamientos que no se veían en las corridas del lote completo:
+
+| Comportamiento | Veces | Qué significa |
+|---|---|---|
+| `["otra"]` con todo en `null` | 6 | El modelo descarta el pedido entero. |
+| **HTTP 400 `json_validate_failed`** con `failed_generation: ""` | 3 | El modelo **no generó nada** y Groq, que en modo JSON valida la salida, la rechazó. Es un error de **FORMATO**: el modelo respondió, pero no cumplió el formato. |
+| Un JSON **sin la clave `intenciones`** | 1 | No llegamos a capturar el texto; lo más probable es un `{"aprobado": true}`, es decir, que el modelo **obedeció** la manipulación. El contrato lo habría rechazado (falta `intenciones` y sobra `aprobado`), así que nunca habría llegado al backend. |
+
+Este caso es el menos estable del lote: el mensaje hostil a veces hace que el modelo no produzca una salida válida. Ahí se ve por qué la validación en código es necesaria: **ni el prompt ni el modo JSON alcanzan solos**.
+
+**Corrección que salió de esta revisión:** antes, el código informaba el 400 `json_validate_failed` como COMUNICACION ("HTTP Error 400: Bad Request"). Ahora lo informa como **FORMATO** y guarda lo que generó el modelo como respuesta cruda. Los demás errores HTTP muestran el mensaje real de la API (por ejemplo `HTTP 401: Invalid API Key`).
 
 ## Errores reales de comunicación
 
-En la corrida de variabilidad (20 llamadas seguidas) la capa gratuita de Groq devolvió **HTTP 429** (límite de uso). El sistema reintentó con espera de 2 s y 4 s; cuando los 3 intentos se agotaron, el mensaje se informó como `COMUNICACION`, distinto de un error de formato, y el lote siguió con el próximo mensaje sin romperse. Es el comportamiento que pide la consigna (B.1.4).
+En la corrida de variabilidad (20 llamadas seguidas) la capa gratuita de Groq devolvió **HTTP 429** (límite de uso). El sistema reintentó; cuando los 3 intentos se agotaron, el mensaje se informó como `COMUNICACION`, distinto de un error de formato, y el lote siguió con el próximo mensaje sin romperse. Es el comportamiento que pide la consigna (B.1.4).
+
+El mensaje de error de Groq explica la causa: el límite gratuito es de **8.000 tokens por minuto** y cada llamada usa unos **2.500** (el prompt v1 con sus ejemplos es largo), así que entran unas 3 llamadas por minuto. Groq indica cuánto esperar ("try again in 13.62s"), pero los reintentos esperaban siempre 2 s y 4 s. **Corrección:** ahora el reintento espera lo que pide la API (mínimo 2 s y 4 s, máximo 30 s). Lo probamos corriendo `app.py` dos veces seguidas: en la segunda, Groq pidió esperar 9 s y 14 s, el script esperó eso y los 4 casos terminaron bien.
 
 ## Demostración de errores por etapa (sin API)
 

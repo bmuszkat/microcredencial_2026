@@ -99,10 +99,10 @@ Las reglas 1, 3, 4 y 5 vienen del diseño de la Entrega 1: el mensaje es dato y 
 | 1. Key desde `.env`, nunca hardcodeada | `clinica/config.py` lee el `.env` de la raíz (ignorado por git). En el repo solo está `.env.example`, sin valores. |
 | 2. Input del dominio a una API real | `clinica/llm.py` llama por HTTP a la API de Groq (compatible con la de OpenAI); también soporta OpenAI, Anthropic y Gemini cambiando `LLM_PROVIDER` en el `.env`. |
 | 3. Parsear con `json.loads()` | `clinica/extractor.py → validar_respuesta()`. |
-| 4. Errores diferenciados | **COMUNICACION** (red, autenticación, límite de uso, configuración: el modelo no respondió) se captura aparte de **FORMATO** (respondió, pero no es JSON). Además se separan **CONTRATO** (JSON que no cumple el schema) y **REGLA** (DNI inválido). Ningún error rompe el programa: un input basura termina en un error tipificado. |
+| 4. Errores diferenciados | **COMUNICACION** (red, autenticación, límite de uso, configuración: el modelo no respondió) se captura aparte de **FORMATO** (respondió, pero no es JSON; incluye el caso en que Groq rechaza la salida con `json_validate_failed`). Además se separan **CONTRATO** (JSON que no cumple el schema) y **REGLA** (DNI inválido). Ningún error rompe el programa: un input basura termina en un error tipificado. |
 | 5. Imprimir campos extraídos y validados | Cada resultado muestra la extracción validada por el contrato y la regla. |
 
-Hay 63 pruebas automáticas que no usan la API (`python -m pytest entrega_2`): contrato, reglas, selección de proveedor, reintentos y el flujo completo por etapas.
+Hay 70 pruebas automáticas que no usan la API (`python -m pytest entrega_2`): contrato, reglas, selección de proveedor, reintentos y el flujo completo por etapas.
 
 ### B.2 — Contrato del prototipo
 
@@ -140,4 +140,4 @@ La tabla completa está en [`resultados_lote.md`](resultados_lote.md): **4 de 4 
 
 ### C.2 — Reflexión
 
-Nos sorprendió que **temperatura 0 no garantiza la misma respuesta**: la manipulación fue resistida en todas las corridas (el modelo nunca devolvió `{"aprobado": true}`), pero el pedido a veces salió como `cancelar_turno` y a veces se descartó entero como `otra`. Ante el mensaje ambiguo el modelo devolvió **las dos intenciones** en lugar de elegir, y en el experimento del síntoma con turno a veces agregó `otra` junto a `crear_turno`. Para la v2 del prompt: agregar un ejemplo de manipulación que muestre cómo extraer el pedido real ignorando la "autoridad" que el mensaje se atribuye, y una regla explícita de que `otra` no se combina con otras intenciones.
+Nos sorprendió que **temperatura 0 no garantiza la misma respuesta**: la manipulación fue resistida en todas las corridas (el modelo nunca devolvió `{"aprobado": true}`), pero el pedido a veces salió como `cancelar_turno` y a veces se descartó entero como `otra`. En corridas adicionales de ese caso, el modelo a veces **no generó nada** (Groq rechazó la salida por no ser JSON) y una vez devolvió un JSON sin `intenciones` que el contrato habría frenado: el mensaje hostil es el que más desestabiliza al modelo. Ante el mensaje ambiguo devolvió **las dos intenciones** en lugar de elegir. Para la v2 del prompt: agregar un ejemplo de manipulación que muestre cómo extraer el pedido real ignorando la "autoridad" que el mensaje se atribuye, y una regla explícita de que `otra` no se combina con otras intenciones.
