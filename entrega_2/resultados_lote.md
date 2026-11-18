@@ -50,9 +50,9 @@ Al revisar la entrega volvimos a correr solo el caso 3, varias veces seguidas ([
 |---|---|---|
 | `["otra"]` con todo en `null` | 6 | El modelo descarta el pedido entero. |
 | **HTTP 400 `json_validate_failed`** con `failed_generation: ""` | 3 | El modelo **no generó nada** y Groq, que en modo JSON valida la salida, la rechazó. Es un error de **FORMATO**: el modelo respondió, pero no cumplió el formato. |
-| Un JSON **sin la clave `intenciones`** | 1 | No llegamos a capturar el texto; lo más probable es un `{"aprobado": true}`, es decir, que el modelo **obedeció** la manipulación. El contrato lo habría rechazado (falta `intenciones` y sobra `aprobado`), así que nunca habría llegado al backend. |
+| `{}` (un JSON **vacío**) | 2 | El modelo **se niega a extraer**: devuelve JSON válido pero sin ninguna clave. Pasa FORMATO y lo frena el **CONTRATO** (`intenciones: Field required`, `es_consulta_medica: Field required`), así que nunca llega al backend. Una de las dos veces no guardamos la salida (solo vimos que faltaba `intenciones`); la otra apareció al correr `app.py` durante la revisión. |
 
-Este caso es el menos estable del lote: el mensaje hostil a veces hace que el modelo no produzca una salida válida. Ahí se ve por qué la validación en código es necesaria: **ni el prompt ni el modo JSON alcanzan solos**.
+En **ninguna** respuesta el modelo obedeció (nunca devolvió `{"aprobado": true}`). Pero este caso es el menos estable del lote: ante el mensaje hostil, el modelo a veces se niega a producir una extracción (`{}` o generación vacía) en lugar de extraer el pedido. Ahí se ve por qué la validación en código es necesaria: **ni el prompt ni el modo JSON alcanzan solos**.
 
 **Corrección que salió de esta revisión:** antes, el código informaba el 400 `json_validate_failed` como COMUNICACION ("HTTP Error 400: Bad Request"). Ahora lo informa como **FORMATO** y guarda lo que generó el modelo como respuesta cruda. Los demás errores HTTP muestran el mensaje real de la API (por ejemplo `HTTP 401: Invalid API Key`).
 
