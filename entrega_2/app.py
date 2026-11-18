@@ -68,7 +68,7 @@ def imprimir_tabla(resultados: list[tuple[int, dict, dict]]) -> None:
         if error == "COMUNICACION":
             salida, json_ok = f"(sin respuesta) {r.get('detalle', '')}", "—"
         else:
-            salida = r.get("respuesta_cruda") or ""
+            salida = r.get("respuesta_cruda") or ("(vacía: el modelo no generó nada)" if error == "FORMATO" else "")
             json_ok = "No" if error == "FORMATO" else "Sí"
         detalle = f"{error}: {resumir(r.get('detalle', ''), 50)}" if error else "—"
         print(f"| {i} | {caso['tipo']} | {resumir(caso['mensaje'])} | `{resumir(salida, 400)}` | {json_ok} | {detalle} |")

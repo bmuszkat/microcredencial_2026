@@ -19,7 +19,7 @@ from pydantic import ValidationError
 
 from .config import RAIZ_ENTREGA, ConfiguracionError, detectar_proveedor, modelo_de
 from .contrato import ExtraccionPaciente
-from .llm import llamar_con_reintentos
+from .llm import RespuestaNoJSON, llamar_con_reintentos, mensaje_del_error
 from .reglas import validar_dni
 
 PROMPT_VERSION = "v1"
@@ -92,6 +92,13 @@ def procesar_mensaje(mensaje: str, simulacion: Optional[str] = None, version: st
         origen = f"API REAL — {nombre} ({modelo_de(nombre)})"
         try:
             texto = llamar_con_reintentos(cargar_prompt(version), armar_mensaje_usuario(mensaje), nombre, key)
+        except RespuestaNoJSON as e:
+            # El modelo respondió, pero no con JSON válido: el proveedor rechazó la salida.
+            return {"origen": origen, "prompt": version, "respuesta_cruda": e.generacion, "ok": False,
+                    "error": "FORMATO", "detalle": f"El proveedor rechazó la salida por no ser JSON válido ({e})"}
+        except urllib.error.HTTPError as e:
+            return {"origen": origen, "prompt": version, "ok": False,
+                    "error": "COMUNICACION", "detalle": mensaje_del_error(e)}
         except ERRORES_DE_COMUNICACION as e:
             return {"origen": origen, "prompt": version, "ok": False,
                     "error": "COMUNICACION", "detalle": f"{type(e).__name__}: {e}"}

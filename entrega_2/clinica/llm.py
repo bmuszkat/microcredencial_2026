@@ -11,15 +11,73 @@ en el .env: el resto del componente no depende de cuál se use.
 """
 
 import json
+import re
 import time
 import urllib.error
 import urllib.request
+from typing import Optional
 
 from .config import MODELOS_POR_DEFECTO, SSL_CONTEXT, modelo_de
 
 TIMEOUT_SEGUNDOS = 60
 REINTENTOS = 3
 CODIGOS_REINTENTABLES = (429, 503)  # 429: límite de uso · 503: servidor saturado
+ESPERA_MAXIMA_SEGUNDOS = 30
+
+
+class RespuestaNoJSON(Exception):
+    """
+    El modelo SÍ respondió, pero no generó JSON válido y el proveedor rechazó la salida
+    (Groq/OpenAI en modo JSON devuelven HTTP 400 con code "json_validate_failed").
+    Es un error de FORMATO, no de comunicación. `generacion` es lo que el modelo produjo.
+    """
+
+    def __init__(self, mensaje: str, generacion: str):
+        super().__init__(mensaje)
+        self.generacion = generacion
+
+
+def cuerpo_del_error(e: urllib.error.HTTPError) -> str:
+    """Lee (una sola vez) el cuerpo de la respuesta de error de la API y lo guarda en el error."""
+    if not hasattr(e, "cuerpo"):
+        try:
+            e.cuerpo = e.read().decode("utf-8", errors="replace") if e.fp else ""
+        except Exception:
+            e.cuerpo = ""
+    return e.cuerpo
+
+
+def mensaje_del_error(e: urllib.error.HTTPError) -> str:
+    """'HTTP 401: Invalid API Key' en lugar de un genérico 'Bad Request'."""
+    try:
+        detalle = json.loads(cuerpo_del_error(e))["error"]["message"]
+    except (ValueError, KeyError, TypeError):
+        detalle = cuerpo_del_error(e)[:300] or e.reason
+    return f"HTTP {e.code}: {detalle}"
+
+
+def _espera_sugerida(e: urllib.error.HTTPError) -> Optional[float]:
+    """Segundos que pide esperar la API: header Retry-After o 'try again in 2.55s' en el mensaje."""
+    if e.headers is not None and e.headers.get("retry-after"):
+        try:
+            return float(e.headers.get("retry-after"))
+        except ValueError:
+            pass
+    encontrado = re.search(r"try again in ([\d.]+)s", cuerpo_del_error(e))
+    return float(encontrado.group(1)) if encontrado else None
+
+
+def _json_rechazado(e: urllib.error.HTTPError) -> Optional[RespuestaNoJSON]:
+    """Si el 400 es porque el modelo no generó JSON válido, lo convierte en RespuestaNoJSON."""
+    if e.code != 400:
+        return None
+    try:
+        error = json.loads(cuerpo_del_error(e))["error"]
+    except (ValueError, KeyError, TypeError):
+        return None
+    if error.get("code") != "json_validate_failed":
+        return None
+    return RespuestaNoJSON(error.get("message", "JSON inválido"), error.get("failed_generation") or "")
 
 
 def _post_json(url: str, payload: dict, headers: dict) -> dict:
@@ -98,16 +156,21 @@ def llamar_modelo(system: str, usuario: str, proveedor: str, api_key: str) -> st
 
 def llamar_con_reintentos(system: str, usuario: str, proveedor: str, api_key: str) -> str:
     """
-    Un error transitorio (429, 503) se reintenta con espera creciente (2 s, 4 s).
+    Un error transitorio (429, 503) se reintenta. La espera es la que pide la API
+    (Retry-After o "try again in Xs"), o como mínimo 2 s y 4 s; nunca más de 30 s.
     Una key inválida (401/403) o un pedido mal armado (400) NO se reintenta: fallaría igual.
+    Si el 400 es porque el modelo no generó JSON válido, se lanza RespuestaNoJSON (FORMATO).
     """
     for intento in range(1, REINTENTOS + 1):
         try:
             return llamar_modelo(system, usuario, proveedor, api_key)
         except urllib.error.HTTPError as e:
+            rechazo = _json_rechazado(e)
+            if rechazo is not None:
+                raise rechazo from e
             if e.code in CODIGOS_REINTENTABLES and intento < REINTENTOS:
-                espera = 2 ** intento
-                print(f"  ⏳ HTTP {e.code} (intento {intento}/{REINTENTOS}). Reintento en {espera} s...")
+                espera = min(max(_espera_sugerida(e) or 0, 2 ** intento), ESPERA_MAXIMA_SEGUNDOS)
+                print(f"  ⏳ HTTP {e.code} (intento {intento}/{REINTENTOS}). Reintento en {espera:.1f} s...")
                 time.sleep(espera)
                 continue
             raise
