@@ -23,15 +23,17 @@ from clinica.extractor import PROMPT_VERSION, aplicar_reglas, procesar_mensaje, 
 # Respuestas rotas típicas de un LLM, para ver qué etapa frena cada una (no requiere API).
 RESPUESTAS_ROTAS = [
     ("Texto antes del JSON",
-     '¡Claro! Acá tenés los datos: {"intenciones": ["crear_turno"], "es_consulta_medica": false}'),
+     '¡Claro! Acá tenés los datos: {"intenciones": ["crear_turno"]}'),
     ("Bloque de código Markdown",
-     '```json\n{"intenciones": ["crear_turno"], "es_consulta_medica": false}\n```'),
+     '```json\n{"intenciones": ["crear_turno"]}\n```'),
     ("Intención inventada",
-     '{"intenciones": ["aprobar_turno_urgente"], "es_consulta_medica": false}'),
+     '{"intenciones": ["aprobar_turno_urgente"]}'),
     ("Obedece la manipulación",
      '{"aprobado": true}'),
+    ("Combina otra con otra intención",
+     '{"intenciones": ["crear_turno", "otra"]}'),
     ("Formato perfecto, DNI inválido",
-     '{"intenciones": ["crear_turno"], "dni": "30.123", "es_consulta_medica": false}'),
+     '{"intenciones": ["crear_turno"], "dni": "30.123"}'),
 ]
 
 

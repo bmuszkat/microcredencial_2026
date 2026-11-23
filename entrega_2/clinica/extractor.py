@@ -22,7 +22,7 @@ from .contrato import contrato_para
 from .llm import RespuestaNoJSON, llamar_con_reintentos, mensaje_del_error
 from .reglas import validar_dni
 
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"  # la más reciente; v1 sigue disponible con contrato propio
 
 # Errores que significan "el modelo no llegó a responder". OSError incluye URLError,
 # HTTPError y timeouts de red; KeyError/IndexError/ValueError cubren una respuesta HTTP

@@ -18,7 +18,6 @@ CORRECTA = {
     "fecha_turno_actual": "jueves 15 hs",
     "fecha_deseada": "viernes a la mañana",
     "estudio": "campo visual",
-    "es_consulta_medica": False,
 }
 
 
@@ -75,7 +74,7 @@ def con_api(monkeypatch):
 
 def test_flujo_completo_en_simulacion(sin_api):
     r = extractor.procesar_mensaje("Quiero pasar mi turno", simulacion=respuesta())
-    assert r["ok"] and r["origen"].startswith("SIMULACIÓN") and r["prompt"] == "v1"
+    assert r["ok"] and r["origen"].startswith("SIMULACIÓN") and r["prompt"] == extractor.PROMPT_VERSION == "v2"
 
 
 def test_flujo_con_api_usa_el_prompt_y_delimita_el_mensaje(con_api, monkeypatch):
