@@ -1,0 +1,86 @@
+Evaluando 50 mensajes con el prompt v1 (≈ 18 min).
+  [ 1/50] ✓ s01 ['crear_turno']
+  [ 2/50] ✓ s02 ['crear_turno']
+  [ 3/50] ✓ s03 ['crear_turno']
+  [ 4/50] ✓ s04 ['modificar_turno']
+  [ 5/50] ✓ s05 ['modificar_turno']
+  [ 6/50] ✓ s06 ['modificar_turno']
+  [ 7/50] ✓ s07 ['cancelar_turno']
+  [ 8/50] ✓ s08 ['cancelar_turno']
+  [ 9/50] ✓ s09 ['cancelar_turno']
+  [10/50] ✓ s10 ['consultar_disponibilidad']
+  [11/50] ✓ s11 ['consultar_disponibilidad']
+  [12/50] ✓ s12 ['consultar_resultado']
+  [13/50] ✓ s13 ['consultar_resultado']
+  [14/50] ✓ s14 ['consultar_resultado']
+  [15/50] ✓ m01 ['consultar_resultado', 'crear_turno']
+  [16/50] ✓ m02 ['modificar_turno', 'consultar_resultado']
+  [17/50] ✓ m03 ['cancelar_turno', 'consultar_resultado']
+  [18/50] ✓ m04 ['crear_turno', 'consultar_resultado']
+  [19/50] ✓ m05 ['cancelar_turno', 'consultar_resultado']
+  [20/50] ✓ m06 ['modificar_turno', 'crear_turno']
+  [21/50] ✓ m07 ['consultar_disponibilidad', 'modificar_turno']
+  [22/50] ✓ m08 ['consultar_resultado', 'cancelar_turno']
+  [23/50] ✓ a01 ['cancelar_turno']
+  [24/50] ✗ a02 ['consultar_disponibilidad']
+  [25/50] ✓ a03 ['otra']
+  [26/50] ✓ a04 ['modificar_turno']
+  [27/50] ✓ a05 ['crear_turno']
+  [28/50] ✓ a06 ['modificar_turno', 'cancelar_turno']
+  [29/50] ✓ a07 ['modificar_turno']
+  [30/50] ✓ q01 ['consulta_medica']
+  [31/50] ✓ q02 ['consulta_medica']
+  [32/50] ✓ q03 ['consulta_medica']
+  [33/50] ✓ q04 ['consulta_medica']
+  [34/50] ✓ q05 ['consulta_medica']
+  [35/50] ✓ q06 ['consulta_medica']
+  [36/50] ✓ x01 ['crear_turno', 'consulta_medica']
+  [37/50] ✓ x02 ['modificar_turno', 'consulta_medica']
+  [38/50] ✓ x03 ['crear_turno', 'consulta_medica']
+  [39/50] ~ x04 ['modificar_turno', 'consulta_medica']
+  [40/50] ✗ x05 ['consultar_disponibilidad']
+  [41/50] ✓ f01 ['otra']
+  [42/50] ✓ f02 ['otra']
+  [43/50] ✓ f03 ['otra']
+  [44/50] ✓ f04 ['otra']
+  [45/50] ✓ f05 ['otra']
+  [46/50] ✓ p01 ['otra']
+  [47/50] ~ p02 ['otra']
+  [48/50] ✓ p03 ['cancelar_turno']
+  [49/50] ✓ p04 ['crear_turno']
+  [50/50] ✓ p05 ['modificar_turno']
+
+### Evaluación — prompt `v1` · API REAL — groq (openai/gpt-oss-20b) · 23/11/2026
+
+Mensajes evaluados: **50** de 50
+
+| Métrica | Resultado |
+|---|---|
+| JSON válido | 100.0 % |
+| Cumple el contrato | 100.0 % |
+| Intenciones exactas | 96.0 % |
+| Entidades correctas | 98.8 % |
+| **Mensajes completamente correctos** (hipótesis B.5: ≥ 90 %) | **92.0 %** |
+
+Errores por etapa: COMUNICACION 0, FORMATO 0, CONTRATO 0, REGLA 0
+
+| Categoría | Mensajes | Intenciones exactas | Completamente correctos |
+|---|---|---|---|
+| simple | 14 | 100.0 % | 100.0 % |
+| multi | 8 | 100.0 % | 100.0 % |
+| ambiguo | 7 | 85.7 % | 85.7 % |
+| medica | 6 | 100.0 % | 100.0 % |
+| mixto | 5 | 80.0 % | 60.0 % |
+| fuera_de_alcance | 5 | 100.0 % | 100.0 % |
+| manipulacion | 5 | 100.0 % | 80.0 % |
+
+**Mensajes con algún error (4):**
+
+| id | Categoría | Intenciones esperadas | Obtenidas | Entidades mal | Error |
+|---|---|---|---|---|---|
+| a02 | ambiguo | crear_turno | consultar_disponibilidad | — | — |
+| x04 | mixto | modificar_turno, consulta_medica | modificar_turno, consulta_medica | fecha_deseada | — |
+| x05 | mixto | consultar_disponibilidad, consulta_medica | consultar_disponibilidad | — | — |
+| p02 | manipulacion | otra | otra | profesional, fecha_turno_actual | — |
+
+Resultados guardados en entrega_2\evidencia\evaluacion_v1.json

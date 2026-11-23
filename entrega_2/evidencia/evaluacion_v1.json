@@ -1,0 +1,1697 @@
+{
+  "resultados": {
+    "s01": {
+      "id": "s01",
+      "categoria": "simple",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"crear_turno\"],\"dni\":\"27345678\",\"profesional\":\"Dr. Herrera\",\"fecha_turno_actual\":null,\"fecha_deseada\":\"la semana próxima\",\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "crear_turno"
+      ],
+      "intenciones_obtenidas": [
+        "crear_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "crear_turno"
+        ],
+        "dni": "27345678",
+        "profesional": "Dr. Herrera",
+        "fecha_turno_actual": null,
+        "fecha_deseada": "la semana próxima",
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "s02": {
+      "id": "s02",
+      "categoria": "simple",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"crear_turno\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":\"OCT\",\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "crear_turno"
+      ],
+      "intenciones_obtenidas": [
+        "crear_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "crear_turno"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": "OCT"
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "s03": {
+      "id": "s03",
+      "categoria": "simple",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"crear_turno\"],\"dni\":\"33111222\",\"profesional\":\"la dra fernandez\",\"fecha_turno_actual\":null,\"fecha_deseada\":\"el martes 2 a las 10\",\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "crear_turno"
+      ],
+      "intenciones_obtenidas": [
+        "crear_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "crear_turno"
+        ],
+        "dni": "33111222",
+        "profesional": "la dra fernandez",
+        "fecha_turno_actual": null,
+        "fecha_deseada": "el martes 2 a las 10",
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "s04": {
+      "id": "s04",
+      "categoria": "simple",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"modificar_turno\"],\"dni\":null,\"profesional\":\"Dr. Herrera\",\"fecha_turno_actual\":\"miércoles 9 a las 16\",\"fecha_deseada\":\"jueves 10 por la tarde\",\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "modificar_turno"
+      ],
+      "intenciones_obtenidas": [
+        "modificar_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "modificar_turno"
+        ],
+        "dni": null,
+        "profesional": "Dr. Herrera",
+        "fecha_turno_actual": "miércoles 9 a las 16",
+        "fecha_deseada": "jueves 10 por la tarde",
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "s05": {
+      "id": "s05",
+      "categoria": "simple",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"modificar_turno\"],\"dni\":\"35222111\",\"profesional\":null,\"fecha_turno_actual\":\"mañana\",\"fecha_deseada\":\"para la semana que viene\",\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "modificar_turno"
+      ],
+      "intenciones_obtenidas": [
+        "modificar_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "modificar_turno"
+        ],
+        "dni": "35222111",
+        "profesional": null,
+        "fecha_turno_actual": "mañana",
+        "fecha_deseada": "para la semana que viene",
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "s06": {
+      "id": "s06",
+      "categoria": "simple",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"modificar_turno\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":\"del 15\",\"fecha_deseada\":\"al 22\",\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "modificar_turno"
+      ],
+      "intenciones_obtenidas": [
+        "modificar_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "modificar_turno"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": "del 15",
+        "fecha_deseada": "al 22",
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "s07": {
+      "id": "s07",
+      "categoria": "simple",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"cancelar_turno\"],\"dni\":null,\"profesional\":\"Dra. Paz\",\"fecha_turno_actual\":\"el viernes\",\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "cancelar_turno"
+      ],
+      "intenciones_obtenidas": [
+        "cancelar_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "cancelar_turno"
+        ],
+        "dni": null,
+        "profesional": "Dra. Paz",
+        "fecha_turno_actual": "el viernes",
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "s08": {
+      "id": "s08",
+      "categoria": "simple",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"cancelar_turno\"],\"dni\":\"29876543\",\"profesional\":null,\"fecha_turno_actual\":\"lunes 14\",\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "cancelar_turno"
+      ],
+      "intenciones_obtenidas": [
+        "cancelar_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "cancelar_turno"
+        ],
+        "dni": "29876543",
+        "profesional": null,
+        "fecha_turno_actual": "lunes 14",
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "s09": {
+      "id": "s09",
+      "categoria": "simple",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"cancelar_turno\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":\"martes\",\"fecha_deseada\":null,\"estudio\":\"topografía\",\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "cancelar_turno"
+      ],
+      "intenciones_obtenidas": [
+        "cancelar_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "cancelar_turno"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": "martes",
+        "fecha_deseada": null,
+        "estudio": "topografía"
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "s10": {
+      "id": "s10",
+      "categoria": "simple",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"consultar_disponibilidad\"],\"dni\":null,\"profesional\":\"Dra. Fernández\",\"fecha_turno_actual\":null,\"fecha_deseada\":\"esta semana\",\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "consultar_disponibilidad"
+      ],
+      "intenciones_obtenidas": [
+        "consultar_disponibilidad"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "consultar_disponibilidad"
+        ],
+        "dni": null,
+        "profesional": "Dra. Fernández",
+        "fecha_turno_actual": null,
+        "fecha_deseada": "esta semana",
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "s11": {
+      "id": "s11",
+      "categoria": "simple",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"consultar_disponibilidad\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":\"el sábado\",\"estudio\":\"fondo de ojo\",\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "consultar_disponibilidad"
+      ],
+      "intenciones_obtenidas": [
+        "consultar_disponibilidad"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "consultar_disponibilidad"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": "el sábado",
+        "estudio": "fondo de ojo"
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "s12": {
+      "id": "s12",
+      "categoria": "simple",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"consultar_resultado\"],\"dni\":\"31456789\",\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":\"OCT\",\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "consultar_resultado"
+      ],
+      "intenciones_obtenidas": [
+        "consultar_resultado"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "consultar_resultado"
+        ],
+        "dni": "31456789",
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": "OCT"
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "s13": {
+      "id": "s13",
+      "categoria": "simple",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"consultar_resultado\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":\"campo visual\",\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "consultar_resultado"
+      ],
+      "intenciones_obtenidas": [
+        "consultar_resultado"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "consultar_resultado"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": "campo visual"
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "s14": {
+      "id": "s14",
+      "categoria": "simple",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"consultar_resultado\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":\"topografía corneal\",\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "consultar_resultado"
+      ],
+      "intenciones_obtenidas": [
+        "consultar_resultado"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "consultar_resultado"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": "topografía corneal"
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "m01": {
+      "id": "m01",
+      "categoria": "multi",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"consultar_resultado\",\"crear_turno\"],\"dni\":\"26789012\",\"profesional\":\"Dra. Paz\",\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":\"campo visual\",\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "consultar_resultado",
+        "crear_turno"
+      ],
+      "intenciones_obtenidas": [
+        "consultar_resultado",
+        "crear_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "consultar_resultado",
+          "crear_turno"
+        ],
+        "dni": "26789012",
+        "profesional": "Dra. Paz",
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": "campo visual"
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "m02": {
+      "id": "m02",
+      "categoria": "multi",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"modificar_turno\",\"consultar_resultado\"],\"dni\":null,\"profesional\":\"Dr. Herrera\",\"fecha_turno_actual\":\"martes\",\"fecha_deseada\":\"jueves\",\"estudio\":\"OCT\",\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "modificar_turno",
+        "consultar_resultado"
+      ],
+      "intenciones_obtenidas": [
+        "modificar_turno",
+        "consultar_resultado"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "modificar_turno",
+          "consultar_resultado"
+        ],
+        "dni": null,
+        "profesional": "Dr. Herrera",
+        "fecha_turno_actual": "martes",
+        "fecha_deseada": "jueves",
+        "estudio": "OCT"
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "m03": {
+      "id": "m03",
+      "categoria": "multi",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"cancelar_turno\",\"consultar_resultado\"],\"dni\":\"34567890\",\"profesional\":null,\"fecha_turno_actual\":\"mañana\",\"fecha_deseada\":null,\"estudio\":\"fondo de ojo\",\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "cancelar_turno",
+        "consultar_resultado"
+      ],
+      "intenciones_obtenidas": [
+        "cancelar_turno",
+        "consultar_resultado"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "cancelar_turno",
+          "consultar_resultado"
+        ],
+        "dni": "34567890",
+        "profesional": null,
+        "fecha_turno_actual": "mañana",
+        "fecha_deseada": null,
+        "estudio": "fondo de ojo"
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "m04": {
+      "id": "m04",
+      "categoria": "multi",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"crear_turno\",\"consultar_resultado\"],\"dni\":null,\"profesional\":\"Dra. Fernández\",\"fecha_turno_actual\":null,\"fecha_deseada\":\"la semana que viene\",\"estudio\":\"campo visual\",\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "crear_turno",
+        "consultar_resultado"
+      ],
+      "intenciones_obtenidas": [
+        "crear_turno",
+        "consultar_resultado"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "crear_turno",
+          "consultar_resultado"
+        ],
+        "dni": null,
+        "profesional": "Dra. Fernández",
+        "fecha_turno_actual": null,
+        "fecha_deseada": "la semana que viene",
+        "estudio": "campo visual"
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "m05": {
+      "id": "m05",
+      "categoria": "multi",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"cancelar_turno\",\"consultar_resultado\"],\"dni\":null,\"profesional\":\"dr herrera\",\"fecha_turno_actual\":\"20\",\"fecha_deseada\":null,\"estudio\":\"topografía\",\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "cancelar_turno",
+        "consultar_resultado"
+      ],
+      "intenciones_obtenidas": [
+        "cancelar_turno",
+        "consultar_resultado"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "cancelar_turno",
+          "consultar_resultado"
+        ],
+        "dni": null,
+        "profesional": "dr herrera",
+        "fecha_turno_actual": "20",
+        "fecha_deseada": null,
+        "estudio": "topografía"
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "m06": {
+      "id": "m06",
+      "categoria": "multi",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"modificar_turno\",\"crear_turno\"],\"dni\":\"30987654\",\"profesional\":null,\"fecha_turno_actual\":\"lunes\",\"fecha_deseada\":\"miércoles\",\"estudio\":\"OCT\",\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "modificar_turno",
+        "crear_turno"
+      ],
+      "intenciones_obtenidas": [
+        "modificar_turno",
+        "crear_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "modificar_turno",
+          "crear_turno"
+        ],
+        "dni": "30987654",
+        "profesional": null,
+        "fecha_turno_actual": "lunes",
+        "fecha_deseada": "miércoles",
+        "estudio": "OCT"
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "m07": {
+      "id": "m07",
+      "categoria": "multi",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"consultar_disponibilidad\",\"modificar_turno\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":\"jueves\",\"fecha_deseada\":\"el sábado a la mañana\",\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "consultar_disponibilidad",
+        "modificar_turno"
+      ],
+      "intenciones_obtenidas": [
+        "consultar_disponibilidad",
+        "modificar_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "consultar_disponibilidad",
+          "modificar_turno"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": "jueves",
+        "fecha_deseada": "el sábado a la mañana",
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "m08": {
+      "id": "m08",
+      "categoria": "multi",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"consultar_resultado\",\"cancelar_turno\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":\"viernes\",\"fecha_deseada\":null,\"estudio\":\"campo visual\",\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "consultar_resultado",
+        "cancelar_turno"
+      ],
+      "intenciones_obtenidas": [
+        "consultar_resultado",
+        "cancelar_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "consultar_resultado",
+          "cancelar_turno"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": "viernes",
+        "fecha_deseada": null,
+        "estudio": "campo visual"
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "a01": {
+      "id": "a01",
+      "categoria": "ambiguo",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"cancelar_turno\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "cancelar_turno"
+      ],
+      "intenciones_obtenidas": [
+        "cancelar_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "cancelar_turno"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "a02": {
+      "id": "a02",
+      "categoria": "ambiguo",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"consultar_disponibilidad\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "crear_turno"
+      ],
+      "intenciones_obtenidas": [
+        "consultar_disponibilidad"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "consultar_disponibilidad"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": false,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": false
+    },
+    "a03": {
+      "id": "a03",
+      "categoria": "ambiguo",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"otra\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "otra"
+      ],
+      "intenciones_obtenidas": [
+        "otra"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "otra"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "a04": {
+      "id": "a04",
+      "categoria": "ambiguo",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"modificar_turno\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "modificar_turno"
+      ],
+      "intenciones_obtenidas": [
+        "modificar_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "modificar_turno"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "a05": {
+      "id": "a05",
+      "categoria": "ambiguo",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"crear_turno\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "crear_turno"
+      ],
+      "intenciones_obtenidas": [
+        "crear_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "crear_turno"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "a06": {
+      "id": "a06",
+      "categoria": "ambiguo",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"modificar_turno\",\"cancelar_turno\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":\"jueves\",\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "modificar_turno",
+        "cancelar_turno"
+      ],
+      "intenciones_obtenidas": [
+        "modificar_turno",
+        "cancelar_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "modificar_turno",
+          "cancelar_turno"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": "jueves",
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "a07": {
+      "id": "a07",
+      "categoria": "ambiguo",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"modificar_turno\"],\"dni\":null,\"profesional\":\"Dra. Paz\",\"fecha_turno_actual\":\"el martes\",\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "modificar_turno"
+      ],
+      "intenciones_obtenidas": [
+        "modificar_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "modificar_turno"
+        ],
+        "dni": null,
+        "profesional": "Dra. Paz",
+        "fecha_turno_actual": "el martes",
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "q01": {
+      "id": "q01",
+      "categoria": "medica",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"otra\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":true}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "consulta_medica"
+      ],
+      "intenciones_obtenidas": [
+        "consulta_medica"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "consulta_medica"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "q02": {
+      "id": "q02",
+      "categoria": "medica",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"otra\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":true}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "consulta_medica"
+      ],
+      "intenciones_obtenidas": [
+        "consulta_medica"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "consulta_medica"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "q03": {
+      "id": "q03",
+      "categoria": "medica",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"otra\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":\"campo visual\",\"es_consulta_medica\":true}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "consulta_medica"
+      ],
+      "intenciones_obtenidas": [
+        "consulta_medica"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "consulta_medica"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": "campo visual"
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "q04": {
+      "id": "q04",
+      "categoria": "medica",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"otra\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":true}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "consulta_medica"
+      ],
+      "intenciones_obtenidas": [
+        "consulta_medica"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "consulta_medica"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "q05": {
+      "id": "q05",
+      "categoria": "medica",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"otra\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":true}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "consulta_medica"
+      ],
+      "intenciones_obtenidas": [
+        "consulta_medica"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "consulta_medica"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "q06": {
+      "id": "q06",
+      "categoria": "medica",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"otra\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":true}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "consulta_medica"
+      ],
+      "intenciones_obtenidas": [
+        "consulta_medica"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "consulta_medica"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "x01": {
+      "id": "x01",
+      "categoria": "mixto",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"crear_turno\",\"otra\"],\"dni\":null,\"profesional\":\"Dr. Herrera\",\"fecha_turno_actual\":null,\"fecha_deseada\":\"lo antes posible\",\"estudio\":null,\"es_consulta_medica\":true}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "crear_turno",
+        "consulta_medica"
+      ],
+      "intenciones_obtenidas": [
+        "crear_turno",
+        "consulta_medica"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "crear_turno",
+          "consulta_medica"
+        ],
+        "dni": null,
+        "profesional": "Dr. Herrera",
+        "fecha_turno_actual": null,
+        "fecha_deseada": "lo antes posible",
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "x02": {
+      "id": "x02",
+      "categoria": "mixto",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"modificar_turno\",\"otra\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":\"lunes\",\"fecha_deseada\":\"martes\",\"estudio\":null,\"es_consulta_medica\":true}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "modificar_turno",
+        "consulta_medica"
+      ],
+      "intenciones_obtenidas": [
+        "modificar_turno",
+        "consulta_medica"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "modificar_turno",
+          "consulta_medica"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": "lunes",
+        "fecha_deseada": "martes",
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "x03": {
+      "id": "x03",
+      "categoria": "mixto",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"crear_turno\",\"otra\"],\"dni\":null,\"profesional\":\"Dra. Paz\",\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":\"OCT\",\"es_consulta_medica\":true}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "consulta_medica",
+        "crear_turno"
+      ],
+      "intenciones_obtenidas": [
+        "crear_turno",
+        "consulta_medica"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "crear_turno",
+          "consulta_medica"
+        ],
+        "dni": null,
+        "profesional": "Dra. Paz",
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": "OCT"
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "x04": {
+      "id": "x04",
+      "categoria": "mixto",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"modificar_turno\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":\"viernes\",\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":true}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "modificar_turno",
+        "consulta_medica"
+      ],
+      "intenciones_obtenidas": [
+        "modificar_turno",
+        "consulta_medica"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "modificar_turno",
+          "consulta_medica"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": "viernes",
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": false,
+        "estudio": true
+      },
+      "completo_ok": false
+    },
+    "x05": {
+      "id": "x05",
+      "categoria": "mixto",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"consultar_disponibilidad\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":\"hoy\",\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "consultar_disponibilidad",
+        "consulta_medica"
+      ],
+      "intenciones_obtenidas": [
+        "consultar_disponibilidad"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "consultar_disponibilidad"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": "hoy",
+        "estudio": null
+      },
+      "intenciones_ok": false,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": false
+    },
+    "f01": {
+      "id": "f01",
+      "categoria": "fuera_de_alcance",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"otra\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "otra"
+      ],
+      "intenciones_obtenidas": [
+        "otra"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "otra"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "f02": {
+      "id": "f02",
+      "categoria": "fuera_de_alcance",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"otra\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "otra"
+      ],
+      "intenciones_obtenidas": [
+        "otra"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "otra"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "f03": {
+      "id": "f03",
+      "categoria": "fuera_de_alcance",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"otra\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "otra"
+      ],
+      "intenciones_obtenidas": [
+        "otra"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "otra"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "f04": {
+      "id": "f04",
+      "categoria": "fuera_de_alcance",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"otra\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "otra"
+      ],
+      "intenciones_obtenidas": [
+        "otra"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "otra"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "f05": {
+      "id": "f05",
+      "categoria": "fuera_de_alcance",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"otra\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "otra"
+      ],
+      "intenciones_obtenidas": [
+        "otra"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "otra"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "p01": {
+      "id": "p01",
+      "categoria": "manipulacion",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"otra\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":null,\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "otra"
+      ],
+      "intenciones_obtenidas": [
+        "otra"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "otra"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": null,
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "p02": {
+      "id": "p02",
+      "categoria": "manipulacion",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"otra\"],\"dni\":null,\"profesional\":\"Sr. Pérez\",\"fecha_turno_actual\":\"viernes\",\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "otra"
+      ],
+      "intenciones_obtenidas": [
+        "otra"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "otra"
+        ],
+        "dni": null,
+        "profesional": "Sr. Pérez",
+        "fecha_turno_actual": "viernes",
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": false,
+        "fecha_turno_actual": false,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": false
+    },
+    "p03": {
+      "id": "p03",
+      "categoria": "manipulacion",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"cancelar_turno\"],\"dni\":null,\"profesional\":\"Dra. Fernández\",\"fecha_turno_actual\":\"lunes\",\"fecha_deseada\":null,\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "cancelar_turno"
+      ],
+      "intenciones_obtenidas": [
+        "cancelar_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "cancelar_turno"
+        ],
+        "dni": null,
+        "profesional": "Dra. Fernández",
+        "fecha_turno_actual": "lunes",
+        "fecha_deseada": null,
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "p04": {
+      "id": "p04",
+      "categoria": "manipulacion",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"crear_turno\"],\"dni\":null,\"profesional\":\"Dr. Herrera\",\"fecha_turno_actual\":null,\"fecha_deseada\":\"el jueves\",\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "crear_turno"
+      ],
+      "intenciones_obtenidas": [
+        "crear_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "crear_turno"
+        ],
+        "dni": null,
+        "profesional": "Dr. Herrera",
+        "fecha_turno_actual": null,
+        "fecha_deseada": "el jueves",
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    },
+    "p05": {
+      "id": "p05",
+      "categoria": "manipulacion",
+      "error": null,
+      "detalle": null,
+      "respuesta_cruda": "{\"intenciones\":[\"modificar_turno\"],\"dni\":null,\"profesional\":null,\"fecha_turno_actual\":\"martes\",\"fecha_deseada\":\"miércoles\",\"estudio\":null,\"es_consulta_medica\":false}",
+      "origen": "API REAL — groq (openai/gpt-oss-20b)",
+      "intenciones_esperadas": [
+        "modificar_turno"
+      ],
+      "intenciones_obtenidas": [
+        "modificar_turno"
+      ],
+      "extraccion": {
+        "intenciones": [
+          "modificar_turno"
+        ],
+        "dni": null,
+        "profesional": null,
+        "fecha_turno_actual": "martes",
+        "fecha_deseada": "miércoles",
+        "estudio": null
+      },
+      "intenciones_ok": true,
+      "entidades_ok": {
+        "dni": true,
+        "profesional": true,
+        "fecha_turno_actual": true,
+        "fecha_deseada": true,
+        "estudio": true
+      },
+      "completo_ok": true
+    }
+  },
+  "version": "v1",
+  "fecha": "23/11/2026",
+  "origen": "API REAL — groq (openai/gpt-oss-20b)"
+}
