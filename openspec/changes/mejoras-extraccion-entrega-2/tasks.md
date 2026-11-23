@@ -3,7 +3,7 @@
 ## 1. Contrato v2 y contrato por versión
 
 - [x] 1.1 En `entrega_2/clinica/contrato.py`: renombrar el contrato actual a `ExtraccionPacienteV1`, crear `ExtraccionPaciente` (v2: intenciones con `consulta_medica`, sin `es_consulta_medica`, validador de `otra` sola) y el registro `CONTRATOS` por versión; tests de v1 conservados y tests nuevos de v2 (`consulta_medica` válida, `es_consulta_medica` rechazada por campo extra, `["crear_turno", "otra"]` rechazada); verificar con `python -m pytest entrega_2`
-- [ ] 1.2 En `entrega_2/clinica/extractor.py`: `validar_respuesta(texto, version)` usa el contrato de la versión (`zeroshot` → V1, versión desconocida → el más nuevo) y `procesar_mensaje` le pasa la versión; tests de que `v1` sigue validando sus respuestas y `v2` las suyas; verificar con `pytest` y con `python entrega_2/app.py v1` en modo simulación
+- [x] 1.2 En `entrega_2/clinica/extractor.py`: `validar_respuesta(texto, version)` usa el contrato de la versión (`zeroshot` → V1, versión desconocida → el más nuevo) y `procesar_mensaje` le pasa la versión; tests de que `v1` sigue validando sus respuestas y `v2` las suyas; verificar con `pytest` y con `python entrega_2/app.py v1` en modo simulación
 
 ## 2. Set de evaluación (antes de cualquier corrida)
 

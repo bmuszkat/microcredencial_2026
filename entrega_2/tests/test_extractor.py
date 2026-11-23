@@ -152,3 +152,29 @@ def test_comunicacion_muestra_el_mensaje_real_de_la_api(con_api, monkeypatch):
     monkeypatch.setattr(extractor, "llamar_con_reintentos", falla)
     r = extractor.procesar_mensaje("Hola")
     assert r["error"] == "COMUNICACION" and r["detalle"] == "HTTP 401: Invalid API Key"
+
+
+# ── Contrato según la versión de prompt ───────────────────────────────────────
+
+RESPUESTA_V1_MEDICA = json.dumps({"intenciones": ["otra"], "dni": None, "profesional": None,
+                                  "fecha_turno_actual": None, "fecha_deseada": None,
+                                  "estudio": None, "es_consulta_medica": True})
+RESPUESTA_V2_MEDICA = json.dumps({"intenciones": ["consulta_medica"], "dni": None, "profesional": None,
+                                  "fecha_turno_actual": None, "fecha_deseada": None, "estudio": None})
+
+
+@pytest.mark.parametrize("version", ["v1", "zeroshot"])
+def test_v1_y_zeroshot_validan_con_el_contrato_v1(version):
+    assert extractor.validar_respuesta(RESPUESTA_V1_MEDICA, version)["ok"]
+    assert extractor.validar_respuesta(RESPUESTA_V2_MEDICA, version)["error"] == "CONTRATO"
+
+
+def test_v2_valida_con_el_contrato_v2():
+    assert extractor.validar_respuesta(RESPUESTA_V2_MEDICA, "v2")["ok"]
+    r = extractor.validar_respuesta(RESPUESTA_V1_MEDICA, "v2")
+    assert r["error"] == "CONTRATO" and any("es_consulta_medica" in d for d in r["detalle"])
+
+
+def test_procesar_mensaje_valida_con_la_version_pedida(sin_api):
+    assert extractor.procesar_mensaje("...", simulacion=RESPUESTA_V2_MEDICA, version="v2")["ok"]
+    assert extractor.procesar_mensaje("...", simulacion=RESPUESTA_V1_MEDICA, version="v1")["ok"]

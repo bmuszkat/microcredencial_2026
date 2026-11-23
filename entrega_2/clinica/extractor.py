@@ -18,7 +18,7 @@ from typing import Optional
 from pydantic import ValidationError
 
 from .config import RAIZ_ENTREGA, ConfiguracionError, detectar_proveedor, modelo_de
-from .contrato import ExtraccionPacienteV1 as ExtraccionPaciente  # tarea 1.2: contrato según versión
+from .contrato import contrato_para
 from .llm import RespuestaNoJSON, llamar_con_reintentos, mensaje_del_error
 from .reglas import validar_dni
 
@@ -42,9 +42,11 @@ def armar_mensaje_usuario(mensaje: str) -> str:
     return f"Mensaje del paciente (entre <mensaje> y </mensaje>):\n<mensaje>\n{mensaje.strip()}\n</mensaje>"
 
 
-def validar_respuesta(texto: Optional[str]) -> dict:
+def validar_respuesta(texto: Optional[str], version: str = PROMPT_VERSION) -> dict:
     """
     Validación en dos niveles: ¿es JSON? (FORMATO) y ¿cumple el contrato? (CONTRATO).
+    El contrato es el de la versión de prompt que generó la respuesta (contrato.CONTRATOS),
+    así una corrida de v1 sigue validándose igual aunque el contrato vigente haya cambiado.
     No se limpian bloques ```json ni texto alrededor: si el modelo los agrega, rompió
     la regla del prompt y queremos verlo como error de FORMATO (design D6).
     """
@@ -57,7 +59,7 @@ def validar_respuesta(texto: Optional[str]) -> dict:
         return {"ok": False, "error": "CONTRATO", "detalle": "El JSON no es un objeto {...}"}
 
     try:
-        extraccion = ExtraccionPaciente(**datos)
+        extraccion = contrato_para(version)(**datos)
     except ValidationError as e:
         errores = [f"{'.'.join(map(str, err['loc'])) or 'objeto'}: {err['msg']}" for err in e.errors()]
         return {"ok": False, "error": "CONTRATO", "detalle": errores}
@@ -103,7 +105,8 @@ def procesar_mensaje(mensaje: str, simulacion: Optional[str] = None, version: st
             return {"origen": origen, "prompt": version, "ok": False,
                     "error": "COMUNICACION", "detalle": f"{type(e).__name__}: {e}"}
 
-    resultado = {"origen": origen, "prompt": version, "respuesta_cruda": texto, **validar_respuesta(texto)}
+    resultado = {"origen": origen, "prompt": version, "respuesta_cruda": texto,
+                 **validar_respuesta(texto, version)}
     if not resultado["ok"]:
         return resultado
     return {**resultado, **aplicar_reglas(resultado["extraccion"])}
