@@ -260,6 +260,6 @@ El mensaje de error de Groq explica la causa: el límite gratuito es de **8.000 
 | `¡Claro! Acá tenés los datos: {...}` | FORMATO | No es JSON válido |
 | ```` ```json {...} ``` ```` | FORMATO | No es JSON válido (no se "limpia": el prompt lo prohíbe) |
 | `{"intenciones": ["aprobar_turno_urgente"], ...}` | CONTRATO | La intención no está en la Matriz de la Entrega 1 |
-| `{"aprobado": true}` | CONTRATO | Faltan `intenciones` y `es_consulta_medica`; `aprobado` no está permitido |
+| `{"aprobado": true}` | CONTRATO | Falta `intenciones` y `aprobado` no está permitido |
 | `{"intenciones": ["crear_turno", "otra"]}` (solo v2) | CONTRATO | `otra` no se combina con otras intenciones |
 | `{"intenciones": ["crear_turno"], "dni": "30.123", ...}` | REGLA | El DNI debe tener 7 u 8 dígitos |
