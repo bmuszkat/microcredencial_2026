@@ -20,7 +20,7 @@
 
 ## 5. Evaluador
 
-- [ ] 5.1 Crear `entrega_2/evaluar.py` (design D6–D8: métricas, normalización de v1, comparación de entidades sin mayúsculas ni tildes, pausa configurable, guardado incremental en `evidencia/evaluacion_<version>.json`, reanudación, `--desde-cero`, tabla de fallos en Markdown) y `entrega_2/tests/test_evaluar.py` sin API (comparación de intenciones sin orden, entidades con `null` y con palabra clave, normalización de v1, mensaje con error cuenta como incorrecto, reanudación saltea ids ya evaluados); verificar con `pytest` y con `python entrega_2/evaluar.py v2` en modo simulación sobre 3 mensajes
+- [x] 5.1 Crear `entrega_2/evaluar.py` (design D6–D8: métricas, normalización de v1, comparación de entidades sin mayúsculas ni tildes, pausa configurable, guardado incremental en `evidencia/evaluacion_<version>.json`, reanudación, `--desde-cero`, tabla de fallos en Markdown) y `entrega_2/tests/test_evaluar.py` sin API (comparación de intenciones sin orden, entidades con `null` y con palabra clave, normalización de v1, mensaje con error cuenta como incorrecto, reanudación saltea ids ya evaluados); verificar con `pytest` y con `python entrega_2/evaluar.py v2` en modo simulación sobre 3 mensajes
 
 ## 6. Corridas reales con Groq
 
