@@ -46,3 +46,11 @@ def test_los_ejemplos_del_prompt_cumplen_el_contrato(ruta):
     assert ejemplos, "El prompt no tiene ejemplos few-shot"
     for ejemplo in ejemplos:
         contrato_para(version_de(ruta))(**json.loads(ejemplo))
+
+
+def test_el_informe_muestra_el_prompt_vigente_tal_cual():
+    """El informe (A.2) copia el prompt vigente: si se edita uno, hay que actualizar el otro."""
+    from clinica.extractor import PROMPT_VERSION
+    raiz = Path(__file__).resolve().parents[1]
+    prompt = (raiz / "prompts" / f"extraccion_{PROMPT_VERSION}.txt").read_text(encoding="utf-8").rstrip("\n")
+    assert prompt in (raiz / "informe.md").read_text(encoding="utf-8")
