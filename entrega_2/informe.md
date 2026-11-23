@@ -126,7 +126,7 @@ Las reglas 1, 3, 4 y 5 vienen del diseño de la Entrega 1: el mensaje es dato y 
 | 4. Errores diferenciados | **COMUNICACION** (red, autenticación, límite de uso, configuración: el modelo no respondió) se captura aparte de **FORMATO** (respondió, pero no es JSON; incluye el caso en que Groq rechaza la salida con `json_validate_failed`). Además se separan **CONTRATO** (JSON que no cumple el schema) y **REGLA** (DNI inválido). Ningún error rompe el programa: un input basura termina en un error tipificado. |
 | 5. Imprimir campos extraídos y validados | Cada resultado muestra la extracción validada por el contrato y la regla. |
 
-Hay 183 pruebas automáticas que no usan la API (`python -m pytest entrega_2`): contratos, reglas, selección de proveedor, reintentos, el flujo completo por etapas, la coherencia entre prompts, contrato y Matriz, el set de evaluación y el evaluador.
+Hay 184 pruebas automáticas que no usan la API (`python -m pytest entrega_2`): contratos, reglas, selección de proveedor, reintentos, el flujo completo por etapas, la coherencia entre prompts, contrato y Matriz, el set de evaluación y el evaluador.
 
 ### B.2 — Contrato del prototipo
 
