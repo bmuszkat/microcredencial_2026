@@ -16,7 +16,7 @@
 
 ## 4. Matriz de la Entrega 1
 
-- [ ] 4.1 Actualizar `entrega_1/informe.md` (design D10): B.3 con 6 intenciones + `otra`, fila de consulta médica de B.4 con `consulta_medica`, nota de que se actualizó durante la Entrega 2; verificar con un test que las intenciones de la Matriz B.4 coinciden exactamente con el contrato v2
+- [x] 4.1 Actualizar `entrega_1/informe.md` (design D10): B.3 con 6 intenciones + `otra`, fila de consulta médica de B.4 con `consulta_medica`, nota de que se actualizó durante la Entrega 2; verificar con un test que las intenciones de la Matriz B.4 coinciden exactamente con el contrato v2
 
 ## 5. Evaluador
 
