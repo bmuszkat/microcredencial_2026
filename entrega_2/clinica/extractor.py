@@ -18,7 +18,7 @@ from typing import Optional
 from pydantic import ValidationError
 
 from .config import RAIZ_ENTREGA, ConfiguracionError, detectar_proveedor, modelo_de
-from .contrato import ExtraccionPaciente
+from .contrato import ExtraccionPacienteV1 as ExtraccionPaciente  # tarea 1.2: contrato según versión
 from .llm import RespuestaNoJSON, llamar_con_reintentos, mensaje_del_error
 from .reglas import validar_dni
 
