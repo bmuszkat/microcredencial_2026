@@ -7,7 +7,7 @@
 
 ## 2. Set de evaluación (antes de cualquier corrida)
 
-- [ ] 2.1 Escribir `entrega_2/datos/set_evaluacion.json` con 50 mensajes etiquetados (formato de design D5; categorías simple, multi, ambiguo, medica, mixto, fuera_de_alcance, manipulacion; cada intención en ≥ 3 mensajes) y `entrega_2/tests/test_set_evaluacion.py` (50 mensajes, ids únicos, etiquetas válidas para el contrato v2, ≥ 3 por intención, ningún mensaje igual a un ejemplo de los prompts ni del lote); verificar con `pytest` y **con la revisión del usuario antes del commit**. Este commit tiene que quedar antes de la primera corrida de evaluación
+- [x] 2.1 Escribir `entrega_2/datos/set_evaluacion.json` con 50 mensajes etiquetados (formato de design D5; categorías simple, multi, ambiguo, medica, mixto, fuera_de_alcance, manipulacion; cada intención en ≥ 3 mensajes) y `entrega_2/tests/test_set_evaluacion.py` (50 mensajes, ids únicos, etiquetas válidas para el contrato v2, ≥ 3 por intención, ningún mensaje igual a un ejemplo de los prompts ni del lote); verificar con `pytest` y **con la revisión del usuario antes del commit**. Este commit tiene que quedar antes de la primera corrida de evaluación
 
 ## 3. Prompt v2
 
