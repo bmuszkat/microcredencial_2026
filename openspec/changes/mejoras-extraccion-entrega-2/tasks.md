@@ -26,7 +26,7 @@
 
 - [x] 6.1 Correr el lote de 4 con `v2`, guardar la salida en `entrega_2/evidencia/` y actualizar `entrega_2/resultados_lote.md` (tabla v2 como principal, la de v1 como antecedente); verificar que la tabla tiene las 4 filas de la corrida real con `prompt: v2`
 - [ ] 6.2 Correr `python entrega_2/evaluar.py v1` sobre los 50 mensajes y verificar que `evidencia/evaluacion_v1.json` tiene 50 resultados
-- [ ] 6.3 Correr `python entrega_2/evaluar.py v2` sobre los 50 mensajes y verificar que `evidencia/evaluacion_v2.json` tiene 50 resultados
+- [x] 6.3 Correr `python entrega_2/evaluar.py v2` sobre los 50 mensajes y verificar que `evidencia/evaluacion_v2.json` tiene 50 resultados
 - [ ] 6.4 Escribir `entrega_2/evaluacion.md`: método (cómo se armó y etiquetó el set, criterios de los casos ambiguos, limitaciones), métricas de v1 y v2 lado a lado, veredicto sobre la hipótesis B.5 (≥ 90 %), análisis de los fallos por categoría; verificar que cada número coincide con los archivos de evidencia
 
 ## 7. Documentación y cierre
