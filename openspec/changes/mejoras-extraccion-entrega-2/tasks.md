@@ -11,7 +11,7 @@
 
 ## 3. Prompt v2
 
-- [ ] 3.1 Escribir `entrega_2/prompts/extraccion_v2.txt` (design D4: `consulta_medica`, sin flag, regla de `otra` sola, ejemplos de manipulación y de consulta médica, ejemplo mixto actualizado) y ajustar `test_prompt.py` para validar cada prompt contra el contrato de su versión; verificar con `pytest` (incluido que ningún ejemplo coincide con el lote ni con el set)
+- [x] 3.1 Escribir `entrega_2/prompts/extraccion_v2.txt` (design D4: `consulta_medica`, sin flag, regla de `otra` sola, ejemplos de manipulación y de consulta médica, ejemplo mixto actualizado) y ajustar `test_prompt.py` para validar cada prompt contra el contrato de su versión; verificar con `pytest` (incluido que ningún ejemplo coincide con el lote ni con el set)
 - [ ] 3.2 Cambiar `PROMPT_VERSION` a `"v2"` en el extractor y actualizar `datos/lote_prueba.json` (simulaciones y textos de "qué observar" al contrato v2; el caso 4 espera `["consulta_medica"]`); verificar con `pytest` y `python entrega_2/app.py` en modo simulación
 
 ## 4. Matriz de la Entrega 1

@@ -122,4 +122,4 @@ def test_contrato_para_cada_version(version, contrato):
 def test_todas_las_versiones_registradas_tienen_prompt():
     from clinica.config import RAIZ_ENTREGA
     for version in CONTRATOS:
-        assert (RAIZ_ENTREGA / "prompts" / f"extraccion_{version}.txt").exists() or version == "v2"
+        assert (RAIZ_ENTREGA / "prompts" / f"extraccion_{version}.txt").exists()

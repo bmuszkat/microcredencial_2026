@@ -24,6 +24,6 @@ def test_las_simulaciones_cumplen_el_contrato():
 
 def test_los_mensajes_del_lote_no_son_ejemplos_del_prompt():
     """Si un mensaje del lote estuviera en el few-shot, el resultado estaría inflado (design D7)."""
-    prompt = (RAIZ_ENTREGA / "prompts" / "extraccion_v1.txt").read_text(encoding="utf-8")
+    prompts = " ".join(p.read_text(encoding="utf-8") for p in (RAIZ_ENTREGA / "prompts").glob("*.txt"))
     for caso in LOTE:
-        assert caso["mensaje"] not in prompt
+        assert caso["mensaje"] not in prompts
