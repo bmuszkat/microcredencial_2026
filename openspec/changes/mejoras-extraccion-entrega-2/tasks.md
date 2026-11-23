@@ -33,7 +33,7 @@
 
 - [x] 7.1 Actualizar `entrega_2/informe.md`: A.1 (v1 contra v2 y zero-shot con los números de la evaluación), A.2 (prompt v2 completo y diferencias con v1), B.2 (contrato v2 y por qué `consulta_medica`), sección nueva de privacidad (design D9), resultados de la evaluación y C.2 actualizada; verificar contra la rúbrica que los 3 puntos (consulta médica, privacidad y evaluación) quedan cubiertos
 - [x] 7.2 Actualizar `README.md` (comando de evaluación, `v2` por defecto, archivos nuevos en el árbol) y verificar que los comandos documentados corren tal cual desde la raíz
-- [ ] 7.3 Verificación final: `pytest` en verde, intenciones idénticas en prompt v2, contrato v2 y Matriz B.4, ninguna key ni ID de organización en el historial (`git grep`), y `openspec validate --strict` del cambio
+- [x] 7.3 Verificación final: `pytest` en verde, intenciones idénticas en prompt v2, contrato v2 y Matriz B.4, ninguna key ni ID de organización en el historial (`git grep`), y `openspec validate --strict` del cambio
 
 ## Workflow follow-up
 
