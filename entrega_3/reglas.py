@@ -10,7 +10,7 @@ import re
 import unicodedata
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import Optional
+from typing import Iterable, Optional
 
 # ── Paso 0 · Anonimizar el DNI (design D6) ────────────────────────────────────
 
@@ -176,3 +176,44 @@ def convertir_fecha(texto: Optional[str], referencia: datetime) -> Optional[Fech
     if desde is None:
         return None  # "cuando pueda", "a la mañana" sola, "a las 9" sin día
     return FechaConvertida(desde=desde, hasta=hasta, franja=franja, hora=hora)
+
+
+# ── Paso 8 · Cargo por reprogramar o cancelar con poca anticipación ───────────
+
+def calcular_cargo(intencion: str, momento_turno: datetime, referencia: datetime, politica: dict) -> int:
+    """
+    Monto que corresponde cobrar según la política (umbral y monto leídos de politica_cargos.json).
+    Solo aplica a las intenciones de `politica["aplica_a"]` (reprogramar y cancelar). Hay cargo si
+    faltan MENOS de `umbral_horas` para el turno, medidas desde la referencia; con el umbral exacto o
+    más, el cargo es 0. Es el dato que en la Entrega 1 (A.2) el modelo inventó: acá lo calcula el código.
+    """
+    if intencion not in politica["aplica_a"]:
+        return 0
+    anticipacion = momento_turno - referencia
+    return politica["monto"] if anticipacion < timedelta(hours=politica["umbral_horas"]) else 0
+
+
+# ── Estado global del mensaje (design D5) ─────────────────────────────────────
+
+REVISION_HUMANA = "REVISION_HUMANA"
+PENDIENTE = "PENDIENTE"
+PENDIENTE_CONFIRMACION = "PENDIENTE_CONFIRMACION"
+DERIVADO = "DERIVADO"
+COMPLETADO = "COMPLETADO"
+
+# Del más restrictivo al menos restrictivo.
+PRIORIDAD_ESTADOS = (REVISION_HUMANA, PENDIENTE, PENDIENTE_CONFIRMACION, DERIVADO, COMPLETADO)
+
+
+def estado_global(estados: Iterable[str]) -> str:
+    """
+    El estado del mensaje es el más restrictivo de los estados de sus intenciones:
+    si una intención necesita a una persona, el mensaje entero la necesita.
+    """
+    lista = list(estados)
+    if not lista:
+        raise ValueError("un mensaje tiene al menos una intención, así que al menos un estado")
+    desconocidos = set(lista) - set(PRIORIDAD_ESTADOS)
+    if desconocidos:
+        raise ValueError(f"estados desconocidos: {sorted(desconocidos)}")
+    return min(lista, key=PRIORIDAD_ESTADOS.index)

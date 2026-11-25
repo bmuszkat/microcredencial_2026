@@ -5,12 +5,15 @@ Se llama test_reglas_dominio.py y no test_reglas.py porque la Entrega 2 ya tiene
 tests/test_reglas.py y pytest no admite dos módulos de test con el mismo nombre.
 """
 
+import json
 from datetime import date, datetime
+from pathlib import Path
 
 import pytest
 
-from reglas import (FRANJA_MANANA, FRANJA_TARDE, MARCADOR_DNI, FechaConvertida, anonimizar_dni,
-                    convertir_fecha)
+from reglas import (COMPLETADO, DERIVADO, FRANJA_MANANA, FRANJA_TARDE, MARCADOR_DNI, PENDIENTE,
+                    PENDIENTE_CONFIRMACION, REVISION_HUMANA, FechaConvertida, anonimizar_dni, calcular_cargo,
+                    convertir_fecha, estado_global)
 
 # ── Paso 0 · Anonimizar el DNI ────────────────────────────────────────────────
 
@@ -154,3 +157,57 @@ def test_la_conversion_depende_de_la_referencia_no_del_reloj():
     otra = datetime(2026, 12, 3, 10, 0)
     assert convertir_fecha("el viernes", otra) == un_dia("2026-12-04")
     assert convertir_fecha("mañana", otra) == un_dia("2026-12-04")
+
+
+# ── Paso 8 · Cargo por reprogramar o cancelar con poca anticipación ───────────
+
+POLITICA = json.loads((Path(__file__).resolve().parents[1] / "datos" / "politica_cargos.json").read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize("turno, cargo", [
+    (datetime(2026, 11, 25, 9, 0), 12000),    # 23 h antes: el caso 8 del lote
+    (datetime(2026, 11, 25, 9, 59), 12000),   # 23 h 59 min
+    (datetime(2026, 11, 25, 10, 0), 0),       # exactamente 24 h: no hay cargo
+    (datetime(2026, 11, 26, 15, 0), 0),       # el turno de Juan Pérez: más de 24 h
+])
+def test_cargo_segun_la_anticipacion(turno, cargo):
+    assert calcular_cargo("modificar_turno", turno, REFERENCIA, POLITICA) == cargo
+
+
+def test_cargo_tambien_aplica_a_cancelar():
+    assert calcular_cargo("cancelar_turno", datetime(2026, 11, 25, 9, 0), REFERENCIA, POLITICA) == 12000
+
+
+@pytest.mark.parametrize("intencion", ["crear_turno", "consultar_disponibilidad", "consultar_resultado"])
+def test_cargo_no_aplica_a_otras_intenciones(intencion):
+    assert calcular_cargo(intencion, datetime(2026, 11, 25, 9, 0), REFERENCIA, POLITICA) == 0
+
+
+def test_cargo_lee_umbral_y_monto_de_la_politica():
+    otra = {**POLITICA, "umbral_horas": 48, "monto": 20000}
+    assert calcular_cargo("modificar_turno", datetime(2026, 11, 26, 9, 0), REFERENCIA, otra) == 20000
+
+
+# ── Estado global ─────────────────────────────────────────────────────────────
+
+@pytest.mark.parametrize("estados, esperado", [
+    ([PENDIENTE_CONFIRMACION, COMPLETADO], PENDIENTE_CONFIRMACION),   # Juan: reprogramar + resultado
+    ([PENDIENTE_CONFIRMACION, DERIVADO], PENDIENTE_CONFIRMACION),     # turno nuevo + síntoma
+    ([DERIVADO, COMPLETADO], DERIVADO),
+    ([PENDIENTE, PENDIENTE_CONFIRMACION, COMPLETADO], PENDIENTE),
+    ([COMPLETADO, REVISION_HUMANA, PENDIENTE], REVISION_HUMANA),
+    ([DERIVADO], DERIVADO),
+    ([COMPLETADO], COMPLETADO),
+])
+def test_estado_global_es_el_mas_restrictivo(estados, esperado):
+    assert estado_global(estados) == esperado
+
+
+def test_estado_global_no_depende_del_orden():
+    assert estado_global([COMPLETADO, PENDIENTE]) == estado_global([PENDIENTE, COMPLETADO]) == PENDIENTE
+
+
+@pytest.mark.parametrize("estados", [[], ["APROBADO"]])
+def test_estado_global_rechaza_vacio_o_desconocido(estados):
+    with pytest.raises(ValueError):
+        estado_global(estados)
