@@ -41,7 +41,7 @@
 
 ## 9. Verificación final
 
-- [ ] 9.1 Correr `python -m pytest` (E2 y E3 en verde), `python entrega_2/app.py` en simulación (la E2 no se rompió), buscar keys en el historial (`gsk_`, `sk-`, `AIza`, `sk-ant-`, `org_`) y correr `openspec validate entrega-3-parte-a-workflow --strict`
+- [x] 9.1 Correr `python -m pytest` (E2 y E3 en verde), `python entrega_2/app.py` en simulación (la E2 no se rompió), buscar keys en el historial (`gsk_`, `sk-`, `AIza`, `sk-ant-`, `org_`) y correr `openspec validate entrega-3-parte-a-workflow --strict`
 
 ## Workflow follow-up
 
