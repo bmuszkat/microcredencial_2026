@@ -36,7 +36,7 @@
 
 ## 8. Documentación
 
-- [ ] 8.1 Escribir `entrega_3/informe.md`, Parte A: tabla de pasos (Regla / LLM / Sensor / Humano) con su origen en el journey, tabla de puntos de control, diagrama Mermaid (A.2) con LLM, reglas, sensores y estados diferenciados, resultados del lote (A.3) con la traza del caso que se completa y del que se detiene, simplificaciones declaradas (identidad por DNI, `PENDIENTE` mixto) y observaciones de la corrida real. Verificar que cada número y estado coincida con el archivo de evidencia
+- [x] 8.1 Escribir `entrega_3/informe.md`, Parte A: tabla de pasos (Regla / LLM / Sensor / Humano) con su origen en el journey, tabla de puntos de control, diagrama Mermaid (A.2) con LLM, reglas, sensores y estados diferenciados, resultados del lote (A.3) con la traza del caso que se completa y del que se detiene, simplificaciones declaradas (identidad por DNI, `PENDIENTE` mixto) y observaciones de la corrida real. Verificar que cada número y estado coincida con el archivo de evidencia
 - [ ] 8.2 Actualizar el `README.md` de la raíz: fila de la Entrega 3 en la tabla de entregas, comandos (`python entrega_3/workflow.py`, `python -m pytest entrega_3`) y la carpeta `entrega_3/` en el árbol. Verificar que los comandos documentados corren tal cual desde la raíz
 
 ## 9. Verificación final
