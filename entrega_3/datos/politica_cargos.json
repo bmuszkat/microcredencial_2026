@@ -1,0 +1,8 @@
+{
+  "_nota": "Política FICTICIA de la Clínica Oftalmológica Visión Sur. El código lee el umbral y el monto de acá; no están escritos en el código.",
+  "umbral_horas": 24,
+  "monto": 12000,
+  "moneda": "ARS",
+  "aplica_a": ["modificar_turno", "cancelar_turno"],
+  "descripcion": "Reprogramar o cancelar un turno con menos de 24 horas de anticipación tiene un cargo de $12.000. Con 24 horas o más de anticipación no hay cargo."
+}

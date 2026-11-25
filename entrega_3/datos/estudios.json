@@ -1,0 +1,12 @@
+{
+  "_nota": "Datos FICTICIOS de la Clínica Oftalmológica Visión Sur. Estados: listo (para retirar), en_proceso (realizado, falta el informe), pendiente (todavía no se realizó).",
+  "estudios": [
+    {"id": "E-001", "dni": "30123456", "estudio": "campo visual", "fecha_realizacion": "2026-11-23", "estado": "listo", "entrega_estimada": null},
+    {"id": "E-002", "dni": "25678901", "estudio": "OCT", "fecha_realizacion": "2026-11-20", "estado": "en_proceso", "entrega_estimada": "2026-11-27"},
+    {"id": "E-003", "dni": "31456789", "estudio": "OCT", "fecha_realizacion": "2026-11-19", "estado": "listo", "entrega_estimada": null},
+    {"id": "E-004", "dni": "28999111", "estudio": "fondo de ojo", "fecha_realizacion": null, "estado": "pendiente", "entrega_estimada": null},
+    {"id": "E-005", "dni": "33222111", "estudio": "OCT", "fecha_realizacion": "2026-11-18", "estado": "listo", "entrega_estimada": null},
+    {"id": "E-006", "dni": "33222111", "estudio": "campo visual", "fecha_realizacion": "2026-11-23", "estado": "en_proceso", "entrega_estimada": "2026-11-30"},
+    {"id": "E-007", "dni": "35777888", "estudio": "topografía", "fecha_realizacion": null, "estado": "pendiente", "entrega_estimada": null}
+  ]
+}

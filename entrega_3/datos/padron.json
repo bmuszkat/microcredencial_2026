@@ -1,0 +1,12 @@
+{
+  "_nota": "Datos FICTICIOS de la Clínica Oftalmológica Visión Sur. Simulan el padrón de pacientes.",
+  "pacientes": [
+    {"dni": "30123456", "nombre": "Juan Pérez", "fecha_nacimiento": "1983-05-14", "obra_social": "OSDE"},
+    {"dni": "25678901", "nombre": "Marta Gómez", "fecha_nacimiento": "1976-09-02", "obra_social": "Swiss Medical"},
+    {"dni": "31456789", "nombre": "Ana Torres", "fecha_nacimiento": "1985-01-23", "obra_social": "Particular"},
+    {"dni": "28999111", "nombre": "Carlos Díaz", "fecha_nacimiento": "1981-11-30", "obra_social": "IOMA"},
+    {"dni": "33222111", "nombre": "Lucía Fernández", "fecha_nacimiento": "1952-03-08", "obra_social": "PAMI"},
+    {"dni": "20444555", "nombre": "Roberto Sosa", "fecha_nacimiento": "1968-07-19", "obra_social": "Galeno"},
+    {"dni": "35777888", "nombre": "Sofía Romero", "fecha_nacimiento": "1991-12-05", "obra_social": "OSDE"}
+  ]
+}
