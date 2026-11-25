@@ -32,7 +32,7 @@
 
 ## 7. Corrida real
 
-- [ ] 7.1 Correr `python entrega_3/workflow.py` contra Groq y guardar la salida en `entrega_3/evidencia/workflow_groq_<fecha>.txt` (con `org_[OCULTO]` si aparece). Verificar que estén los 9 casos con su traza, y registrar cuáles dieron el estado esperado y cuáles no, sin modificar el lote
+- [x] 7.1 Correr `python entrega_3/workflow.py` contra Groq y guardar la salida en `entrega_3/evidencia/workflow_groq_<fecha>.txt` (con `org_[OCULTO]` si aparece). Verificar que estén los 9 casos con su traza, y registrar cuáles dieron el estado esperado y cuáles no, sin modificar el lote
 
 ## 8. Documentación
 
