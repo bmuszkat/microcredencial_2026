@@ -14,8 +14,8 @@ Sigue el user journey B.2 de la Entrega 1 (design D3). Cada paso queda en la tra
      7    verificar turno, estudio y disponibilidad             Sensor  intención
      8    cargo por reprogramar o cancelar con < 24 h           Regla   intención
      9    si la operación escribe → PENDIENTE_CONFIRMACION      Regla   intención
-     10   redactar la respuesta                                 LLM     mensaje     (tarea 6.3)
-     11   verificar horarios, fechas y montos del texto         Regla   mensaje     (tarea 6.3)
+     10   redactar la respuesta (o plantilla, según el estado)  LLM     mensaje
+     11   verificar horarios, fechas y montos del texto         Regla   mensaje
 
 "La IA interpreta, la base de datos es la autoridad": el LLM solo extrae (paso 1) y redacta
 (paso 10); todo lo que decide es código. El workflow NUNCA escribe en la agenda.
@@ -34,6 +34,7 @@ sys.path.insert(0, str(ENTREGA_3.parent / "entrega_2"))
 sys.path.insert(0, str(ENTREGA_3))
 
 import herramientas  # noqa: E402
+import redactor  # noqa: E402
 import reglas  # noqa: E402
 from clinica.config import ConfiguracionError, detectar_proveedor, modelo_de  # noqa: E402
 from clinica.extractor import ERRORES_DE_COMUNICACION, armar_mensaje_usuario, validar_respuesta  # noqa: E402
@@ -445,11 +446,34 @@ def resolver_intencion(ctx: Contexto, intencion: dict) -> None:
 
 # ── El workflow completo ──────────────────────────────────────────────────────
 
+def pasos_de_respuesta(ctx: Contexto, estado: str, llm: LLM) -> "redactor.Respuesta":
+    """
+    Pasos 10 y 11. El redactor decide si escribe una plantilla o el LLM (design D5). Solo cuando
+    interviene el LLM quedan en la traza el paso 10 (redacción) y el 11 (guardrail del texto).
+    """
+    datos_validados = {"paciente": ctx.paciente["nombre"] if ctx.paciente else None,
+                       "intenciones": ctx.intenciones, "pendientes": ctx.pendientes}
+    respuesta = redactor.armar_respuesta(estado, datos_validados, llm, dni=ctx.dni)
+
+    if respuesta.origen == "LLM":
+        ctx.traza.registrar(10, "Redactar la respuesta", LLM_, f"prompt redaccion_v1: {respuesta.texto}")
+        ctx.traza.registrar(11, "Verificar horarios, fechas y montos", REGLA, "todos los valores están en los datos validados")
+    elif respuesta.plantilla == "respaldo" and respuesta.valores_sin_respaldo:
+        ctx.traza.registrar(10, "Redactar la respuesta", LLM_, "el LLM redactó un texto")
+        ctx.traza.registrar(11, "Verificar horarios, fechas y montos", REGLA,
+                            "sin respaldo: " + ", ".join(respuesta.valores_sin_respaldo) + " → plantilla de respaldo",
+                            ok=False)
+    elif respuesta.plantilla == "respaldo":
+        ctx.traza.registrar(10, "Redactar la respuesta", LLM_, f"{respuesta.detalle} → plantilla de respaldo", ok=False)
+    return respuesta
+
+
 def procesar(mensaje: str, llm: LLM, datos: Optional[dict] = None) -> dict:
     """
-    Procesa un mensaje de punta a punta (pasos 0 a 9). Nunca rompe el programa: siempre devuelve
-    un estado global y la traza. El estado global es el más restrictivo de las intenciones
-    (design D5); si un paso de mensaje detuvo el flujo, ese estado cuenta para todo el mensaje.
+    Procesa un mensaje de punta a punta (pasos 0 a 11). Nunca rompe el programa: siempre devuelve
+    un estado global, la respuesta para el paciente y la traza. El estado global es el más
+    restrictivo de las intenciones (design D5); si un paso de mensaje detuvo el flujo, ese estado
+    cuenta para todo el mensaje.
     """
     ctx = pasos_de_mensaje(mensaje, llm, datos)
     if not ctx.detenido:
@@ -460,8 +484,11 @@ def procesar(mensaje: str, llm: LLM, datos: Optional[dict] = None) -> dict:
     estados = [i["estado"] for i in ctx.intenciones]
     if ctx.detenido:
         estados.append(ctx.estado_detenido)
+    estado = reglas.estado_global(estados)
+    respuesta = pasos_de_respuesta(ctx, estado, llm)
     return {
-        "estado": reglas.estado_global(estados),
+        "estado": estado,
+        "respuesta": respuesta,
         "paso_detenido": ctx.paso_detenido,
         "motivo_detenido": ctx.motivo_detenido,
         "paciente": ctx.paciente["nombre"] if ctx.paciente else None,
@@ -472,3 +499,109 @@ def procesar(mensaje: str, llm: LLM, datos: Optional[dict] = None) -> dict:
         "traza": ctx.traza,
         "_dni": ctx.dni,  # solo para el guardrail del paso 11: no se muestra ni se envía al LLM
     }
+
+
+# ── Ejecución por consola (A.3) ───────────────────────────────────────────────
+#   python entrega_3/workflow.py                       corre el lote de 9 casos (Groq si hay key; si no, simulación)
+#   python entrega_3/workflow.py --simulacion          el lote con las respuestas simuladas, aunque haya key
+#   python entrega_3/workflow.py --pausa 0             sin pausa entre llamadas (por defecto, 20 s)
+#   python entrega_3/workflow.py "mensaje libre"       un mensaje suelto contra el LLM real
+
+import argparse  # noqa: E402
+import json  # noqa: E402
+import re  # noqa: E402
+import time  # noqa: E402
+
+RUTA_LOTE = ENTREGA_3 / "datos" / "lote_workflow.json"
+PAUSA_POR_DEFECTO = 20  # segundos entre llamadas: el límite gratuito de Groq admite ~3 por minuto (design D13)
+ICONO = {REGLA: "📏", LLM_: "🤖", SENSOR: "🔎"}
+
+
+def llm_simulado(respuestas: list) -> LLM:
+    """Devuelve las respuestas del caso en orden, como si fueran el texto del modelo."""
+    pendientes = [json.dumps(r, ensure_ascii=False) for r in respuestas if r is not None]
+    return lambda system, usuario: pendientes.pop(0)
+
+
+def llm_con_pausa(llm: LLM, segundos: float) -> LLM:
+    """Espera `segundos` antes de cada llamada salvo la primera, para no superar el límite de la API."""
+    estado = {"primera": True}
+
+    def llamar(system: str, usuario: str) -> str:
+        if not estado["primera"] and segundos > 0:
+            time.sleep(segundos)
+        estado["primera"] = False
+        return llm(system, usuario)
+    return llamar
+
+
+def ocultar_org(texto: str) -> str:
+    """Los errores 429 de Groq traen el ID de organización: no se guarda en la evidencia."""
+    return re.sub(r"org_[A-Za-z0-9]+", "org_[OCULTO]", texto)
+
+
+def imprimir(resultado: dict) -> None:
+    for p in resultado["traza"].pasos:
+        marca = "✔" if p.ok else "✘"
+        print(f"   {marca} {p.numero:>2} {ICONO[p.tipo]} {p.tipo:<6} {p.nombre}: {ocultar_org(p.resultado)}")
+    for i in resultado["intenciones"]:
+        extra = f" ({i['motivo']})" if i.get("motivo") else ""
+        print(f"   · {i['intencion']}: {i['estado']}{extra}")
+    respuesta = resultado["respuesta"]
+    origen = respuesta.origen if respuesta.origen == "LLM" else f"plantilla {respuesta.plantilla}"
+    print(f"   ⇒ ESTADO: {resultado['estado']}")
+    print(f"   ⇒ Respuesta al paciente ({origen}): {respuesta.texto}")
+
+
+def correr_lote(llm_de_caso, pausa_descripcion: str) -> int:
+    """Corre los casos del lote y devuelve cuántos dieron el estado esperado (global y por intención)."""
+    lote = json.loads(RUTA_LOTE.read_text(encoding="utf-8"))
+    coinciden = 0
+    for caso in lote:
+        print(f"── {caso['id']} · {caso['caso']} ──")
+        print(f"   Mensaje: {caso['mensaje']}")
+        resultado = procesar(caso["mensaje"], llm_de_caso(caso))
+        imprimir(resultado)
+        obtenido = {i["intencion"]: i["estado"] for i in resultado["intenciones"]}
+        esperado = caso["esperado"]
+        ok = resultado["estado"] == esperado["estado_global"] and obtenido == esperado["intenciones"]
+        coinciden += ok
+        detalle = "" if ok else f" (esperado: {esperado['estado_global']} {esperado['intenciones']})"
+        print(f"   ⇒ {'COINCIDE con lo esperado' if ok else 'NO COINCIDE'}{detalle}\n")
+    print(f"Resultado: {coinciden}/{len(lote)} casos con el estado esperado ({pausa_descripcion}).")
+    return coinciden
+
+
+def main(argv: Optional[list[str]] = None) -> int:
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")  # la consola de Windows no siempre usa UTF-8
+    except (AttributeError, ValueError):
+        pass
+    parser = argparse.ArgumentParser(description="Workflow de la Entrega 3 (Parte A)")
+    parser.add_argument("mensaje", nargs="*", help="mensaje suelto (si se omite, corre el lote)")
+    parser.add_argument("--simulacion", action="store_true", help="usar las respuestas simuladas del lote")
+    parser.add_argument("--pausa", type=float, default=PAUSA_POR_DEFECTO, help="segundos entre llamadas al LLM")
+    args = parser.parse_args(argv)
+
+    real = None if args.simulacion else llm_real()
+    origen = real[1] if real else "SIMULACIÓN (respuestas predefinidas del lote, sin API)"
+    print(f"Workflow · prompt de extracción {PROMPT_EXTRACCION} · redacción redaccion_v1 · LLM: {origen}\n")
+
+    if args.mensaje:
+        if not real:
+            print("Para un mensaje suelto hace falta una API key en el .env (un mensaje nuevo no tiene respuesta simulada).")
+            return 1
+        imprimir(procesar(" ".join(args.mensaje), real[0]))
+        return 0
+
+    if real:
+        llm = llm_con_pausa(real[0], args.pausa)  # una sola función: la pausa cuenta también entre casos
+        correr_lote(lambda caso: llm, f"pausa de {args.pausa:g} s entre llamadas")
+    else:
+        correr_lote(lambda caso: llm_simulado([caso["simulacion"]["extraccion"], caso["simulacion"]["redaccion"]]),
+                    "simulación")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

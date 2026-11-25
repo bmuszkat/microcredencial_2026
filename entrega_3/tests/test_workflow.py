@@ -316,3 +316,89 @@ def test_el_workflow_nunca_escribe_en_la_agenda(datos):
     procesar("Ana, DNI 31.456.789: turno con el Dr. Ruiz el lunes", datos,
              intenciones=["crear_turno"], profesional="Dr. Ruiz", fecha_deseada="el lunes")
     assert datos == antes
+
+
+# ── Pasos 10 y 11 · Respuesta ─────────────────────────────────────────────────
+
+def test_caso_que_se_completa_tiene_redaccion_y_guardrail_en_la_traza(datos):
+    redaccion = json.dumps({"respuesta": "¡Hola! El viernes 27/11 la Dra. López tiene turnos a las 09:00, 10:30 y 12:00."})
+    llm = LLMFalso(extraccion(intenciones=["consultar_disponibilidad"], profesional="Dra. López",
+                              fecha_deseada="viernes a la mañana"), redaccion)
+    r = w.procesar("¿Hay lugar el viernes a la mañana con la Dra. López?", llm, datos)
+    assert r["respuesta"].origen == "LLM"
+    assert [p.tipo for p in r["traza"].pasos if p.numero in (1, 10)] == ["LLM", "LLM"]
+    assert r["traza"].numeros()[-2:] == [10, 11]
+
+
+def test_caso_que_se_detiene_no_redacta_ni_verifica(datos):
+    llm = LLMFalso(extraccion(intenciones=["consultar_resultado"], estudio="OCT"))
+    r = w.procesar("¿ya está mi OCT? DNI 40.111.222", llm, datos)
+    assert r["traza"].numeros() == [0, 1, 2, 3, 4, 5]
+    assert r["respuesta"].plantilla == "acuse_revision"
+    assert len(llm.llamadas) == 1   # el redactor no se llamó
+
+
+def test_texto_sin_respaldo_queda_registrado_en_el_paso_11(datos):
+    inventado = json.dumps({"respuesta": "¡Hola! El viernes 27/11 hay turno a las 11:30, con un cargo de $5.000."})
+    llm = LLMFalso(extraccion(intenciones=["consultar_disponibilidad"], profesional="Dra. López",
+                              fecha_deseada="viernes a la mañana"), inventado)
+    r = w.procesar("¿Hay lugar el viernes a la mañana con la Dra. López?", llm, datos)
+    assert (r["estado"], r["respuesta"].plantilla) == (COMPLETADO, "respaldo")   # el estado no cambia
+    paso_11 = r["traza"].pasos[-1]
+    assert (paso_11.numero, paso_11.ok) == (11, False)
+    assert "11:30" in paso_11.resultado and "$5.000" in paso_11.resultado
+
+
+def test_falla_del_redactor_usa_la_plantilla_sin_cambiar_el_estado(datos):
+    llm = LLMFalso(extraccion(intenciones=["consultar_disponibilidad"], fecha_deseada="viernes"))
+    r = w.procesar("¿Hay lugar el viernes?", llm, datos)   # el LLM falso no tiene una segunda respuesta
+    assert (r["estado"], r["respuesta"].plantilla) == (COMPLETADO, "respaldo")
+    assert (r["traza"].pasos[-1].numero, r["traza"].pasos[-1].ok) == (10, False)
+
+
+# ── Un test por caso del lote (simulación) ────────────────────────────────────
+
+LOTE = json.loads(w.RUTA_LOTE.read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize("caso", LOTE, ids=[c["id"] for c in LOTE])
+def test_caso_del_lote_termina_en_el_estado_esperado(caso, datos):
+    simulacion = caso["simulacion"]
+    llm = w.llm_simulado([simulacion["extraccion"], simulacion["redaccion"]])
+    r = w.procesar(caso["mensaje"], llm, datos)
+    assert r["estado"] == caso["esperado"]["estado_global"]
+    assert {i["intencion"]: i["estado"] for i in r["intenciones"]} == caso["esperado"]["intenciones"]
+    # Si el caso tiene redacción simulada, tiene que pasar el guardrail y llegar al paciente tal cual.
+    if simulacion["redaccion"]:
+        assert r["respuesta"].origen == "LLM", r["respuesta"].valores_sin_respaldo
+        assert r["respuesta"].texto == simulacion["redaccion"]["respuesta"]
+    else:
+        assert r["respuesta"].origen == "PLANTILLA"
+
+
+# ── Consola ───────────────────────────────────────────────────────────────────
+
+def test_main_en_simulacion_corre_el_lote_completo(capsys):
+    assert w.main(["--simulacion", "--pausa", "0"]) == 0
+    salida = capsys.readouterr().out
+    assert "SIMULACIÓN" in salida
+    assert f"Resultado: {len(LOTE)}/{len(LOTE)} casos con el estado esperado" in salida
+
+
+def test_mensaje_suelto_sin_key_no_corre(monkeypatch, capsys):
+    monkeypatch.setattr(w, "llm_real", lambda: None)
+    assert w.main(["hola"]) == 1
+    assert "API key" in capsys.readouterr().out
+
+
+def test_pausa_entre_llamadas_salvo_la_primera(monkeypatch):
+    esperas = []
+    monkeypatch.setattr(w.time, "sleep", esperas.append)
+    llm = w.llm_con_pausa(lambda system, usuario: "ok", 20)
+    for _ in range(3):
+        llm("s", "u")
+    assert esperas == [20, 20]
+
+
+def test_el_id_de_organizacion_se_oculta():
+    assert w.ocultar_org("Rate limit reached for org_01abcXYZ in model") == "Rate limit reached for org_[OCULTO] in model"
