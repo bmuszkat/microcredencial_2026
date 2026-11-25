@@ -3,7 +3,7 @@
 ## 1. Datos ficticios y sensores
 
 - [x] 1.1 Crear `entrega_3/conftest.py` (agrega `entrega_2` y `entrega_3` al `sys.path`) y los datos de `entrega_3/datos/` (design D8): `padron.json`, `agenda.json` con `fecha_referencia`, `estudios.json` y `politica_cargos.json`, preparados para los 8 casos de D12. Agregar `entrega_3/tests/test_datos.py`: referencias válidas, ningún turno libre y reservado a la vez, Juan Pérez con su turno y su estudio, un turno a menos de 24 h y un paciente con dos turnos con la misma profesional. Verificar con `python -m pytest entrega_3`
-- [ ] 1.2 Crear `entrega_3/herramientas.py` con las consultas de solo lectura (spec `agenda-clinica`): buscar paciente, turnos futuros, buscar estudio (sin mayúsculas ni tildes), turnos libres por rango, franja y profesional (por apellido), y política de cargos. Agregar `tests/test_herramientas.py` con un test por escenario de la spec y uno que confirme que ninguna consulta modifica los datos. Verificar con `pytest`
+- [x] 1.2 Crear `entrega_3/herramientas.py` con las consultas de solo lectura (spec `agenda-clinica`): buscar paciente, turnos futuros, buscar estudio (sin mayúsculas ni tildes), turnos libres por rango, franja y profesional (por apellido), y política de cargos. Agregar `tests/test_herramientas.py` con un test por escenario de la spec y uno que confirme que ninguna consulta modifica los datos. Verificar con `pytest`
 
 ## 2. Reglas del dominio
 
