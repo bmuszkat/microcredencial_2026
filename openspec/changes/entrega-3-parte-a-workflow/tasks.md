@@ -22,7 +22,7 @@
 
 ## 5. Lote de casos (antes de cualquier corrida real)
 
-- [ ] 5.1 Escribir `entrega_3/datos/lote_workflow.json` con los 9 casos de design D12: mensaje, estado global esperado, estado esperado por intención, por qué y respuestas simuladas para correr sin API. Agregar un test de estructura (9 casos, ids únicos, estados válidos, al menos un `COMPLETADO` y un `REVISION_HUMANA`). Verificar con `pytest` y **con tu revisión antes del commit**. Este commit tiene que quedar antes de la primera corrida real
+- [x] 5.1 Escribir `entrega_3/datos/lote_workflow.json` con los 9 casos de design D12: mensaje, estado global esperado, estado esperado por intención, por qué y respuestas simuladas para correr sin API. Agregar un test de estructura (9 casos, ids únicos, estados válidos, al menos un `COMPLETADO` y un `REVISION_HUMANA`). Verificar con `pytest` y **con tu revisión antes del commit**. Este commit tiene que quedar antes de la primera corrida real
 
 ## 6. Workflow
 
