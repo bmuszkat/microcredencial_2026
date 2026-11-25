@@ -1,5 +1,6 @@
 """Workflow (spec `workflow-pedidos`): pasos de mensaje 0 a 5, con un LLM falso (sin API)."""
 
+import copy
 import json
 import urllib.error
 
@@ -8,7 +9,7 @@ import pytest
 import herramientas
 import workflow as w
 from clinica.llm import RespuestaNoJSON
-from reglas import COMPLETADO, DERIVADO, PENDIENTE, REVISION_HUMANA
+from reglas import COMPLETADO, DERIVADO, PENDIENTE, PENDIENTE_CONFIRMACION, REVISION_HUMANA
 
 
 def extraccion(**campos) -> str:
@@ -158,3 +159,160 @@ def test_paciente_identificado(datos):
     assert not ctx.detenido
     assert ctx.paciente["nombre"] == "Juan Pérez"
     assert [p.tipo for p in ctx.traza.pasos] == ["Regla", "LLM", "Regla", "Regla", "Regla", "Sensor"]
+
+
+# ── procesar(): pasos por intención (6 a 9) y estado global ───────────────────
+# Un test por condición de la tabla de puntos de control (design D4).
+
+def procesar(mensaje: str, datos: dict, **campos) -> dict:
+    return w.procesar(mensaje, LLMFalso(extraccion(**campos)), datos)
+
+
+def estados(resultado: dict) -> dict:
+    return {i["intencion"]: i["estado"] for i in resultado["intenciones"]}
+
+
+def por_intencion(resultado: dict, nombre: str) -> dict:
+    return next(i for i in resultado["intenciones"] if i["intencion"] == nombre)
+
+
+def test_juan_reprogramar_y_resultado(datos):
+    r = procesar("Juan, DNI 30.123.456: pasar el jueves 15 hs al viernes a la mañana, ¿y el campo visual?", datos,
+                 intenciones=["modificar_turno", "consultar_resultado"], profesional="Dra. López",
+                 fecha_turno_actual="jueves a las 15 hs", fecha_deseada="viernes a la mañana", estudio="campo visual")
+    assert r["estado"] == PENDIENTE_CONFIRMACION
+    assert estados(r) == {"modificar_turno": PENDIENTE_CONFIRMACION, "consultar_resultado": COMPLETADO}
+    modificar = por_intencion(r, "modificar_turno")
+    assert modificar["turno"] == {"profesional": "Dra. López", "fecha": "2026-11-26", "hora": "15:00", "sede": "Centro"}
+    assert [(o["fecha"], o["hora"]) for o in modificar["opciones"]] == [
+        ("2026-11-27", "09:00"), ("2026-11-27", "10:30"), ("2026-11-27", "12:00")]
+    assert modificar["cargo"] == 0
+    assert por_intencion(r, "consultar_resultado")["estudio"]["estado"] == "listo"
+    assert r["paciente"] == "Juan Pérez"
+    assert w.REGLA in {p.tipo for p in r["traza"].pasos} and {6, 7, 8, 9} <= set(r["traza"].numeros())
+
+
+def test_disponibilidad_sin_dni_se_completa(datos):
+    r = procesar("¿Hay lugar el viernes a la mañana con la Dra. López?", datos,
+                 intenciones=["consultar_disponibilidad"], profesional="Dra. López", fecha_deseada="viernes a la mañana")
+    assert r["estado"] == COMPLETADO
+    assert len(por_intencion(r, "consultar_disponibilidad")["opciones"]) == 3
+
+
+def test_disponibilidad_sin_fecha_ofrece_los_proximos(datos):
+    r = procesar("¿Tienen turnos con el Dr. Ruiz?", datos, intenciones=["consultar_disponibilidad"], profesional="Dr. Ruiz")
+    opciones = por_intencion(r, "consultar_disponibilidad")["opciones"]
+    assert r["estado"] == COMPLETADO
+    assert [(o["fecha"], o["hora"]) for o in opciones] == [("2026-11-25", "10:00"), ("2026-11-25", "11:00"), ("2026-11-30", "09:00")]
+
+
+def test_disponibilidad_sin_turnos_en_la_franja_informa_los_mas_cercanos(datos):
+    r = procesar("¿Hay lugar el lunes a la tarde con el Dr. Ruiz?", datos,
+                 intenciones=["consultar_disponibilidad"], profesional="Dr. Ruiz", fecha_deseada="lunes a la tarde")
+    disponibilidad = por_intencion(r, "consultar_disponibilidad")
+    assert r["estado"] == COMPLETADO
+    assert disponibilidad["opciones_alternativas"] is True and disponibilidad["opciones"]
+
+
+def test_consulta_medica_sola_es_derivado(datos):
+    assert procesar("me arde el ojo", datos, intenciones=["consulta_medica"])["estado"] == DERIVADO
+
+
+def test_turno_nuevo_con_sintoma(datos):
+    r = procesar("Ana, DNI 31.456.789: veo puntitos, ¿es grave? Turno con el Dr. Ruiz la semana que viene", datos,
+                 intenciones=["crear_turno", "consulta_medica"], profesional="Dr. Ruiz", fecha_deseada="la semana que viene")
+    assert r["estado"] == PENDIENTE_CONFIRMACION
+    assert estados(r) == {"crear_turno": PENDIENTE_CONFIRMACION, "consulta_medica": DERIVADO}
+
+
+def test_reprogramar_con_menos_de_24_horas_tiene_cargo(datos):
+    r = procesar("Marta, DNI 25.678.901: mañana a las 9 con el Dr. Ruiz, ¿me lo pasan al lunes?", datos,
+                 intenciones=["modificar_turno"], profesional="Dr. Ruiz",
+                 fecha_turno_actual="mañana a las 9", fecha_deseada="al lunes")
+    assert r["estado"] == PENDIENTE_CONFIRMACION
+    assert por_intencion(r, "modificar_turno")["cargo"] == 12000
+
+
+def test_cancelar_valido_espera_confirmacion_con_cargo(datos):
+    r = procesar("Marta, DNI 25.678.901: cancelen mi turno de mañana", datos,
+                 intenciones=["cancelar_turno"], fecha_turno_actual="mañana")
+    cancelar = por_intencion(r, "cancelar_turno")
+    assert (r["estado"], cancelar["cargo"]) == (PENDIENTE_CONFIRMACION, 12000)
+
+
+def test_fecha_que_no_se_entiende_queda_pendiente(datos):
+    r = procesar("Juan, DNI 30.123.456: quiero pasar el turno del jueves para cuando pueda", datos,
+                 intenciones=["modificar_turno"], fecha_turno_actual="jueves", fecha_deseada="cuando pueda")
+    assert r["estado"] == PENDIENTE
+    assert por_intencion(r, "modificar_turno")["motivo"] == "fecha_no_entendida"
+    assert {"motivo": "fecha_no_entendida"} in r["pendientes"]
+
+
+def test_turno_que_no_coincide_va_a_revision_humana(datos):
+    r = procesar("Marta, DNI 25.678.901: cancelen el turno del miércoles... no, del jueves", datos,
+                 intenciones=["cancelar_turno"], profesional="Dr. Ruiz", fecha_turno_actual="jueves")
+    assert r["estado"] == REVISION_HUMANA
+    assert por_intencion(r, "cancelar_turno")["motivo"] == "turno_no_coincide"
+
+
+def test_paciente_sin_turnos_futuros_va_a_revision_humana(datos):
+    r = procesar("Roberto, DNI 20.444.555: cancelen mi turno", datos, intenciones=["cancelar_turno"])
+    assert (r["estado"], por_intencion(r, "cancelar_turno")["motivo"]) == (REVISION_HUMANA, "sin_turnos_futuros")
+
+
+def test_estudio_no_registrado_va_a_revision_humana(datos):
+    r = procesar("Juan, DNI 30.123.456: ¿está mi OCT?", datos, intenciones=["consultar_resultado"], estudio="OCT")
+    assert (r["estado"], por_intencion(r, "consultar_resultado")["motivo"]) == (REVISION_HUMANA, "estudio_no_registrado")
+
+
+def test_dos_turnos_posibles_pregunta_sin_listarlos(datos):
+    r = procesar("Carlos, DNI 28.999.111: cancelen mi turno con la Dra. Ríos", datos,
+                 intenciones=["cancelar_turno"], profesional="Dra. Ríos")
+    assert r["estado"] == PENDIENTE
+    assert por_intencion(r, "cancelar_turno")["motivo"] == "varios_turnos"
+    assert r["pendientes"] == [{"motivo": "varios_turnos"}]   # sin fechas ni horas de los turnos registrados
+
+
+def test_el_dia_desambigua_entre_dos_turnos(datos):
+    r = procesar("Carlos, DNI 28.999.111: cancelen el del viernes", datos,
+                 intenciones=["cancelar_turno"], fecha_turno_actual="el viernes")
+    assert por_intencion(r, "cancelar_turno")["turno"]["fecha"] == "2026-11-27"
+
+
+def test_varios_estudios_sin_decir_cual_queda_pendiente(datos):
+    r = procesar("Lucía, DNI 33.222.111: ¿están mis estudios?", datos, intenciones=["consultar_resultado"])
+    assert (r["estado"], por_intencion(r, "consultar_resultado")["motivo"]) == (PENDIENTE, "varios_estudios")
+
+
+def test_reprogramar_sin_turnos_en_lo_pedido_ofrece_alternativas(datos):
+    r = procesar("Juan, DNI 30.123.456: pasar el jueves al lunes a la mañana", datos,
+                 intenciones=["modificar_turno"], fecha_turno_actual="jueves", fecha_deseada="lunes a la mañana")
+    assert r["estado"] == PENDIENTE
+    pendiente = r["pendientes"][0]
+    assert pendiente["motivo"] == "sin_turnos_en_lo_pedido"
+    assert pendiente["opciones"] and all(o["profesional"] == "Dra. López" for o in pendiente["opciones"])
+
+
+def test_crear_turno_sin_dni_queda_pendiente(datos):
+    r = procesar("Quiero un turno con la Dra. López", datos, intenciones=["crear_turno"], profesional="Dra. López")
+    assert (r["estado"], r["paso_detenido"]) == (PENDIENTE, 4)
+
+
+def test_otra_completa_con_motivo(datos):
+    r = procesar("¿Hasta qué hora atienden?", datos, intenciones=["otra"])
+    assert r["estado"] == COMPLETADO
+    assert r["intenciones"] == [{"intencion": "otra", "estado": COMPLETADO, "motivo": "fuera_de_alcance"}]
+
+
+def test_falla_del_llm_da_estado_global_revision_humana(datos):
+    r = w.procesar("hola", LLMFalso(error=OSError("sin red")), datos)
+    assert (r["estado"], r["paso_detenido"], r["intenciones"]) == (REVISION_HUMANA, 1, [])
+
+
+def test_el_workflow_nunca_escribe_en_la_agenda(datos):
+    antes = copy.deepcopy(datos)
+    procesar("Marta, DNI 25.678.901: cancelen mi turno de mañana", datos,
+             intenciones=["cancelar_turno"], fecha_turno_actual="mañana")
+    procesar("Ana, DNI 31.456.789: turno con el Dr. Ruiz el lunes", datos,
+             intenciones=["crear_turno"], profesional="Dr. Ruiz", fecha_deseada="el lunes")
+    assert datos == antes

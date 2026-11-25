@@ -10,7 +10,10 @@ Sigue el user journey B.2 de la Entrega 1 (design D3). Cada paso queda en la tra
      3    enrutar cada intención                                Regla   mensaje
      4    ¿alguna intención necesita identificar al paciente?   Regla   mensaje
      5    identificar al paciente en el padrón                  Sensor  mensaje
-     6-9  fechas, agenda, cargo y confirmación                  ...     intención   (tarea 6.2)
+     6    convertir fechas relativas                            Regla   intención
+     7    verificar turno, estudio y disponibilidad             Sensor  intención
+     8    cargo por reprogramar o cancelar con < 24 h           Regla   intención
+     9    si la operación escribe → PENDIENTE_CONFIRMACION      Regla   intención
      10   redactar la respuesta                                 LLM     mensaje     (tarea 6.3)
      11   verificar horarios, fechas y montos del texto         Regla   mensaje     (tarea 6.3)
 
@@ -21,6 +24,7 @@ Sigue el user journey B.2 de la Entrega 1 (design D3). Cada paso queda en la tra
 import sys
 import urllib.error
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -35,7 +39,8 @@ from clinica.config import ConfiguracionError, detectar_proveedor, modelo_de  # 
 from clinica.extractor import ERRORES_DE_COMUNICACION, armar_mensaje_usuario, validar_respuesta  # noqa: E402
 from clinica.llm import RespuestaNoJSON, llamar_con_reintentos, mensaje_del_error  # noqa: E402
 from clinica.reglas import validar_dni  # noqa: E402
-from reglas import COMPLETADO, DERIVADO, PENDIENTE, REVISION_HUMANA  # noqa: E402
+from reglas import (COMPLETADO, DERIVADO, PENDIENTE, PENDIENTE_CONFIRMACION, REVISION_HUMANA,  # noqa: E402
+                    FechaConvertida)
 
 PROMPT_EXTRACCION = "v3"
 RUTA_PROMPT_EXTRACCION = ENTREGA_3 / "prompts" / f"extraccion_{PROMPT_EXTRACCION}.txt"
@@ -243,3 +248,227 @@ def pasos_de_mensaje(mensaje: str, llm: LLM, datos: Optional[dict] = None) -> Co
     if ctx.detenido or not hace_falta:
         return ctx
     return paso_5_identificar(ctx)
+
+
+# ── Pasos por intención (6 a 9) ───────────────────────────────────────────────
+
+MAX_OPCIONES = 3              # turnos libres que se ofrecen (design D9)
+HORIZONTE_DIAS = 30           # hasta dónde se buscan turnos libres cuando no hay fecha o como alternativa
+
+
+def _con_sede(turno: dict, datos: dict) -> dict:
+    """El turno en la forma que usa el redactor: profesional, fecha ISO, hora y sede."""
+    profesional = herramientas.datos_profesional(turno["profesional"], datos) or {}
+    return {"profesional": turno["profesional"], "fecha": turno["fecha"], "hora": turno["hora"],
+            "sede": profesional.get("sede", "a confirmar")}
+
+
+def _describir(t: dict) -> str:
+    return f"{t['fecha']} {t['hora']} {t['profesional']}"
+
+
+def _convertir(ctx: Contexto, intencion: dict, texto: Optional[str], campo: str) -> tuple[Optional[FechaConvertida], bool]:
+    """
+    Paso 6 · Regla. Devuelve (fecha convertida o None, se_entendio).
+    Una fecha ausente no es un error (se_entendio=True con None); una que no se entiende, sí.
+    """
+    nombre = f"Convertir fechas ({intencion['intencion']})"
+    if not texto:
+        ctx.traza.registrar(6, nombre, REGLA, f"{campo}: no la indicó")
+        return None, True
+    fecha = reglas.convertir_fecha(texto, herramientas.ahora(ctx.datos))
+    if fecha is None:
+        ctx.traza.registrar(6, nombre, REGLA, f"{campo}: '{texto}' no se entiende → se le pregunta", ok=False)
+        return None, False
+    rango = fecha.desde.isoformat() if fecha.un_solo_dia else f"{fecha.desde.isoformat()} a {fecha.hasta.isoformat()}"
+    if fecha.hora:
+        rango += f", {fecha.hora}"
+    elif fecha.franja:
+        rango += f", {fecha.franja[0]}-{fecha.franja[1]}"
+    ctx.traza.registrar(6, nombre, REGLA, f"{campo}: '{texto}' → {rango}")
+    return fecha, True
+
+
+def _buscar_libres(ctx: Contexto, fecha: Optional[FechaConvertida], profesional: Optional[str]) -> list[dict]:
+    """Turnos libres en lo pedido (o los próximos, si no indicó fecha)."""
+    ahora = herramientas.ahora(ctx.datos)
+    if fecha is None:
+        return herramientas.turnos_libres(ahora.date(), ahora.date() + timedelta(days=HORIZONTE_DIAS),
+                                          None, profesional, ctx.datos)
+    libres = herramientas.turnos_libres(fecha.desde, fecha.hasta, fecha.franja, profesional, ctx.datos)
+    return [t for t in libres if t["hora"] == fecha.hora] if fecha.hora else libres
+
+
+def _alternativas(ctx: Contexto, fecha: Optional[FechaConvertida], profesional: Optional[str]) -> list[dict]:
+    """Los turnos libres más cercanos a lo pedido, cuando en lo pedido no hay ninguno."""
+    ahora = herramientas.ahora(ctx.datos)
+    desde = max(fecha.desde, ahora.date()) if fecha else ahora.date()
+    return herramientas.turnos_libres(desde, desde + timedelta(days=HORIZONTE_DIAS), None, profesional, ctx.datos)
+
+
+def _ofrecer(ctx: Contexto, intencion: dict, fecha: Optional[FechaConvertida], profesional: Optional[str],
+             estado_si_hay: str) -> None:
+    """
+    Paso 7 (disponibilidad) · Sensor. Si hay turnos libres en lo pedido, la intención queda en
+    `estado_si_hay` con hasta 3 opciones. Si no hay, se buscan alternativas (design D9).
+    """
+    nombre = f"Verificar disponibilidad ({intencion['intencion']})"
+    libres = _buscar_libres(ctx, fecha, profesional)[:MAX_OPCIONES]
+    if libres:
+        intencion.update(estado=estado_si_hay, opciones=[_con_sede(t, ctx.datos) for t in libres],
+                         opciones_alternativas=False)
+        ctx.traza.registrar(7, nombre, SENSOR, "turnos libres: " + "; ".join(_describir(t) for t in libres))
+        return
+    alternativas = [_con_sede(t, ctx.datos) for t in _alternativas(ctx, fecha, profesional)[:MAX_OPCIONES]]
+    if intencion["intencion"] == "consultar_disponibilidad" and alternativas:
+        intencion.update(estado=COMPLETADO, opciones=alternativas, opciones_alternativas=True)
+        ctx.traza.registrar(7, nombre, SENSOR, "sin turnos libres en lo pedido; se informan los más cercanos")
+        return
+    intencion.update(estado=PENDIENTE, motivo="sin_turnos_en_lo_pedido")
+    ctx.pendientes.append({"motivo": "sin_turnos_en_lo_pedido", "opciones": alternativas})
+    ctx.traza.registrar(7, nombre, SENSOR, "sin turnos libres en lo pedido → se le ofrecen alternativas", ok=False)
+
+
+def _identificar_turno(ctx: Contexto, intencion: dict) -> Optional[dict]:
+    """
+    Pasos 6 y 7: el turno al que se refiere el paciente tiene que ser exactamente uno de sus turnos futuros.
+    Ninguno → REVISION_HUMANA (no se le muestran sus turnos: la identidad es solo por DNI, design D4).
+    Varios → PENDIENTE, preguntando qué día era, sin listarlos.
+    """
+    extraccion = ctx.extraccion
+    fecha, se_entendio = _convertir(ctx, intencion, extraccion["fecha_turno_actual"], "turno actual")
+    if not se_entendio:
+        intencion.update(estado=PENDIENTE, motivo="varios_turnos")
+        ctx.pendientes.append({"motivo": "varios_turnos"})
+        return None
+
+    nombre = f"Verificar el turno ({intencion['intencion']})"
+    futuros = herramientas.turnos_futuros(ctx.dni, ctx.datos)
+    if not futuros:
+        intencion.update(estado=REVISION_HUMANA, motivo="sin_turnos_futuros")
+        ctx.traza.registrar(7, nombre, SENSOR, "el paciente no tiene turnos futuros", ok=False)
+        return None
+
+    candidatos = [t for t in futuros if herramientas.coincide_profesional(extraccion["profesional"], t["profesional"])]
+    if fecha is not None:
+        candidatos = [t for t in candidatos
+                      if fecha.desde.isoformat() <= t["fecha"] <= fecha.hasta.isoformat()
+                      and (fecha.hora is None or t["hora"] == fecha.hora)
+                      and (fecha.franja is None or fecha.franja[0] <= t["hora"] < fecha.franja[1])]
+    if not candidatos:
+        intencion.update(estado=REVISION_HUMANA, motivo="turno_no_coincide")
+        ctx.traza.registrar(7, nombre, SENSOR, "ningún turno futuro del paciente coincide con lo que mencionó", ok=False)
+        return None
+    if len(candidatos) > 1:
+        intencion.update(estado=PENDIENTE, motivo="varios_turnos")
+        ctx.pendientes.append({"motivo": "varios_turnos"})
+        ctx.traza.registrar(7, nombre, SENSOR, f"{len(candidatos)} turnos posibles → se le pregunta cuál", ok=False)
+        return None
+    turno = candidatos[0]
+    ctx.traza.registrar(7, nombre, SENSOR, f"turno identificado: {turno['id']} ({_describir(turno)})")
+    return turno
+
+
+def _cargo(ctx: Contexto, intencion: dict, turno: dict) -> None:
+    """Paso 8 · Regla: cargo según la política, solo para reprogramar y cancelar."""
+    ahora = herramientas.ahora(ctx.datos)
+    momento = datetime.fromisoformat(f"{turno['fecha']}T{turno['hora']}")
+    cargo = reglas.calcular_cargo(intencion["intencion"], momento, ahora, herramientas.politica_cargos(ctx.datos))
+    intencion["cargo"] = cargo
+    horas = (momento - ahora).total_seconds() / 3600
+    detalle = f"cargo de ${cargo:,}".replace(",", ".") if cargo else "sin cargo"
+    ctx.traza.registrar(8, f"Cargo por anticipación ({intencion['intencion']})", REGLA, f"faltan {horas:.0f} h → {detalle}")
+
+
+def _confirmacion(ctx: Contexto, intencion: dict) -> None:
+    """Paso 9 · Regla: una operación que escribe nunca se ejecuta; queda esperando que el paciente confirme."""
+    if intencion["estado"] == PENDIENTE_CONFIRMACION:
+        ctx.traza.registrar(9, f"Confirmación ({intencion['intencion']})", REGLA,
+                            "la operación escribe en la agenda → PENDIENTE_CONFIRMACION (no se ejecuta)")
+
+
+def _fecha_deseada(ctx: Contexto, intencion: dict) -> tuple[Optional[FechaConvertida], bool]:
+    fecha, se_entendio = _convertir(ctx, intencion, ctx.extraccion["fecha_deseada"], "fecha deseada")
+    if not se_entendio:
+        intencion.update(estado=PENDIENTE, motivo="fecha_no_entendida")
+        ctx.pendientes.append({"motivo": "fecha_no_entendida"})
+    return fecha, se_entendio
+
+
+def resolver_intencion(ctx: Contexto, intencion: dict) -> None:
+    """Pasos 6 a 9 de una intención administrativa."""
+    nombre, extraccion = intencion["intencion"], ctx.extraccion
+
+    if nombre == "consultar_resultado":
+        estudios = herramientas.buscar_estudios(ctx.dni, extraccion["estudio"], ctx.datos)
+        paso = f"Verificar el estudio ({nombre})"
+        if not estudios:
+            intencion.update(estado=REVISION_HUMANA, motivo="estudio_no_registrado")
+            ctx.traza.registrar(7, paso, SENSOR, "el paciente no tiene registrado ese estudio", ok=False)
+        elif len(estudios) > 1:
+            intencion.update(estado=PENDIENTE, motivo="varios_estudios")
+            ctx.pendientes.append({"motivo": "varios_estudios"})
+            ctx.traza.registrar(7, paso, SENSOR, f"{len(estudios)} estudios posibles → se le pregunta cuál", ok=False)
+        else:
+            e = estudios[0]
+            intencion.update(estado=COMPLETADO, estudio={"estudio": e["estudio"], "estado": e["estado"],
+                                                         "entrega_estimada": e["entrega_estimada"]})
+            ctx.traza.registrar(7, paso, SENSOR, f"{e['estudio']}: {e['estado']}")
+        return
+
+    if nombre in ("consultar_disponibilidad", "crear_turno"):
+        fecha, se_entendio = _fecha_deseada(ctx, intencion)
+        if not se_entendio:
+            return
+        estado = COMPLETADO if nombre == "consultar_disponibilidad" else PENDIENTE_CONFIRMACION
+        _ofrecer(ctx, intencion, fecha, extraccion["profesional"], estado)
+        _confirmacion(ctx, intencion)
+        return
+
+    # modificar_turno / cancelar_turno: primero, el turno que ya tiene
+    turno = _identificar_turno(ctx, intencion)
+    if turno is None:
+        return
+    intencion["turno"] = _con_sede(turno, ctx.datos)
+    if nombre == "modificar_turno":
+        fecha, se_entendio = _fecha_deseada(ctx, intencion)
+        if not se_entendio:
+            return
+        _ofrecer(ctx, intencion, fecha, turno["profesional"], PENDIENTE_CONFIRMACION)
+        if intencion["estado"] != PENDIENTE_CONFIRMACION:
+            return
+    else:
+        intencion["estado"] = PENDIENTE_CONFIRMACION
+    _cargo(ctx, intencion, turno)
+    _confirmacion(ctx, intencion)
+
+
+# ── El workflow completo ──────────────────────────────────────────────────────
+
+def procesar(mensaje: str, llm: LLM, datos: Optional[dict] = None) -> dict:
+    """
+    Procesa un mensaje de punta a punta (pasos 0 a 9). Nunca rompe el programa: siempre devuelve
+    un estado global y la traza. El estado global es el más restrictivo de las intenciones
+    (design D5); si un paso de mensaje detuvo el flujo, ese estado cuenta para todo el mensaje.
+    """
+    ctx = pasos_de_mensaje(mensaje, llm, datos)
+    if not ctx.detenido:
+        for intencion in ctx.intenciones:
+            if intencion["estado"] is None:
+                resolver_intencion(ctx, intencion)
+
+    estados = [i["estado"] for i in ctx.intenciones]
+    if ctx.detenido:
+        estados.append(ctx.estado_detenido)
+    return {
+        "estado": reglas.estado_global(estados),
+        "paso_detenido": ctx.paso_detenido,
+        "motivo_detenido": ctx.motivo_detenido,
+        "paciente": ctx.paciente["nombre"] if ctx.paciente else None,
+        "intenciones": ctx.intenciones,
+        "pendientes": ctx.pendientes,
+        "extraccion": ctx.extraccion,
+        "texto_enviado_al_llm": ctx.texto_para_llm,
+        "traza": ctx.traza,
+        "_dni": ctx.dni,  # solo para el guardrail del paso 11: no se muestra ni se envía al LLM
+    }
