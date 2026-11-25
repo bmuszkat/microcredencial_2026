@@ -13,7 +13,7 @@
 
 ## 3. Prompt de extracción v3
 
-- [ ] 3.1 Escribir `entrega_3/prompts/extraccion_v3.txt` (design D14) y `tests/test_prompt_v3.py`: cada ejemplo cumple el contrato v2, ningún ejemplo coincide con el set de evaluación ni con el lote de la E2, las intenciones del prompt son exactamente las del contrato y ningún ejemplo trae un DNI en claro. Verificar con `pytest`
+- [x] 3.1 Escribir `entrega_3/prompts/extraccion_v3.txt` (design D14) y `tests/test_prompt_v3.py`: cada ejemplo cumple el contrato v2, ningún ejemplo coincide con el set de evaluación ni con el lote de la E2, las intenciones del prompt son exactamente las del contrato y ningún ejemplo trae un DNI en claro. Verificar con `pytest`
 
 ## 4. Respuesta al paciente
 
