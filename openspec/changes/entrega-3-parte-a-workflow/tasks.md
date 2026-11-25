@@ -8,7 +8,7 @@
 ## 2. Reglas del dominio
 
 - [x] 2.1 En `entrega_3/reglas.py`, implementar la anonimización del DNI (design D6): un candidato → texto con `[DNI]` y el valor normalizado; ninguno → sin cambios; dos o más → candidatos múltiples. Agregar `tests/test_reglas.py` con DNI con y sin puntos, un teléfono de 10 dígitos que no se toma, dos DNI distintos, el mismo DNI repetido, un DNI seguido de punto final ("Mi DNI es 27.345.678.") y "30.123" sin detectar. Verificar con `pytest`
-- [ ] 2.2 En `reglas.py`, implementar la conversión de fechas relativas (design D7) con la fecha de referencia como parámetro: días de la semana, hoy / mañana / pasado mañana, "la semana que viene", `dd/mm`, franjas, hora explícita y "no se entiende". Agregar tests de cada forma, entre ellos "viernes a la mañana" → 27/11 08:00–13:00 (no el día siguiente), "jueves a las 15 hs" → 26/11 15:00 y "cuando pueda" → no se entiende. Verificar con `pytest`
+- [x] 2.2 En `reglas.py`, implementar la conversión de fechas relativas (design D7) con la fecha de referencia como parámetro: días de la semana, hoy / mañana / pasado mañana, "la semana que viene", `dd/mm`, franjas, hora explícita y "no se entiende". Agregar tests de cada forma, entre ellos "viernes a la mañana" → 27/11 08:00–13:00 (no el día siguiente), "jueves a las 15 hs" → 26/11 15:00 y "cuando pueda" → no se entiende. Verificar con `pytest`
 - [ ] 2.3 En `reglas.py`, implementar el cálculo del cargo (< 24 h, con monto y umbral leídos de la política) y la prioridad de estados para el estado global (design D5). Agregar tests: 25/11 09:00 → cargo, 26/11 15:00 → sin cargo, exactamente 24 h → sin cargo, y combinaciones de estados → el más restrictivo. Verificar con `pytest`
 
 ## 3. Prompt de extracción v3

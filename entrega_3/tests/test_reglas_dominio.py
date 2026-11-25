@@ -5,9 +5,12 @@ Se llama test_reglas_dominio.py y no test_reglas.py porque la Entrega 2 ya tiene
 tests/test_reglas.py y pytest no admite dos módulos de test con el mismo nombre.
 """
 
+from datetime import date, datetime
+
 import pytest
 
-from reglas import MARCADOR_DNI, anonimizar_dni
+from reglas import (FRANJA_MANANA, FRANJA_TARDE, MARCADOR_DNI, FechaConvertida, anonimizar_dni,
+                    convertir_fecha)
 
 # ── Paso 0 · Anonimizar el DNI ────────────────────────────────────────────────
 
@@ -80,3 +83,74 @@ def test_dos_dni_distintos_no_se_elige_ninguno():
     assert r.candidatos == ("30123456", "12345678")
     # igual se anonimizan los dos: ningún DNI sale hacia la API
     assert "30.123.456" not in r.texto and "12.345.678" not in r.texto
+
+
+# ── Paso 6 · Convertir fechas relativas ───────────────────────────────────────
+
+REFERENCIA = datetime(2026, 11, 24, 10, 0)  # martes 24/11/2026 a las 10:00 (agenda.json)
+
+
+def un_dia(d: str, franja=None, hora=None) -> FechaConvertida:
+    dia = date.fromisoformat(d)
+    return FechaConvertida(desde=dia, hasta=dia, franja=franja, hora=hora)
+
+
+@pytest.mark.parametrize("texto, esperado", [
+    # el caso del journey: "a la mañana" es una franja, no el día siguiente
+    ("viernes a la mañana", un_dia("2026-11-27", franja=FRANJA_MANANA)),
+    ("el viernes por la mañana", un_dia("2026-11-27", franja=FRANJA_MANANA)),
+    ("jueves a las 15 hs", un_dia("2026-11-26", hora="15:00")),
+    ("jueves 15 hs", un_dia("2026-11-26", hora="15:00")),
+    ("el jueves a las 15", un_dia("2026-11-26", hora="15:00")),
+    ("lunes a la tarde", un_dia("2026-11-30", franja=FRANJA_TARDE)),
+    ("el miércoles", un_dia("2026-11-25")),
+    ("miercoles", un_dia("2026-11-25")),
+    ("el martes", un_dia("2026-11-24")),           # hoy es martes: desde hoy inclusive
+    ("hoy a la tarde", un_dia("2026-11-24", franja=FRANJA_TARDE)),
+    ("mañana", un_dia("2026-11-25")),
+    ("mañana a la mañana", un_dia("2026-11-25", franja=FRANJA_MANANA)),
+    ("mañana a las 9:30", un_dia("2026-11-25", hora="09:30")),
+    ("pasado mañana", un_dia("2026-11-26")),
+    ("27/11", un_dia("2026-11-27")),
+    ("el 3/12 a las 11 hs", un_dia("2026-12-03", hora="11:00")),
+    ("viernes 27/11", un_dia("2026-11-27")),
+    ("el viernes a las 3 de la tarde", un_dia("2026-11-27", hora="15:00")),
+    ("el miércoles de la semana que viene", un_dia("2026-12-02")),
+])
+def test_fechas_de_un_dia(texto, esperado):
+    assert convertir_fecha(texto, REFERENCIA) == esperado
+
+
+@pytest.mark.parametrize("texto", ["la semana que viene", "la próxima semana", "semana próxima"])
+def test_semana_que_viene_es_lunes_a_viernes_de_la_siguiente(texto):
+    r = convertir_fecha(texto, REFERENCIA)
+    assert (r.desde, r.hasta) == (date(2026, 11, 30), date(2026, 12, 4))
+    assert not r.un_solo_dia
+
+
+def test_semana_que_viene_con_franja():
+    r = convertir_fecha("la semana que viene a la tarde", REFERENCIA)
+    assert (r.desde, r.hasta, r.franja) == (date(2026, 11, 30), date(2026, 12, 4), FRANJA_TARDE)
+
+
+@pytest.mark.parametrize("texto", [
+    "cuando pueda",
+    "lo antes posible",
+    "a la mañana",            # franja sin día
+    "a las 9",                # hora sin día
+    "lunes o martes",         # dos días: no se elige por el paciente
+    "jueves 27/11",           # el 27/11 es viernes: contradictorio
+    "31/02",                  # fecha imposible
+    "el viernes a las 25 hs",  # hora imposible
+    "",
+    None,
+])
+def test_fecha_que_no_se_entiende(texto):
+    assert convertir_fecha(texto, REFERENCIA) is None
+
+
+def test_la_conversion_depende_de_la_referencia_no_del_reloj():
+    # Con la referencia un jueves, "el viernes" es el día siguiente.
+    otra = datetime(2026, 12, 3, 10, 0)
+    assert convertir_fecha("el viernes", otra) == un_dia("2026-12-04")
+    assert convertir_fecha("mañana", otra) == un_dia("2026-12-04")
