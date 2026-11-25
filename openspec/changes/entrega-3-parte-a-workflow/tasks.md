@@ -18,7 +18,7 @@
 ## 4. Respuesta al paciente
 
 - [x] 4.1 Crear `entrega_3/redactor.py` y `entrega_3/prompts/redaccion_v1.txt` (design D10): contrato de la salida `{"respuesta"}`, llamada al LLM inyectado con los datos validados y plantillas por estado (acuse de revisión, preguntas pendientes, derivación, fuera de alcance y respaldo cuando falla la redacción) y la regla de formato fijo de fechas, horas y montos en el prompt. Agregar `tests/test_redactor.py`: el redactor no recibe el mensaje original, una salida fuera de contrato o un error de comunicación usan la plantilla y las plantillas no exponen motivos internos ni turnos o estudios registrados. Verificar con `pytest`
-- [ ] 4.2 En `redactor.py`, implementar el guardrail de horarios, fechas, montos y DNI (design D11). Agregar tests con los escenarios de la spec `respuesta-paciente`: un monto inventado, un horario inventado, un texto respaldado y el DNI en el texto, un cargo omitido y una fecha con el nombre del mes ("28 de noviembre"), más las formas "15 hs", "15:00", "a las 9", "$12.000" y "$ 12000". Verificar con `pytest`
+- [x] 4.2 En `redactor.py`, implementar el guardrail de horarios, fechas, montos y DNI (design D11). Agregar tests con los escenarios de la spec `respuesta-paciente`: un monto inventado, un horario inventado, un texto respaldado y el DNI en el texto, un cargo omitido y una fecha con el nombre del mes ("28 de noviembre"), más las formas "15 hs", "15:00", "a las 9", "$12.000" y "$ 12000". Verificar con `pytest`
 
 ## 5. Lote de casos (antes de cualquier corrida real)
 

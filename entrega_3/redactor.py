@@ -31,6 +31,7 @@ Forma de los datos validados (la arma workflow.py):
 """
 
 import json
+import re
 import urllib.error
 from dataclasses import dataclass, field
 from datetime import date
@@ -68,7 +69,7 @@ class Respuesta:
     origen: str                         # "LLM" o "PLANTILLA"
     plantilla: Optional[str] = None     # acuse_revision, preguntas, derivacion, fuera_de_alcance, respaldo
     detalle: Optional[str] = None       # por qué se usó la plantilla de respaldo
-    valores_sin_respaldo: list[str] = field(default_factory=list)  # lo que rechazó el guardrail (tarea 4.2)
+    valores_sin_respaldo: list[str] = field(default_factory=list)  # lo que rechazó el guardrail
 
 
 # ── Formato de los datos ──────────────────────────────────────────────────────
@@ -225,14 +226,116 @@ def redactar_con_llm(datos: dict, llm: LLM) -> tuple[Optional[str], Optional[str
         return None, f"CONTRATO: la redacción no cumple el contrato ({e.error_count()} error/es)"
 
 
+# ── Paso 11 · Guardrail del texto redactado (design D11) ──────────────────────
+# Cada horario, fecha y monto del texto tiene que estar en los datos validados. Es el paso 9 del
+# journey B.2 de la Entrega 1, la respuesta a la evidencia A.2 (una política y un cargo inventados).
+
+MESES = ("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto",
+         "septiembre", "octubre", "noviembre", "diciembre")
+_NUM_DIAS = {"lunes": 0, "martes": 1, "miercoles": 2, "miércoles": 2, "jueves": 3, "viernes": 4,
+             "sabado": 5, "sábado": 5, "domingo": 6}
+
+_MONTO = re.compile(r"\$\s*(\d{1,3}(?:\.\d{3})+|\d+)|\b(\d{1,3}(?:\.\d{3})+|\d+)\s*pesos\b", re.I)
+_DURACION = re.compile(r"\b(?:menos|m[aá]s) de \d+\s*(?:hs|h|horas)\b", re.I)   # "menos de 24 horas" no es un horario
+_FECHA_BARRA = re.compile(r"\b(\d{1,2})/(\d{1,2})(?:/\d{2,4})?\b")
+_FECHA_MES = re.compile(r"\b(\d{1,2}) de (" + "|".join(MESES) + r")\b", re.I)
+_FECHA_DIA = re.compile(r"\b(" + "|".join(_NUM_DIAS) + r")\s+(\d{1,2})\b(?![/:.]\d)", re.I)
+_HORA_PUNTOS = re.compile(r"\b(\d{1,2})[:.](\d{2})\b")
+_HORA_HS = re.compile(r"\b(\d{1,2})\s*(?:hs|h)\b", re.I)
+_HORA_A_LAS = re.compile(r"\ba las (\d{1,2})\b", re.I)
+
+
+def _sacar(patron: re.Pattern, texto: str) -> tuple[list[re.Match], str]:
+    """
+    Devuelve las coincidencias y el texto sin ellas, para que un monto no se lea después como hora.
+    Cada valor se reemplaza por un separador, no por un espacio: así "viernes 27/11 16 hs" no queda
+    como "viernes 16 hs" (que se leería como el día 16).
+    """
+    encontrados = list(patron.finditer(texto))
+    return encontrados, patron.sub(" · ", texto)
+
+
+def valores_del_texto(texto: str) -> tuple[list[tuple[str, int]], list[tuple[str, tuple]], list[tuple[str, str]]]:
+    """
+    Extrae del texto (original, normalizado) para montos, fechas y horas.
+    Fechas normalizadas como (día, mes o None, día de la semana o None).
+    """
+    resto = texto
+    encontrados, resto = _sacar(_MONTO, resto)
+    montos = [(m.group(0).strip(), int((m.group(1) or m.group(2)).replace(".", ""))) for m in encontrados]
+
+    _, resto = _sacar(_DURACION, resto)
+
+    fechas = []
+    encontrados, resto = _sacar(_FECHA_BARRA, resto)
+    fechas += [(m.group(0), (int(m.group(1)), int(m.group(2)), None)) for m in encontrados]
+    encontrados, resto = _sacar(_FECHA_MES, resto)
+    fechas += [(m.group(0), (int(m.group(1)), MESES.index(m.group(2).lower()) + 1, None)) for m in encontrados]
+    encontrados, resto = _sacar(_FECHA_DIA, resto)
+    fechas += [(m.group(0), (int(m.group(2)), None, _NUM_DIAS[m.group(1).lower()])) for m in encontrados]
+
+    horas = []
+    encontrados, resto = _sacar(_HORA_PUNTOS, resto)
+    horas += [(m.group(0), f"{int(m.group(1)):02d}:{m.group(2)}") for m in encontrados]
+    encontrados, resto = _sacar(_HORA_HS, resto)
+    horas += [(m.group(0), f"{int(m.group(1)):02d}:00") for m in encontrados]
+    encontrados, resto = _sacar(_HORA_A_LAS, resto)
+    horas += [(m.group(0), f"{int(m.group(1)):02d}:00") for m in encontrados]
+    return montos, fechas, horas
+
+
+def valores_permitidos(datos: dict) -> tuple[set[int], list[date], set[str]]:
+    """Montos, fechas y horas que aparecen en los datos validados: lo único que el texto puede mencionar."""
+    montos, fechas, horas = set(), [], set()
+    for i in datos["intenciones"]:
+        turnos = ([i["turno"]] if "turno" in i else []) + i.get("opciones", [])
+        fechas += [date.fromisoformat(t["fecha"]) for t in turnos]
+        horas |= {t["hora"] for t in turnos}
+        if i.get("cargo"):
+            montos.add(i["cargo"])
+        estudio = i.get("estudio") or {}
+        if estudio.get("entrega_estimada"):
+            fechas.append(date.fromisoformat(estudio["entrega_estimada"]))
+    return montos, fechas, horas
+
+
+def _fecha_respaldada(dia: int, mes: Optional[int], dia_semana: Optional[int], fechas: list[date]) -> bool:
+    return any(f.day == dia and (mes is None or f.month == mes) and (dia_semana is None or f.weekday() == dia_semana)
+               for f in fechas)
+
+
+def verificar_texto(texto: str, datos: dict, dni: Optional[str] = None) -> list[str]:
+    """
+    Devuelve los valores del texto que NO están respaldados por los datos validados (vacío = el texto pasa).
+    Además: si hay un cargo mayor que cero, el monto tiene que aparecer; y el DNI nunca puede aparecer.
+    """
+    montos_ok, fechas_ok, horas_ok = valores_permitidos(datos)
+    montos, fechas, horas = valores_del_texto(texto)
+
+    sin_respaldo = [original for original, valor in montos if valor not in montos_ok]
+    sin_respaldo += [original for original, (d, m, s) in fechas if not _fecha_respaldada(d, m, s, fechas_ok)]
+    sin_respaldo += [original for original, valor in horas if valor not in horas_ok]
+
+    mencionados = {valor for _, valor in montos}
+    sin_respaldo += [f"falta el cargo {monto(c)}" for c in sorted(montos_ok) if c not in mencionados]
+
+    if dni and dni in re.sub(r"[.\s]", "", texto):
+        sin_respaldo.append("DNI del paciente")
+    return sin_respaldo
+
+
 # ── Punto de entrada ──────────────────────────────────────────────────────────
 
 def solo(datos: dict, intencion: str) -> bool:
     return [i["intencion"] for i in datos["intenciones"]] == [intencion]
 
 
-def armar_respuesta(estado_global: str, datos: dict, llm: Optional[LLM]) -> Respuesta:
-    """Elige quién escribe según el estado (design D5) y devuelve el texto para el paciente."""
+def armar_respuesta(estado_global: str, datos: dict, llm: Optional[LLM], dni: Optional[str] = None) -> Respuesta:
+    """
+    Elige quién escribe según el estado (design D5) y devuelve el texto para el paciente.
+    Un texto del LLM solo llega al paciente si pasa el guardrail (paso 11); si no, va la plantilla.
+    `dni` se usa únicamente para verificar que el texto no lo exponga: el LLM nunca lo recibe.
+    """
     if estado_global == REVISION_HUMANA:
         return Respuesta(ACUSE_REVISION, "PLANTILLA", "acuse_revision")
     if estado_global == PENDIENTE:
@@ -245,4 +348,10 @@ def armar_respuesta(estado_global: str, datos: dict, llm: Optional[LLM]) -> Resp
     texto, falla = redactar_con_llm(datos, llm) if llm else (None, "sin LLM configurado")
     if texto is None:
         return Respuesta(plantilla_respaldo(datos), "PLANTILLA", "respaldo", detalle=falla)
+
+    sin_respaldo = verificar_texto(texto, datos, dni)
+    if sin_respaldo:
+        return Respuesta(plantilla_respaldo(datos), "PLANTILLA", "respaldo",
+                         detalle="GUARDRAIL: el texto del LLM menciona valores que no están en los datos validados",
+                         valores_sin_respaldo=sin_respaldo)
     return Respuesta(texto, "LLM")
