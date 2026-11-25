@@ -7,7 +7,7 @@ Procesa de punta a punta el mensaje de un paciente: lo interpreta con el LLM, lo
 ## ADDED Requirements
 
 ### Requirement: Pasos encadenados con traza
-El workflow SHALL procesar cada mensaje en pasos en secuencia y registrar una traza con un registro por paso ejecutado: número, nombre, tipo (Regla, LLM, Sensor o Humano) y resultado. Un paso que no se ejecuta porque el flujo se detuvo antes MUST NOT figurar en la traza.
+El workflow SHALL procesar cada mensaje en pasos en secuencia y registrar una traza con un registro por paso ejecutado: número, nombre, tipo (Regla, LLM o Sensor) y resultado. Un paso que no se ejecuta porque el flujo se detuvo antes MUST NOT figurar en la traza.
 
 #### Scenario: Traza de un caso que se completa
 - **WHEN** el mensaje "¿Hay lugar el viernes a la mañana?" termina en `COMPLETADO`
@@ -44,7 +44,7 @@ El workflow SHALL validar la respuesta del LLM contra el contrato de extracción
 - **THEN** el workflow termina en `REVISION_HUMANA` con un motivo de tipo COMUNICACION y el programa no se interrumpe
 
 ### Requirement: Una resolución por intención
-El workflow SHALL resolver por separado cada intención del mensaje y asignarle su propio estado. `consulta_medica` MUST terminar en `DERIVADO` sin que el asistente opine. `otra` MUST terminar en `COMPLETADO` con una respuesta fija.
+El workflow SHALL resolver por separado cada intención del mensaje y asignarle su propio estado. `consulta_medica` MUST terminar en `DERIVADO` sin que el asistente opine. `otra` MUST terminar en `COMPLETADO` con una respuesta fija y `motivo: "fuera_de_alcance"`, para distinguirla de un pedido resuelto.
 
 #### Scenario: Dos pedidos administrativos
 - **WHEN** el mensaje pide reprogramar un turno y consultar un resultado
@@ -56,7 +56,7 @@ El workflow SHALL resolver por separado cada intención del mensaje y asignarle 
 
 #### Scenario: Fuera de alcance
 - **WHEN** las intenciones son `["otra"]`
-- **THEN** el workflow termina en `COMPLETADO` con una respuesta fija, sin llamar al LLM redactor
+- **THEN** el workflow termina en `COMPLETADO` con una respuesta fija, sin llamar al LLM redactor, y la intención registra `motivo: "fuera_de_alcance"`
 
 ### Requirement: Pedido contradictorio
 Si el mensaje pide a la vez `modificar_turno` y `cancelar_turno`, el workflow MUST NOT resolver ninguna de las dos y SHALL terminar en `PENDIENTE`, preguntándole al paciente qué prefiere.
@@ -92,7 +92,7 @@ El workflow SHALL convertir las fechas literales extraídas (día de la semana, 
 - **THEN** la intención queda en `PENDIENTE` con la pregunta de qué día prefiere
 
 ### Requirement: Verificación contra la agenda
-Por cada intención, el workflow SHALL verificar los datos contra el backend. Para modificar o cancelar, el turno mencionado tiene que ser exactamente uno de los turnos futuros del paciente. Para consultar un resultado, el estudio tiene que estar registrado. Para crear, modificar o consultar disponibilidad, se buscan turnos libres en la fecha y franja pedidas.
+Por cada intención, el workflow SHALL verificar los datos contra el backend. Para modificar o cancelar, el turno mencionado tiene que ser exactamente uno de los turnos futuros del paciente. Para consultar un resultado, el estudio tiene que estar registrado. Para crear, modificar o consultar disponibilidad, se buscan turnos libres en la fecha y franja pedidas. Como la identidad se valida solo con el DNI, las preguntas al paciente MUST NOT mostrar sus turnos ni estudios registrados.
 
 #### Scenario: Turno identificado
 - **WHEN** el paciente tiene un único turno futuro, el jueves a las 15:00 con la Dra. López, y menciona "el jueves a las 15 hs con la Dra. López"
@@ -104,7 +104,7 @@ Por cada intención, el workflow SHALL verificar los datos contra el backend. Pa
 
 #### Scenario: Dos turnos posibles
 - **WHEN** el paciente tiene dos turnos futuros con la misma profesional y no dice cuál
-- **THEN** la intención queda en `PENDIENTE` preguntando a cuál de los dos se refiere
+- **THEN** la intención queda en `PENDIENTE` preguntando qué día era el turno, sin mostrar los turnos registrados
 
 #### Scenario: Sin turnos libres en la franja
 - **WHEN** no hay turnos libres en la franja pedida para reprogramar

@@ -13,7 +13,7 @@ El componente de la Entrega 2 convierte un mensaje en un JSON validado, pero se 
 - **Prompt de extracción v3** en `entrega_3/prompts/`. Es el v2 más el manejo de `[DNI]` y los dos errores que encontró la evaluación de la Entrega 2: la fecha de un estudio no es un turno (s12) y un paciente no es un profesional (p02). *(A.1, paso 1: "reusar o mejorar el prompt de la E2".)*
 - **Datos ficticios del backend** (padrón, agenda, estudios y política de cargos) y **sensores de solo lectura** sobre ellos. Son la "autoridad" contra la que se valida, y la Parte C los va a reutilizar como herramientas del agente. *(A.1, paso 2.)*
 - **Redacción con datos validados, plantillas y guardrail.** El LLM redacta solo con los datos que el código validó. Si la API falla se usa una plantilla. Cada horario, fecha y monto del texto se compara con los datos, y si alguno no coincide se reemplaza todo por la plantilla. *(A.1, paso 4. Es el paso 9 del journey B.2, que responde a la alucinación documentada en A.2 de la Entrega 1.)*
-- **Lote de 8 casos con el estado esperado fijado antes de correr**, corrida real contra Groq, diagrama Mermaid e informe. *(A.2 y A.3.)*
+- **Lote de 9 casos con el estado esperado fijado antes de correr** (incluye uno de manipulación), corrida real contra Groq, diagrama Mermaid e informe. *(A.2 y A.3.)*
 
 ### Fuera de alcance
 
@@ -42,4 +42,4 @@ El componente de la Entrega 2 convierte un mensaje en un JSON validado, pero se 
 - **`entrega_2/` no se modifica.** Se importan `clinica.llm`, `clinica.extractor`, `clinica.contrato` y `clinica.reglas` agregando `entrega_2` al `sys.path`.
 - **`README.md` de la raíz:** fila de la Entrega 3 y comandos.
 - **Dependencias:** ninguna nueva (pydantic, python-dotenv, pytest).
-- **Costo de API:** el lote de 8 casos hace hasta 2 llamadas por caso (extracción y redacción). Con una pausa de 20 s entre llamadas, la corrida tarda unos 6 minutos.
+- **Costo de API:** el lote de 9 casos hace hasta 2 llamadas por caso (extracción y redacción). Con una pausa de 20 s entre llamadas, la corrida tarda unos 7 minutos.

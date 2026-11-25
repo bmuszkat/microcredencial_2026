@@ -10,14 +10,14 @@ Cuando el mensaje recibido contiene el marcador `[DNI]` en lugar del documento, 
 - **THEN** la extracción tiene `dni: null`, `intenciones: ["consultar_resultado"]` y `estudio` con "campo visual"
 
 ### Requirement: La fecha de un estudio no es la de un turno
-La extracción MUST NOT poner la fecha en que el paciente se hizo un estudio en `fecha_turno_actual` ni en `fecha_deseada`. Esos campos son solo para turnos.
+A partir del prompt v3, la extracción MUST NOT poner la fecha en que el paciente se hizo un estudio en `fecha_turno_actual` ni en `fecha_deseada`. Esos campos son solo para turnos. El prompt v2 se conserva sin cambios como registro de la Entrega 2.
 
 #### Scenario: Consulta de resultado con fecha del estudio
 - **WHEN** el paciente escribe "¿ya están los resultados de la OCT que me hice el jueves?"
 - **THEN** `fecha_turno_actual` y `fecha_deseada` son `null` y `estudio` contiene "OCT"
 
 ### Requirement: El profesional es solo quien atiende
-`profesional` SHALL contener únicamente el nombre de un profesional de la clínica tal como lo escribe el paciente. MUST ser `null` si el mensaje solo nombra a un paciente o a quien escribe, o si menciona al profesional sin nombre ("el doctor que me operó").
+A partir del prompt v3, `profesional` SHALL contener únicamente el nombre de un profesional de la clínica tal como lo escribe el paciente. MUST ser `null` si el mensaje solo nombra a un paciente o a quien escribe, o si menciona al profesional sin nombre ("el doctor que me operó"). El prompt v2 se conserva sin cambios como registro de la Entrega 2.
 
 #### Scenario: Nombre de un paciente
 - **WHEN** el mensaje dice "confirmá el turno del Sr. Pérez del viernes"

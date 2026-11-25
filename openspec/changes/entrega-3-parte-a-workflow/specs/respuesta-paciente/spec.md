@@ -40,7 +40,7 @@ Si el LLM redactor no responde o su respuesta no cumple el contrato de redacció
 - **THEN** el paciente recibe la respuesta de plantilla con los mismos datos, y la traza registra que se usó la plantilla
 
 ### Requirement: Guardrail de horarios, fechas y montos
-Antes de enviar un texto redactado por el LLM, el sistema MUST verificar con código que cada horario, fecha y monto que menciona esté en los datos validados. Si alguno no está, SHALL reemplazar el texto completo por la plantilla y registrar en la traza qué valor no coincidió.
+Antes de enviar un texto redactado por el LLM, el sistema MUST verificar con código que cada horario, fecha y monto que menciona esté en los datos validados. Si alguno no está, SHALL reemplazar el texto completo por la plantilla y registrar en la traza qué valor no coincidió. Si los datos tienen un cargo mayor que cero, el monto MUST aparecer en el texto; si el cargo es cero, cualquier monto MUST rechazarse.
 
 #### Scenario: Monto inventado
 - **WHEN** el texto dice "tiene un cargo de $5.000" y los datos validados no tienen cargo, o tienen otro monto
@@ -53,6 +53,14 @@ Antes de enviar un texto redactado por el LLM, el sistema MUST verificar con có
 #### Scenario: Texto respaldado por los datos
 - **WHEN** todos los horarios, fechas y montos del texto están en los datos validados
 - **THEN** el paciente recibe el texto redactado por el LLM
+
+#### Scenario: Cargo omitido
+- **WHEN** los datos validados tienen un cargo de $12.000 y el texto no menciona ningún monto
+- **THEN** el paciente recibe la plantilla
+
+#### Scenario: Fecha escrita con el nombre del mes
+- **WHEN** el texto ofrece "el 28 de noviembre" y esa fecha no está en los datos validados
+- **THEN** el paciente recibe la plantilla
 
 ### Requirement: El DNI no se expone en la respuesta
 La respuesta enviada al paciente MUST NOT contener su DNI completo, con o sin puntos.
