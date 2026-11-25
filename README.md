@@ -21,6 +21,7 @@ el sistema de turnos.
 |---|---|
 | [Entrega 1](entrega_1/informe.md) | Diagnóstico, ficha de oportunidad y concepto de solución |
 | [Entrega 2](entrega_2/informe.md) | Primer prototipo operativo: prompt versionado, API real y JSON validado ([resultados del lote](entrega_2/resultados_lote.md) · [evaluación sobre 50 mensajes](entrega_2/evaluacion.md)) |
+| [Entrega 3](entrega_3/informe.md) | Workflow encadenado con puntos de control (Parte A, Hito 1: 9/9 casos contra Groq). RAG y agente: en curso |
 
 ## Cómo correrlo (Entrega 2)
 
@@ -43,6 +44,19 @@ python -m pytest entrega_2       # pruebas automáticas (no usan la API)
 **Evaluación larga:** `evaluar.py` espera 20 s entre llamadas para no superar el límite gratuito de Groq y guarda cada resultado apenas llega en `entrega_2/evidencia/evaluacion_<versión>.json`. Si se corta, al volver a correrlo sigue desde donde quedó (`--desde-cero` para empezar de nuevo, `--limite 3` para una prueba rápida).
 
 > La API key nunca se escribe en el código: vive solo en el `.env`, que está en el `.gitignore`.
+
+## Cómo correrlo (Entrega 3)
+
+Mismos requisitos y mismo `.env` que la Entrega 2. Desde la raíz del repo:
+
+```bash
+python entrega_3/workflow.py                   # workflow sobre el lote de 9 casos (~7 min con Groq gratis)
+python entrega_3/workflow.py --simulacion      # el lote con respuestas simuladas, sin llamar a la API
+python entrega_3/workflow.py "mensaje libre"   # un mensaje suelto contra el LLM real
+python -m pytest entrega_3                     # pruebas automáticas (no usan la API)
+```
+
+**Workflow:** cada caso muestra la traza paso a paso (📏 regla, 🤖 LLM, 🔎 sensor), el estado de cada intención, el estado global y la respuesta al paciente, y al final cuántos casos dieron el estado esperado. Con Groq espera 20 s entre llamadas (`--pausa N` para cambiarlo). Sin ninguna key corre en modo simulación. Los datos de la clínica (padrón, agenda, estudios y política de cargos) son ficticios y están en `entrega_3/datos/`.
 
 ## Estructura del repo
 
@@ -75,5 +89,17 @@ python -m pytest entrega_2       # pruebas automáticas (no usan la API)
 │   │   └── set_evaluacion.json ← 50 mensajes con su respuesta esperada
 │   ├── evidencia/            ← salidas de las corridas reales contra Groq
 │   └── tests/                ← pruebas automáticas sin API
+├── entrega_3/
+│   ├── informe.md            ← A.2 (diagrama del workflow) y A.3 (prueba de falla controlada)
+│   ├── workflow.py           ← Parte A: los 12 pasos, la traza y el punto de entrada por consola
+│   ├── reglas.py             ← reglas en código: anonimizar el DNI, fechas relativas, cargo, estado global
+│   ├── herramientas.py       ← sensores de solo lectura sobre los datos de la clínica
+│   ├── redactor.py           ← respuesta al paciente: plantillas, redacción con datos validados y guardrail
+│   ├── prompts/
+│   │   ├── extraccion_v3.txt ← el v2 con el DNI anonimizado y los fallos s12 y p02 corregidos
+│   │   └── redaccion_v1.txt  ← redacción con formato fijo (dd/mm, HH:MM, $12.000)
+│   ├── datos/                ← padrón, agenda, estudios y política de cargos (ficticios) y el lote de 9 casos
+│   ├── evidencia/            ← salida de la corrida real contra Groq
+│   └── tests/                ← pruebas automáticas sin API (clinica/ se importa desde entrega_2)
 └── openspec/                 ← specs y cambios (desarrollo guiado por especificaciones)
 ```
