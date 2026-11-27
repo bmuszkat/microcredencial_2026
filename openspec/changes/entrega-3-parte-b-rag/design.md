@@ -29,16 +29,15 @@ Se usan con fastembed (ONNX, sin PyTorch), envueltos en una clase que implementa
 *Alternativas descartadas:* `paraphrase-multilingual-MiniLM` (instala PyTorch, más de 2 GB), el embedding por defecto de Chroma (pensado para inglés) y embeddings por API (otra key, y la búsqueda dejaría de andar sin key).
 
 ### D3. Corpus: un documento por tema, metadatos con lista cerrada
-`entrega_3/corpus/corpus_clinica.json` es una lista de documentos `{id, titulo, descripcion_semantica, metadatos}`. Cada documento es una unidad de sentido, así que no hace falta dividirlo en fragmentos. Metadatos: `categoria` ∈ {`cargos`, `cobertura`, `preparacion_estudio`, `resultados`, `sedes_horarios`, `profesionales`, `documentacion`}, `vigente` (bool), `version` (int) y, cuando aplica, `obra_social` y `sede`. Los ids son legibles y citables (por ejemplo `CAR-CANCELACION-V2`). Lista tentativa (se fija en la tarea 1.1):
+`entrega_3/corpus/corpus_clinica.json` es una lista de documentos `{id, titulo, descripcion_semantica, metadatos}`. Cada documento es una unidad de sentido, así que no hace falta dividirlo en fragmentos. Metadatos: `categoria` ∈ {`cargos`, `cobertura`, `preparacion_estudio`, `resultados`, `sedes_horarios`, `documentacion`}, `vigente` (bool), `version` (int) y, cuando aplica, `obra_social`, `sede`, `estudio`, `monto`, `umbral_horas` y `plazo_dias_habiles` (Chroma solo acepta metadatos escalares). Los ids son legibles y citables (por ejemplo `CAR-CANCELACION-V2`). Los 15 documentos (tarea 2.1):
 
 | Categoría | Documentos |
 |---|---|
 | cargos | Política de cancelación y reprogramación **vigente** (menos de 24 h, $12.000, igual que `politica_cargos.json`) y **derogada** (menos de 48 h, $8.000) |
 | cobertura | Uno por obra social del padrón: OSDE, Swiss Medical, IOMA, PAMI, Galeno y Particular. La de OSDE dice que el plan 210 cubre el campo visual **con orden médica y un copago**, a propósito distinto del "100 %" que inventó Gemini |
 | preparacion_estudio | Fondo de ojo (dilatación: no manejar por unas horas, venir acompañado), campo visual y OCT/topografía (lentes de contacto) |
-| resultados | Plazos de entrega por estudio (coherentes con `estudios.json`) y cómo retirarlos |
-| sedes_horarios | Sedes Centro y Belgrano con sus horarios |
-| profesionales | Profesionales, especialidades y sede (los de `agenda.json`) |
+| resultados | Un documento: plazo de entrega (hasta 5 días hábiles, coherente con `estudios.json`) y cómo retirar los resultados |
+| sedes_horarios | Uno por sede (Centro y Belgrano), con su horario y los profesionales que atienden ahí (los de `agenda.json`). Así el metadato `sede` filtra algo real y el corpus queda en 15 documentos |
 | documentacion | Qué llevar al turno (DNI, credencial, orden médica, estudios previos) |
 
 La derogada usa $8.000 y no los $5.000 de Gemini, para que la demo del filtro no se confunda con la alucinación.

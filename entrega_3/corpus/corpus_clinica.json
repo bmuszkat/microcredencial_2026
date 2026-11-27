@@ -1,0 +1,92 @@
+[
+  {
+    "id": "CAR-CANCELACION-V2",
+    "titulo": "Política de cancelación y reprogramación de turnos (vigente)",
+    "descripcion_semantica": "Política vigente desde el 1 de marzo de 2026. Si el paciente cancela, reprograma, cambia, mueve o pasa su turno a otro día con menos de 24 horas de anticipación, la clínica cobra un cargo de $12.000. Con 24 horas o más de anticipación no hay ningún cargo, se puede reprogramar o cancelar sin costo. El cargo se suma al próximo turno y se abona en la recepción de cualquier sede. No se cobra si el paciente presenta un certificado de internación o de una urgencia médica. Responde a preguntas como: ¿me cobran si cancelo a último momento?, ¿tiene costo cambiar el turno?, ¿hay multa por no avisar con tiempo?",
+    "metadatos": {"categoria": "cargos", "vigente": true, "version": 2, "umbral_horas": 24, "monto": 12000}
+  },
+  {
+    "id": "CAR-CANCELACION-V1",
+    "titulo": "Política de cancelación y reprogramación de turnos (derogada)",
+    "descripcion_semantica": "Política anterior, derogada el 28 de febrero de 2026 y reemplazada por la versión 2. Establecía que cancelar o reprogramar un turno con menos de 48 horas de anticipación tenía un cargo de $8.000, que se abonaba en la recepción antes de la consulta siguiente. Con 48 horas o más de anticipación no había cargo.",
+    "metadatos": {"categoria": "cargos", "vigente": false, "version": 1, "umbral_horas": 48, "monto": 8000}
+  },
+  {
+    "id": "COB-OSDE",
+    "titulo": "Cobertura de OSDE",
+    "descripcion_semantica": "La clínica atiende a pacientes de OSDE en todos sus planes (210, 310, 410 y 450). La consulta oftalmológica no tiene costo para el paciente. Los estudios (campo visual, OCT, fondo de ojo y topografía corneal) están cubiertos con orden médica y autorización online de OSDE, que la gestiona la recepción. En el plan 210 cada estudio tiene un copago de $4.500 que se abona el día del estudio; en los planes 310, 410 y 450 los estudios no tienen copago. Responde a: ¿OSDE cubre el campo visual?, ¿tengo que pagar algo con OSDE?, ¿cuánto es el copago?",
+    "metadatos": {"categoria": "cobertura", "vigente": true, "version": 1, "obra_social": "OSDE"}
+  },
+  {
+    "id": "COB-SWISS-MEDICAL",
+    "titulo": "Cobertura de Swiss Medical",
+    "descripcion_semantica": "La clínica atiende a pacientes de Swiss Medical en todos los planes SMG. La consulta no tiene copago. Los estudios están cubiertos con orden médica; la topografía corneal y la OCT además necesitan autorización previa de Swiss Medical, que tarda hasta 48 horas, así que conviene pedirla antes de sacar el turno del estudio. Responde a: ¿atienden Swiss Medical?, ¿la prepaga cubre los estudios de ojos?, ¿necesito autorización?",
+    "metadatos": {"categoria": "cobertura", "vigente": true, "version": 1, "obra_social": "Swiss Medical"}
+  },
+  {
+    "id": "COB-IOMA",
+    "titulo": "Cobertura de IOMA",
+    "descripcion_semantica": "La clínica atiende a afiliados de IOMA. Para la consulta hay que presentar el bono de consulta de IOMA. Los estudios requieren orden médica y autorización previa en la delegación de IOMA del afiliado; sin la autorización el estudio no se puede hacer por obra social. Los estudios autorizados no tienen copago. Responde a: ¿atienden IOMA?, ¿qué necesito para hacerme un estudio por IOMA?, ¿hay que llevar bono?",
+    "metadatos": {"categoria": "cobertura", "vigente": true, "version": 1, "obra_social": "IOMA"}
+  },
+  {
+    "id": "COB-PAMI",
+    "titulo": "Cobertura de PAMI",
+    "descripcion_semantica": "La clínica es prestadora de PAMI. Para la consulta con el oftalmólogo, el afiliado necesita la derivación electrónica de su médico de cabecera. Los estudios se hacen con orden médica electrónica de PAMI y no tienen costo para el afiliado. Si falta la derivación, la recepción no puede dar el turno por PAMI. Responde a: ¿atienden jubilados de PAMI?, ¿necesito derivación del médico de cabecera?, ¿PAMI cubre los estudios?",
+    "metadatos": {"categoria": "cobertura", "vigente": true, "version": 1, "obra_social": "PAMI"}
+  },
+  {
+    "id": "COB-GALENO",
+    "titulo": "Cobertura de Galeno",
+    "descripcion_semantica": "La clínica atiende a pacientes de Galeno en los planes Azul, Plata y Oro. En el plan Azul la consulta tiene un copago de $2.000; en Plata y Oro la consulta no tiene copago. Los estudios están cubiertos en todos los planes con orden médica y no tienen copago. Responde a: ¿atienden Galeno?, ¿cuánto pago la consulta con Galeno?, ¿Galeno cubre los estudios?",
+    "metadatos": {"categoria": "cobertura", "vigente": true, "version": 1, "obra_social": "Galeno"}
+  },
+  {
+    "id": "COB-PARTICULAR",
+    "titulo": "Atención particular (sin obra social) y aranceles",
+    "descripcion_semantica": "Los pacientes sin obra social ni prepaga se atienden de forma particular. Aranceles vigentes: consulta oftalmológica $45.000 (incluye el fondo de ojo si el médico lo hace en la consulta); campo visual $38.000; OCT $52.000; topografía corneal $40.000. Se puede pagar en efectivo, con tarjeta de débito o de crédito, o por transferencia, en la recepción el día de la atención. Responde a: ¿cuánto sale la consulta particular?, ¿cuánto cuesta un estudio sin obra social?, ¿cómo se paga?",
+    "metadatos": {"categoria": "cobertura", "vigente": true, "version": 1, "obra_social": "Particular"}
+  },
+  {
+    "id": "PREP-FONDO-DE-OJO",
+    "titulo": "Preparación para el fondo de ojo (con dilatación)",
+    "descripcion_semantica": "Para el fondo de ojo se dilatan las pupilas con gotas. Después de la dilatación la visión queda borrosa y hay sensibilidad a la luz durante 4 a 6 horas, por eso no se puede manejar después del estudio: conviene venir acompañado o en transporte público y traer anteojos de sol. El estudio completo, con la espera para que las gotas hagan efecto, dura alrededor de una hora. Quien usa lentes de contacto tiene que venir con anteojos o con un estuche para sacárselas. No hace falta estar en ayunas. Responde a: ¿puedo ir manejando al fondo de ojo?, ¿cuánto dura la dilatación?, ¿tengo que ir acompañado?",
+    "metadatos": {"categoria": "preparacion_estudio", "vigente": true, "version": 1, "estudio": "fondo de ojo"}
+  },
+  {
+    "id": "PREP-CAMPO-VISUAL",
+    "titulo": "Preparación para el campo visual",
+    "descripcion_semantica": "El campo visual computarizado no usa gotas ni dilatación, así que después se puede manejar con normalidad. Hay que traer los anteojos que se usan para ver de lejos y de cerca, y la última receta si la hay. El estudio dura entre 30 y 45 minutos y requiere concentración, por eso se recomienda venir descansado. Responde a: ¿cómo me preparo para el campo visual?, ¿cuánto tarda?, ¿llevo los anteojos?",
+    "metadatos": {"categoria": "preparacion_estudio", "vigente": true, "version": 1, "estudio": "campo visual"}
+  },
+  {
+    "id": "PREP-OCT-TOPOGRAFIA",
+    "titulo": "Preparación para la OCT y la topografía corneal",
+    "descripcion_semantica": "La OCT (tomografía de coherencia óptica) es un estudio sin contacto que dura unos 15 minutos y en general no necesita dilatación, salvo que el médico lo indique en la orden. Para la topografía corneal hay que dejar de usar las lentes de contacto antes del estudio: 3 días si son blandas y 2 semanas si son rígidas, porque las lentes cambian la forma de la córnea y alteran el resultado. Responde a: ¿tengo que sacarme las lentes de contacto para la topografía?, ¿la OCT duele?, ¿cuánto dura la OCT?",
+    "metadatos": {"categoria": "preparacion_estudio", "vigente": true, "version": 1, "estudio": "OCT y topografía"}
+  },
+  {
+    "id": "RES-PLAZOS-RETIRO",
+    "titulo": "Plazos de entrega y retiro de resultados",
+    "descripcion_semantica": "Los informes de campo visual, OCT y topografía corneal están listos en hasta 5 días hábiles desde que se hace el estudio. El fondo de ojo lo informa el médico en la misma consulta. Cuando el informe está listo, el paciente recibe un aviso por mail y lo puede descargar del portal de pacientes o retirar en la recepción de la sede donde se hizo el estudio, de lunes a viernes, presentando el DNI. Otra persona puede retirarlo con una autorización firmada por el paciente y el DNI de los dos. Por WhatsApp solo se informa si el estudio está listo; el informe no se envía por ese medio. Responde a: ¿cuándo está mi estudio?, ¿dónde retiro los resultados?, ¿me lo pueden mandar?",
+    "metadatos": {"categoria": "resultados", "vigente": true, "version": 1, "plazo_dias_habiles": 5}
+  },
+  {
+    "id": "SEDE-CENTRO",
+    "titulo": "Sede Centro: horarios y profesionales",
+    "descripcion_semantica": "La sede Centro atiende de lunes a viernes de 8 a 19 horas y los sábados de 8 a 13 horas (los sábados solo consultas de oftalmología general y retiro de resultados). Atienden la Dra. López, especialista en glaucoma, y la Dra. Ríos, de oftalmología general. En la sede Centro se hacen campo visual, OCT y fondo de ojo. Responde a: ¿hasta qué hora atienden?, ¿abren los sábados?, ¿qué médicos atienden en Centro?, ¿quién ve glaucoma?",
+    "metadatos": {"categoria": "sedes_horarios", "vigente": true, "version": 1, "sede": "Centro"}
+  },
+  {
+    "id": "SEDE-BELGRANO",
+    "titulo": "Sede Belgrano: horarios y profesionales",
+    "descripcion_semantica": "La sede Belgrano atiende de lunes a viernes de 9 a 19 horas; los sábados está cerrada. Atienden el Dr. Ruiz, especialista en retina, y el Dr. Méndez, especialista en córnea y cirugía refractiva. En la sede Belgrano se hacen OCT, fondo de ojo y topografía corneal. Responde a: ¿qué horario tiene Belgrano?, ¿quién atiende retina?, ¿dónde hacen la topografía?, ¿atienden los sábados en Belgrano?",
+    "metadatos": {"categoria": "sedes_horarios", "vigente": true, "version": 1, "sede": "Belgrano"}
+  },
+  {
+    "id": "DOC-TURNO",
+    "titulo": "Qué llevar el día del turno",
+    "descripcion_semantica": "El día del turno hay que presentar el DNI y la credencial de la obra social o prepaga. Para un estudio hace falta la orden médica, y la autorización cuando la obra social la pide. También conviene traer los anteojos actuales y los estudios oftalmológicos anteriores. Se recomienda llegar 15 minutos antes para hacer la admisión en la recepción. Responde a: ¿qué tengo que llevar?, ¿qué documentos necesito?, ¿con cuánto tiempo de anticipación llego?",
+    "metadatos": {"categoria": "documentacion", "vigente": true, "version": 1}
+  }
+]
