@@ -5,7 +5,7 @@ Microcredencial #2 — Diseño de Aplicaciones Inteligentes (ORT) · Grupo 1 · 
 | Parte | Estado |
 |---|---|
 | **A — Workflow encadenado (Clase 4, Hito 1)** | ✅ Ejecutable, corrido contra Groq: 9/9 casos con el estado esperado |
-| B — RAG con corpus propio (Clase 5) | Pendiente |
+| B — RAG con corpus propio (Clase 5) | En curso: B.1 (corpus) listo |
 | C — Agente con LangGraph (Clase 6, Hito 2) | Pendiente |
 
 ---
@@ -236,7 +236,47 @@ El flujo se detuvo en el **paso 5**. No consultó estudios, no llamó al redacto
 
 ## Parte B — RAG
 
-*Pendiente.*
+En la Entrega 1 (A.2), sin acceso a la información de la clínica, Gemini respondió con total seguridad que reprogramar con menos de 24 horas tenía, "según el Punto 4.2", un cargo de $5.000, y que OSDE 210 cubría el campo visual al 100 % (`entrega_1/evidencia/a2_gemini_con_memoria.txt`). Ninguna de las dos cosas salía de un documento: el modelo llenó el vacío. La Parte A resolvió eso para los datos estructurados (agenda, estudios y cargos), pero las preguntas informativas seguían sin respuesta. La Parte B le da al asistente esa información oficial como **corpus** y le pide responder solo con lo que recupera de ahí.
+
+### B.1 — El corpus
+
+`entrega_3/corpus/corpus_clinica.json` tiene **15 documentos ficticios** de la Clínica Oftalmológica Visión Sur. Cada uno trata un solo tema, así que no hace falta dividirlo en fragmentos.
+
+| id | Categoría | Vigente | Otros metadatos | Tema |
+|---|---|---|---|---|
+| `CAR-CANCELACION-V2` | cargos | sí (v2) | `monto` 12000, `umbral_horas` 24 | Cancelar o reprogramar con menos de 24 h: $12.000 |
+| `CAR-CANCELACION-V1` | cargos | **no** (v1) | `monto` 8000, `umbral_horas` 48 | La política anterior, derogada: menos de 48 h, $8.000 |
+| `COB-OSDE` | cobertura | sí | `obra_social` OSDE | Consulta sin costo; estudios con orden y autorización; copago de $4.500 en el plan 210 |
+| `COB-SWISS-MEDICAL` | cobertura | sí | `obra_social` Swiss Medical | Estudios con orden; OCT y topografía con autorización previa |
+| `COB-IOMA` | cobertura | sí | `obra_social` IOMA | Bono de consulta; estudios con autorización en la delegación |
+| `COB-PAMI` | cobertura | sí | `obra_social` PAMI | Derivación del médico de cabecera; estudios sin costo |
+| `COB-GALENO` | cobertura | sí | `obra_social` Galeno | Copago de consulta en el plan Azul; estudios sin copago |
+| `COB-PARTICULAR` | cobertura | sí | `obra_social` Particular | Aranceles de consulta y estudios; medios de pago |
+| `PREP-FONDO-DE-OJO` | preparacion_estudio | sí | `estudio` fondo de ojo | Dilatación: no manejar, venir acompañado |
+| `PREP-CAMPO-VISUAL` | preparacion_estudio | sí | `estudio` campo visual | Sin gotas; traer anteojos; dura de 30 a 45 minutos |
+| `PREP-OCT-TOPOGRAFIA` | preparacion_estudio | sí | `estudio` OCT y topografía | OCT sin contacto; dejar las lentes de contacto antes de la topografía |
+| `RES-PLAZOS-RETIRO` | resultados | sí | `plazo_dias_habiles` 5 | Plazo de entrega y cómo retirar los resultados |
+| `SEDE-CENTRO` | sedes_horarios | sí | `sede` Centro | Horario (incluye sábados) y profesionales de la sede |
+| `SEDE-BELGRANO` | sedes_horarios | sí | `sede` Belgrano | Horario y profesionales de la sede |
+| `DOC-TURNO` | documentacion | sí | — | Qué llevar el día del turno |
+
+**Por qué estos temas.** Son las fuentes de verdad que le faltaron al modelo en la Entrega 1 y las preguntas que hoy llegan por WhatsApp sin ser un pedido de turno: cuánto se cobra por cancelar, qué cubre cada obra social, cómo prepararse para un estudio, cuándo están los resultados, dónde y en qué horario se atiende y qué hay que llevar. Hay una cobertura por cada obra social del padrón de la Parte A, para que ningún paciente del backend quede sin respuesta.
+
+**Qué va en el texto y qué en los metadatos.** La `descripcion_semantica` explica el tema con las palabras de un paciente y termina con preguntas de ejemplo ("¿me cobran si cancelo a último momento?", "¿puedo ir manejando al fondo de ojo?"), porque es lo que se convierte en embedding y lo que tiene que parecerse a la pregunta. Lo exacto, lo que sirve para filtrar o verificar, va en los metadatos: `categoria` (lista cerrada), `vigente`, `version` y, cuando aplica, `obra_social`, `sede`, `estudio`, `monto`, `umbral_horas` o `plazo_dias_habiles`. Los metadatos son todos escalares, porque ChromaDB no acepta listas ni objetos.
+
+**Una versión derogada a propósito.** `CAR-CANCELACION-V1` dice lo mismo que la vigente con otro monto y otro umbral. Para la búsqueda semántica las dos son casi igual de parecidas a "¿me cobran si cancelo tarde?", así que, sin filtro, el modelo podría recibir la vieja. El filtro por metadatos (`vigente = true`) es lo que la deja afuera. Usa $8.000, no los $5.000 que inventó Gemini, para que la demo del filtro no se confunda con la alucinación.
+
+**Coherente con el backend.** El RAG y el workflow no pueden decirle cosas distintas al paciente. `entrega_3/tests/test_corpus.py` lo verifica en 13 pruebas sin API:
+
+- El cargo vigente es el de `datos/politica_cargos.json` ($12.000, 24 horas).
+- Hay una cobertura por cada obra social de `datos/padron.json`.
+- Cada profesional de `datos/agenda.json` figura en su sede con su especialidad, y el corpus no nombra a nadie que no esté en la agenda.
+- Todos los turnos de la agenda caen dentro del horario publicado de su sede.
+- Las entregas estimadas de `datos/estudios.json` cumplen el plazo de 5 días hábiles.
+- Cada estudio del backend tiene su documento de preparación.
+- Los montos se escriben siempre igual (`$12.000`), porque el guardrail de la respuesta los compara como texto.
+
+Todos los datos son ficticios: los montos, coberturas y plazos no corresponden a ninguna clínica ni obra social real.
 
 ## Parte C — Agente con LangGraph
 

@@ -7,7 +7,7 @@
 ## 2. Corpus
 
 - [x] 2.1 Escribir `entrega_3/corpus/corpus_clinica.json` con 12 a 15 documentos según design D3 (incluida la política de cargos derogada) y `entrega_3/tests/test_corpus.py`: estructura, ids únicos, categorías de la lista cerrada, `vigente` booleano, una política vigente y una derogada con distinto monto, una cobertura por cada obra social del padrón y coherencia con `politica_cargos.json`, `agenda.json` y `estudios.json` (spec `corpus-clinica`). Verificar con `pytest` y **con tu revisión del texto antes del commit**
-- [ ] 2.2 Agregar al `informe.md` la sección B.1: tabla del corpus (id, categoría, metadatos), por qué cada tema (lo que le faltó al modelo en la Entrega 1) y qué va en metadatos y qué en el texto. Verificar que la tabla coincida con el JSON
+- [x] 2.2 Agregar al `informe.md` la sección B.1: tabla del corpus (id, categoría, metadatos), por qué cada tema (lo que le faltó al modelo en la Entrega 1) y qué va en metadatos y qué en el texto. Verificar que la tabla coincida con el JSON
 
 ## 3. Base de conocimiento
 
