@@ -210,3 +210,18 @@ def test_errores_por_umbral_cuenta_los_dos_tipos_de_error():
     e = rag.errores_por_umbral(filas, 0.45)
     assert (e["dentro_rechazadas"], e["fuera_aceptadas"], e["errores"]) == (["D2"], ["F1"], 2)
     assert rag.errores_por_umbral(filas, 0.45)["umbral"] == 0.45
+
+
+# ── Comparación B.3 en simulación, con la recuperación real (tarea 6.2) ──────
+
+def test_comparar_en_simulacion_cumple_lo_esperado(base, monkeypatch, capsys, tmp_path):
+    import rag
+    monkeypatch.setattr(rag.bc, "abrir", lambda *a, **k: base)
+    monkeypatch.setattr(rag, "CARPETA_EVIDENCIA", tmp_path)
+    assert rag.main(["comparar", "--simulacion", "--guardar"]) == 0
+    salida = capsys.readouterr().out
+    total = len(json.loads(rag.RUTA_COMPARACION.read_text(encoding="utf-8"))["preguntas"])
+    assert f"Resultado: {total}/{total} preguntas con lo esperado con RAG" in salida
+    assert "pausa 0 s" in salida
+    [guardado] = list(tmp_path.glob("comparacion_simulacion_*.txt"))
+    assert "Resultado:" in guardado.read_text(encoding="utf-8")

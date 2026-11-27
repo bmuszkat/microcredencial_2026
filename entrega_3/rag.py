@@ -20,6 +20,7 @@ Consola:
     python entrega_3/rag.py buscar "pregunta" --todas   # lo mismo sin el filtro de vigencia
     python entrega_3/rag.py preguntar "pregunta"    # respuesta completa: recuperación + LLM + guardrail
     python entrega_3/rag.py preguntar "pregunta" --simulacion   # lo mismo sin llamar al LLM
+    python entrega_3/rag.py comparar                # comparación B.3: sin grounding vs. con RAG (--simulacion, --guardar)
     python entrega_3/rag.py calibrar                # similitud de las preguntas de calibración (umbral)
     python entrega_3/rag.py calibrar --guardar      # lo mismo, y lo guarda en entrega_3/evidencia/
 
@@ -31,6 +32,7 @@ import io
 import json
 import re
 import sys
+import time
 from contextlib import redirect_stdout
 from dataclasses import dataclass, field
 from datetime import date
@@ -52,6 +54,8 @@ from clinica.config import detectar_proveedor, modelo_de  # noqa: E402
 from redactor import valores_del_texto  # noqa: E402   (la misma lectura de montos que el guardrail de la Parte A)
 
 RUTA_CALIBRACION = ENTREGA_3 / "datos" / "preguntas_calibracion.json"
+RUTA_COMPARACION = ENTREGA_3 / "datos" / "preguntas_comparacion.json"
+PAUSA_POR_DEFECTO = 20   # segundos entre llamadas: límite gratuito de Groq
 CARPETA_EVIDENCIA = ENTREGA_3 / "evidencia"
 CARPETA_PROMPTS = ENTREGA_3 / "prompts"
 
@@ -294,6 +298,14 @@ def imprimir_calibracion(filas: list[dict]) -> None:
     print(f"\nUmbral vigente en base_conocimiento.py: {bc.UMBRAL_SIMILITUD:g} → {e['errores']} errores ({detalle})")
 
 
+def ruta_corta(ruta: Path) -> str:
+    """La ruta relativa a la raíz del repo, o completa si está afuera (por ejemplo, en los tests)."""
+    try:
+        return str(ruta.relative_to(ENTREGA_3.parent))
+    except ValueError:
+        return str(ruta)
+
+
 # ── Consola ───────────────────────────────────────────────────────────────────
 
 def cmd_indexar(args) -> int:
@@ -374,7 +386,107 @@ def cmd_calibrar(args) -> int:
         CARPETA_EVIDENCIA.mkdir(exist_ok=True)
         ruta = CARPETA_EVIDENCIA / f"calibracion_{date.today().isoformat()}.txt"
         ruta.write_text(salida.getvalue(), encoding="utf-8")
-        print(f"\nGuardado en {ruta.relative_to(ENTREGA_3.parent)}")
+        print(f"\nGuardado en {ruta_corta(ruta)}")
+    return 0
+
+
+# ── Comparación B.3: sin grounding vs. con RAG (design D14) ───────────────────
+
+def evaluar_esperado(r: ResultadoRag, esperado: dict) -> list[str]:
+    """Compara el resultado del RAG con lo esperado (fijado antes de correr). Devuelve lo que no se cumplió."""
+    fallas = []
+    if r.estado != esperado["estado"]:
+        fallas.append(f"estado {r.estado}, se esperaba {esperado['estado']}")
+    if esperado["documento"] and esperado["documento"] not in r.citas:
+        fallas.append(f"no cita {esperado['documento']}")
+    texto = (r.texto or "").lower()
+    if esperado["debe_contener"] and not any(t.lower() in texto for t in esperado["debe_contener"]):
+        fallas.append(f"no menciona ninguno de: {', '.join(esperado['debe_contener'])}")
+    fallas += [f"menciona «{t}»" for t in esperado["no_debe_contener"] if t.lower() in texto]
+    return fallas
+
+
+class Pausa:
+    """Espera `segundos` antes de cada llamada al LLM salvo la primera (límite gratuito de Groq)."""
+
+    def __init__(self, segundos: float):
+        self.segundos, self.llamadas = segundos, 0
+
+    def __call__(self, entrada):
+        if self.llamadas and self.segundos:
+            time.sleep(self.segundos)
+        self.llamadas += 1
+        return entrada
+
+
+def correr_comparacion(preguntas: list[dict], responder_rag, responder_sin_grounding) -> int:
+    """Imprime cada pregunta con las dos respuestas lado a lado y devuelve cuántas dieron lo esperado con RAG."""
+    aciertos = 0
+    for p in preguntas:
+        print(f"━━━ {p['id']} · {p['pregunta']}")
+        for e in p["entrega_1"]:
+            print(f"  Entrega 1, sin datos ({e['archivo']}):\n     «{e['cita']}»")
+        print(f"  SIN GROUNDING:\n     {responder_sin_grounding(p)}")
+        r = responder_rag(p["pregunta"])
+        print("  CON RAG:")
+        print("     recuperados: " + " · ".join(f"{i} {s:.3f}{' ✓' if ok else ''}" for i, s, ok in r.candidatos))
+        print(f"     estado: {r.estado}{'' if r.llamo_llm else ' (el LLM no se llamó)'}"
+              + (f" · citas: {', '.join(r.citas)}" if r.citas else ""))
+        if r.detalle:
+            print(f"     detalle: {r.detalle}")
+        print(f"     {r.texto if r.texto else '(sin texto para el paciente)'}")
+        if r.texto is None and r.texto_generado:
+            print(f"     descartada por el guardrail: {r.texto_generado}")
+        fallas = evaluar_esperado(r, p["esperado_rag"])
+        aciertos += not fallas
+        print(f"  Esperado con RAG: {'✓ cumple' if not fallas else '✗ ' + '; '.join(fallas)}\n")
+    print(f"Resultado: {aciertos}/{len(preguntas)} preguntas con lo esperado con RAG")
+    return aciertos
+
+
+class _Duplicar(io.TextIOBase):
+    """Escribe en la consola y en un buffer a la vez: se ve en vivo y después se guarda."""
+
+    def __init__(self, consola):
+        self.consola, self.buffer = consola, io.StringIO()
+
+    def write(self, texto):
+        self.consola.write(texto)
+        self.consola.flush()
+        return self.buffer.write(texto)
+
+
+def cmd_comparar(args) -> int:
+    preguntas = json.loads(RUTA_COMPARACION.read_text(encoding="utf-8"))["preguntas"]
+    if args.simulacion:
+        modelo, origen = modelo_simulado, "SIMULACIÓN (--simulacion)"
+    else:
+        modelo, origen = crear_modelo()
+    simulado = modelo is modelo_simulado
+    pausa = 0 if simulado else args.pausa
+    pausado = RunnableLambda(Pausa(pausa)) | modelo
+
+    def sin_grounding(p: dict) -> str:
+        if simulado:   # sin LLM real no hay "memoria" que mostrar: se usa la respuesta de ejemplo
+            return f"(simulación) {p['simulacion_sin_grounding']}"
+        try:
+            return cadena_sin_grounding(pausado).invoke({"pregunta": p["pregunta"]}).strip()
+        except Exception as e:
+            return ocultar_org(f"(falló la API: {type(e).__name__}: {e})")
+
+    salida = _Duplicar(sys.stdout)
+    with redirect_stdout(salida):
+        print(f"Comparación B.3 · {date.today().isoformat()} · modelo {origen} · prompts sin_grounding_v1 y rag_v1")
+        print(f"RAG: k={bc.K} · filtro {bc.SOLO_VIGENTES} · umbral {bc.UMBRAL_SIMILITUD:g} · "
+              f"pausa {pausa:g} s entre llamadas")
+        print(f"Preguntas: {RUTA_COMPARACION.relative_to(ENTREGA_3.parent)} (fijadas antes de correr)\n")
+        correr_comparacion(preguntas, crear_respondedor(modelo=pausado, origen=origen), sin_grounding)
+    if args.guardar:
+        CARPETA_EVIDENCIA.mkdir(exist_ok=True)
+        nombre = "simulacion" if simulado else origen.split(" ")[0]
+        ruta = CARPETA_EVIDENCIA / f"comparacion_{nombre}_{date.today().isoformat()}.txt"
+        ruta.write_text(ocultar_org(salida.buffer.getvalue()), encoding="utf-8")
+        print(f"\nGuardado en {ruta_corta(ruta)}")
     return 0
 
 
@@ -396,12 +508,16 @@ def main(argv: Optional[list[str]] = None) -> int:
     p_preguntar = sub.add_parser("preguntar", help="respuesta completa del RAG: recuperación, LLM y guardrail")
     p_preguntar.add_argument("pregunta", nargs="+")
     p_preguntar.add_argument("--simulacion", action="store_true", help="sin llamar al LLM, aunque haya key")
+    p_comparar = sub.add_parser("comparar", help="comparación B.3: sin grounding vs. con RAG")
+    p_comparar.add_argument("--simulacion", action="store_true", help="sin llamar al LLM, aunque haya key")
+    p_comparar.add_argument("--pausa", type=float, default=PAUSA_POR_DEFECTO, help="segundos entre llamadas al LLM")
+    p_comparar.add_argument("--guardar", action="store_true", help="guardar la salida en entrega_3/evidencia/")
     p_calibrar = sub.add_parser("calibrar", help="similitud de las preguntas de calibración y errores por umbral")
     p_calibrar.add_argument("--guardar", action="store_true", help="guardar la tabla en entrega_3/evidencia/")
 
     args = parser.parse_args(argv)
     comandos = {"indexar": cmd_indexar, "ver": cmd_ver, "buscar": cmd_buscar, "preguntar": cmd_preguntar,
-                "calibrar": cmd_calibrar}
+                "calibrar": cmd_calibrar, "comparar": cmd_comparar}
     return comandos[args.comando](args)
 
 

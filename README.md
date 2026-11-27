@@ -85,9 +85,11 @@ python entrega_3/rag.py buscar "¿me cobran si cancelo tarde?" --todas   # sin e
 python entrega_3/rag.py preguntar "¿qué tengo que llevar el día del turno?"  # respuesta con el LLM del .env
 python entrega_3/rag.py preguntar "¿atienden a domicilio?" --simulacion     # sin llamar al LLM
 python entrega_3/rag.py calibrar                         # similitud de las preguntas de calibración del umbral
+python entrega_3/rag.py comparar                         # B.3: cada pregunta sin grounding y con RAG (~3 min con Groq gratis)
+python entrega_3/rag.py comparar --simulacion            # lo mismo sin llamar al LLM
 ```
 
-`preguntar` muestra los documentos recuperados con su similitud, el estado (`respondida`, `sin_informacion`, `no_verificado` o `error`), las citas y la respuesta. Si ningún documento supera el umbral, responde "No tengo información oficial sobre esa consulta." sin llamar al LLM. El RAG usa Groq u OpenAI; sin key (o con `--simulacion`) devuelve el documento recuperado tal cual. El corpus (15 documentos ficticios) está en `entrega_3/corpus/`.
+`preguntar` muestra los documentos recuperados con su similitud, el estado (`respondida`, `sin_informacion`, `no_verificado` o `error`), las citas y la respuesta. Si ningún documento supera el umbral, responde "No tengo información oficial sobre esa consulta." sin llamar al LLM. El RAG usa Groq u OpenAI; sin key (o con `--simulacion`) devuelve el documento recuperado tal cual. El corpus (15 documentos ficticios) está en `entrega_3/corpus/`. `comparar` corre las preguntas de `entrega_3/datos/preguntas_comparacion.json` sin contexto (como el modelo de la Entrega 1) y con RAG, verifica lo esperado con RAG y espera 20 s entre llamadas (`--pausa N`); con `--guardar` deja la salida en `entrega_3/evidencia/`.
 
 ## Estructura del repo
 

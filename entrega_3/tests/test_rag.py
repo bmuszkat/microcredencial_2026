@@ -254,3 +254,58 @@ def test_preguntar_muestra_lo_que_descarto_el_guardrail(capsys):
     assert "Detalle:   monto sin respaldo" in salida
     assert "Descartada por el guardrail: Son $5.000" in salida
     assert "Respuesta:" not in salida
+
+
+# ── Comparación B.3 (tarea 6.2) ───────────────────────────────────────────────
+
+ESPERADO_C1 = {"estado": "respondida", "documento": "CAR-CANCELACION-V2",
+               "debe_contener": ["$12.000"], "no_debe_contener": ["$5.000", "48 horas"]}
+
+
+def resultado(estado=rag.RESPONDIDA, texto="Sí, son $12.000 (CAR-CANCELACION-V2).", citas=("CAR-CANCELACION-V2",)):
+    return rag.ResultadoRag(estado, texto, list(citas), [("CAR-CANCELACION-V2", 0.7, True)], True)
+
+
+def test_evaluar_esperado_cumple():
+    assert rag.evaluar_esperado(resultado(), ESPERADO_C1) == []
+
+
+def test_evaluar_esperado_detecta_cada_falla():
+    fallas = rag.evaluar_esperado(resultado(texto="Son $5.000 o $8.000 con 48 horas (DOC-TURNO).", citas=["DOC-TURNO"]),
+                                  ESPERADO_C1)
+    assert fallas == ["no cita CAR-CANCELACION-V2", "no menciona ninguno de: $12.000",
+                      "menciona «$5.000»", "menciona «48 horas»"]
+
+
+def test_evaluar_esperado_sin_texto_por_el_guardrail():
+    fallas = rag.evaluar_esperado(resultado(rag.NO_VERIFICADO, None), ESPERADO_C1)
+    assert fallas[0] == "estado no_verificado, se esperaba respondida"
+
+
+def test_evaluar_esperado_fuera_del_corpus():
+    esperado = {"estado": "sin_informacion", "documento": None, "debe_contener": [], "no_debe_contener": []}
+    r = rag.ResultadoRag(rag.SIN_INFORMACION_OFICIAL, rag.SIN_INFORMACION, [], [], False)
+    assert rag.evaluar_esperado(r, esperado) == []
+
+
+def test_la_pausa_espera_entre_llamadas_salvo_la_primera(monkeypatch):
+    esperas = []
+    monkeypatch.setattr(rag.time, "sleep", esperas.append)
+    pausa = rag.Pausa(20)
+    assert [pausa(x) for x in "abc"] == ["a", "b", "c"]
+    assert esperas == [20, 20]
+
+
+def test_correr_comparacion_imprime_las_dos_respuestas_y_cuenta_aciertos(capsys):
+    preguntas = [
+        {"id": "C1", "pregunta": "¿me cobran?", "esperado_rag": ESPERADO_C1,
+         "entrega_1": [{"archivo": "a2.txt", "cita": "Punto 4.2, $5.000"}]},
+        {"id": "C2", "pregunta": "¿otra?", "esperado_rag": ESPERADO_C1, "entrega_1": []},
+    ]
+    respuestas = iter([resultado(), resultado(rag.NO_VERIFICADO, None)])
+    aciertos = rag.correr_comparacion(preguntas, lambda p: next(respuestas), lambda p: f"sin datos: {p['id']}")
+    salida = capsys.readouterr().out
+    assert aciertos == 1
+    assert "«Punto 4.2, $5.000»" in salida and "sin datos: C1" in salida
+    assert "✓ cumple" in salida and "✗ estado no_verificado" in salida
+    assert "Resultado: 1/2 preguntas con lo esperado con RAG" in salida
