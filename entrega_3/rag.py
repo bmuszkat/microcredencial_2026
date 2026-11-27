@@ -1,5 +1,18 @@
 """
-RAG de la clínica (Entrega 3, Parte B). Por ahora, la consola de la base de conocimiento:
+RAG de la clínica (Entrega 3, Parte B), armado como una CADENA de LangChain (LCEL):
+
+    pregunta ──┬──────────────────────────────────────────────────────┐
+               └─▶ recuperar (embedding + Chroma + filtro vigente + umbral) ┤
+                                                                      ▼
+               ¿algún documento supera el umbral?
+                 ├─ NO → "No tengo información oficial sobre esa consulta."   (el LLM ni se llama)
+                 └─ SÍ → plantilla(documentos con [ID] + pregunta) | modelo | parser → respuesta con citas
+
+Es la misma idea de la Clase 4 (plantilla | modelo | parser) con un paso nuevo adelante: RECUPERAR
+el contexto. Sin API key el "modelo" es una simulación que devuelve el primer documento recuperado;
+la recuperación corre de verdad igual.
+
+Consola:
 
     python entrega_3/rag.py indexar                 # fuerza la reindexación (la primera vez baja el modelo)
     python entrega_3/rag.py ver                     # qué quedó guardado en Chroma
@@ -21,12 +34,110 @@ from pathlib import Path
 from typing import Optional
 
 ENTREGA_3 = Path(__file__).resolve().parent
+sys.path.insert(0, str(ENTREGA_3.parent / "entrega_2"))   # se reusa clinica/ (config del proveedor) sin moverlo
 sys.path.insert(0, str(ENTREGA_3))
 
+from langchain_core.output_parsers import StrOutputParser  # noqa: E402
+from langchain_core.prompt_values import ChatPromptValue  # noqa: E402
+from langchain_core.prompts import ChatPromptTemplate  # noqa: E402
+from langchain_core.runnables import (RunnableBranch, RunnableLambda, RunnableParallel,  # noqa: E402
+                                      RunnablePassthrough)
+
 import base_conocimiento as bc  # noqa: E402
+from clinica.config import detectar_proveedor, modelo_de  # noqa: E402
 
 RUTA_CALIBRACION = ENTREGA_3 / "datos" / "preguntas_calibracion.json"
 CARPETA_EVIDENCIA = ENTREGA_3 / "evidencia"
+CARPETA_PROMPTS = ENTREGA_3 / "prompts"
+
+SIN_INFORMACION = "No tengo información oficial sobre esa consulta."
+URL_GROQ = "https://api.groq.com/openai/v1"
+
+
+# ── 1) Plantillas ─────────────────────────────────────────────────────────────
+
+def leer_prompt(nombre: str) -> str:
+    return (CARPETA_PROMPTS / f"{nombre}.txt").read_text(encoding="utf-8")
+
+
+PLANTILLA_RAG = ChatPromptTemplate.from_messages([
+    ("system", leer_prompt("rag_v1")),
+    ("human", "Documentos recuperados del corpus de la clínica:\n{contexto}\n\n"
+              "Consulta del paciente:\n<consulta>\n{pregunta}\n</consulta>"),
+])
+
+# Para la comparación B.3: la misma pregunta SIN contexto, como el modelo de la Entrega 1
+PLANTILLA_SIN_GROUNDING = ChatPromptTemplate.from_messages([
+    ("system", leer_prompt("sin_grounding_v1")),
+    ("human", "{pregunta}"),
+])
+
+
+def formatear_contexto(recuperados: list[bc.Recuperado]) -> str:
+    """Solo los documentos que superan el umbral, cada uno con su id adelante para poder citarlo."""
+    return "\n\n".join(f"[{r.id}] {r.texto}" for r in recuperados if r.supera_umbral)
+
+
+def hay_contexto(recuperados: list[bc.Recuperado]) -> bool:
+    return any(r.supera_umbral for r in recuperados)
+
+
+# ── 2) Modelo: el real si hay key; si no, una simulación ──────────────────────
+
+def _modelo_simulado(prompt: ChatPromptValue) -> str:
+    """Sin API key: devuelve el texto del primer documento recuperado, tal cual y con su cita. No redacta nada."""
+    for linea in prompt.messages[-1].content.splitlines():
+        if linea.startswith("["):                                   # "[DOC-TURNO] Qué llevar el día del turno. ..."
+            id_, texto = linea[1:].split("] ", 1)
+            cuerpo = texto.split(". ", 1)[-1]                        # sin el título
+            cuerpo = cuerpo.split(" Responde a", 1)[0]               # sin las preguntas de ejemplo
+            return f"Según la información oficial de la clínica ({id_}): {cuerpo}"
+    return SIN_INFORMACION
+
+
+modelo_simulado = RunnableLambda(_modelo_simulado)
+
+
+def crear_modelo(temperatura: float = 0):
+    """
+    Devuelve (modelo, origen). Cualquier chat model de LangChain encaja en la cadena.
+    Groq y OpenAI usan el mismo formato, así que alcanza con ChatOpenAI (design D7).
+    Sin key, o con un proveedor que el RAG no soporta, usa la simulación.
+    """
+    proveedor = detectar_proveedor()
+    if proveedor is None:
+        return modelo_simulado, "SIMULACIÓN (sin API key)"
+    nombre, key = proveedor
+    if nombre not in ("groq", "openai"):
+        return modelo_simulado, f"SIMULACIÓN (el RAG solo usa Groq u OpenAI; el .env tiene {nombre})"
+    from langchain_openai import ChatOpenAI
+    modelo = ChatOpenAI(model=modelo_de(nombre), temperature=temperatura, api_key=key, max_retries=3,
+                        base_url=URL_GROQ if nombre == "groq" else None)
+    return modelo, f"{nombre} ({modelo_de(nombre)})"
+
+
+# ── 3) La cadena completa ─────────────────────────────────────────────────────
+
+def crear_cadena(buscador, modelo):
+    """
+    `buscador`: pregunta → list[Recuperado] (la "R" del RAG). `modelo`: cualquier Runnable de chat.
+    Devuelve un dict con la pregunta, los documentos recuperados y la respuesta.
+    """
+    generar = RunnableBranch(
+        (lambda x: not hay_contexto(x["documentos"]), RunnableLambda(lambda x: SIN_INFORMACION)),   # ✋ umbral
+        RunnablePassthrough.assign(contexto=lambda x: formatear_contexto(x["documentos"]))
+        | PLANTILLA_RAG | modelo | StrOutputParser(),
+    )
+    return RunnableParallel(pregunta=RunnablePassthrough(), documentos=RunnableLambda(buscador)).assign(respuesta=generar)
+
+
+def buscador_de(base, filtro: Optional[dict] = bc.SOLO_VIGENTES, umbral: float = bc.UMBRAL_SIMILITUD):
+    """El paso de recuperación sobre el índice de Chroma, con el filtro híbrido y el umbral calibrado."""
+    return lambda pregunta: bc.buscar(base, pregunta, filtro=filtro, umbral=umbral)
+
+
+def cadena_sin_grounding(modelo):
+    return PLANTILLA_SIN_GROUNDING | modelo | StrOutputParser()
 
 
 # ── Calibración del umbral (design D6) ────────────────────────────────────────
