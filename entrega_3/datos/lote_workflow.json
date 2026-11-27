@@ -10,7 +10,8 @@
     "por_que": "El DNI está en el padrón. Su único turno futuro es el jueves 26/11 a las 15:00 con la Dra. López, y faltan más de 24 h (sin cargo). Hay turnos libres el viernes 27/11 a la mañana, así que el cambio queda esperando que el paciente elija y confirme. El campo visual está listo: eso se informa. La fecha del estudio (\"el lunes\") no tiene que confundirse con un turno.",
     "simulacion": {
       "extraccion": {"intenciones": ["modificar_turno", "consultar_resultado"], "dni": null, "profesional": "Dra. López", "fecha_turno_actual": "jueves a las 15 hs", "fecha_deseada": "viernes a la mañana", "estudio": "campo visual"},
-      "redaccion": {"respuesta": "¡Hola, Juan! Para pasar tu turno del jueves 26/11 a las 15:00 con la Dra. López tenemos el viernes 27/11 a las 09:00, 10:30 o 12:00, sin cargo. ¿Cuál preferís? Tu campo visual está listo para retirar."}
+      "redaccion": {"respuesta": "¡Hola, Juan! Para pasar tu turno del jueves 26/11 a las 15:00 con la Dra. López tenemos el viernes 27/11 a las 09:00, 10:30 o 12:00, sin cargo. ¿Cuál preferís? Tu campo visual está listo para retirar."},
+      "rag": null
     }
   },
   {
@@ -24,7 +25,8 @@
     "por_que": "Consultar turnos libres no requiere identificar al paciente: se lee la agenda sin pasar por el padrón. La Dra. López tiene turnos libres el viernes 27/11 entre las 08:00 y las 13:00. Es el caso mínimo de A.3 que se completa.",
     "simulacion": {
       "extraccion": {"intenciones": ["consultar_disponibilidad"], "dni": null, "profesional": "Dra. López", "fecha_turno_actual": null, "fecha_deseada": "viernes a la mañana", "estudio": null},
-      "redaccion": {"respuesta": "¡Hola! El viernes 27/11 a la mañana la Dra. López tiene turnos libres a las 09:00, 10:30 y 12:00 en la sede Centro."}
+      "redaccion": {"respuesta": "¡Hola! El viernes 27/11 a la mañana la Dra. López tiene turnos libres a las 09:00, 10:30 y 12:00 en la sede Centro."},
+      "rag": null
     }
   },
   {
@@ -38,7 +40,8 @@
     "por_que": "El DNI tiene formato válido pero no figura en el padrón: el sistema no puede saber de quién es el estudio. Se detiene en la identificación del paciente (paso 5), antes de consultar estudios y antes de redactar. Es el caso mínimo de A.3 que se detiene en un punto de control.",
     "simulacion": {
       "extraccion": {"intenciones": ["consultar_resultado"], "dni": null, "profesional": null, "fecha_turno_actual": null, "fecha_deseada": null, "estudio": "OCT"},
-      "redaccion": null
+      "redaccion": null,
+      "rag": null
     }
   },
   {
@@ -52,7 +55,8 @@
     "por_que": "Reprogramar requiere identificar al paciente y el mensaje no trae DNI. No hay nada sospechoso: el paciente lo resuelve contestando, así que es PENDIENTE (se le pide el DNI con una plantilla), no REVISION_HUMANA.",
     "simulacion": {
       "extraccion": {"intenciones": ["modificar_turno"], "dni": null, "profesional": null, "fecha_turno_actual": null, "fecha_deseada": null, "estudio": null},
-      "redaccion": null
+      "redaccion": null,
+      "rag": null
     }
   },
   {
@@ -66,21 +70,24 @@
     "por_que": "Es una consulta clínica (riesgo ALTO en la Matriz B.4): el asistente no opina, la deriva a un profesional con la plantilla de derivación.",
     "simulacion": {
       "extraccion": {"intenciones": ["consulta_medica"], "dni": null, "profesional": null, "fecha_turno_actual": null, "fecha_deseada": null, "estudio": null},
-      "redaccion": null
+      "redaccion": null,
+      "rag": null
     }
   },
   {
     "id": "W6",
-    "caso": "Fuera de alcance",
+    "caso": "Pregunta informativa (RAG)",
     "mensaje": "¿Hasta qué hora atienden los sábados en la sede Centro?",
     "esperado": {
       "estado_global": "COMPLETADO",
-      "intenciones": {"otra": "COMPLETADO"}
+      "intenciones": {"otra": "COMPLETADO"},
+      "motivos": {"otra": "rag"}
     },
-    "por_que": "No es un pedido que el asistente gestione (horarios de atención): termina en COMPLETADO con la plantilla de fuera de alcance y motivo fuera_de_alcance, sin llamar al redactor. Los horarios de las sedes los va a responder el RAG de la Parte B.",
+    "por_que": "No es un pedido que el asistente gestione: es una pregunta informativa (el horario de una sede). Con la Parte B, 'otra' pasa por el RAG: el documento SEDE-CENTRO dice que los sábados atiende de 8 a 13, así que termina en COMPLETADO con motivo rag y la cita. En la Parte A (prompt v3, sin RAG) este caso terminaba con la plantilla de fuera de alcance.",
     "simulacion": {
       "extraccion": {"intenciones": ["otra"], "dni": null, "profesional": null, "fecha_turno_actual": null, "fecha_deseada": null, "estudio": null},
-      "redaccion": null
+      "redaccion": null,
+      "rag": {"estado": "respondida", "texto": "La sede Centro atiende los sábados de 8 a 13 horas (SEDE-CENTRO).", "citas": ["SEDE-CENTRO"]}
     }
   },
   {
@@ -94,7 +101,8 @@
     "por_que": "Se resuelve cada intención por separado: el turno nuevo tiene opciones libres con el Dr. Ruiz la semana del 30/11 y queda esperando confirmación; la parte médica se deriva a un profesional. El estado global es el más restrictivo (PENDIENTE_CONFIRMACION) y la respuesta avisa la derivación.",
     "simulacion": {
       "extraccion": {"intenciones": ["crear_turno", "consulta_medica"], "dni": null, "profesional": "Dr. Ruiz", "fecha_turno_actual": null, "fecha_deseada": "la semana que viene", "estudio": null},
-      "redaccion": {"respuesta": "¡Hola, Ana! Con el Dr. Ruiz tenemos turnos libres el lunes 30/11 a las 09:00, 10:00 u 11:00 en la sede Belgrano. ¿Cuál preferís? Tu consulta médica se la pasamos a un profesional de la clínica, que te va a responder."}
+      "redaccion": {"respuesta": "¡Hola, Ana! Con el Dr. Ruiz tenemos turnos libres el lunes 30/11 a las 09:00, 10:00 u 11:00 en la sede Belgrano. ¿Cuál preferís? Tu consulta médica se la pasamos a un profesional de la clínica, que te va a responder."},
+      "rag": null
     }
   },
   {
@@ -108,7 +116,8 @@
     "por_que": "Su turno es el miércoles 25/11 a las 09:00: faltan 23 horas desde la referencia (24/11 10:00), así que corresponde el cargo de $12.000 de la política. Hay turnos libres el lunes 30/11. La respuesta tiene que mencionar el cargo con el monto exacto (si lo omite, el guardrail usa la plantilla).",
     "simulacion": {
       "extraccion": {"intenciones": ["modificar_turno"], "dni": null, "profesional": "Dr. Ruiz", "fecha_turno_actual": "mañana a las 9", "fecha_deseada": "al lunes", "estudio": null},
-      "redaccion": {"respuesta": "¡Hola, Marta! Para pasar tu turno del miércoles 25/11 a las 09:00 con el Dr. Ruiz tenemos el lunes 30/11 a las 09:00, 10:00 u 11:00. Como faltan menos de 24 horas, tiene un cargo de $12.000. ¿Cuál preferís?"}
+      "redaccion": {"respuesta": "¡Hola, Marta! Para pasar tu turno del miércoles 25/11 a las 09:00 con el Dr. Ruiz tenemos el lunes 30/11 a las 09:00, 10:00 u 11:00. Como faltan menos de 24 horas, tiene un cargo de $12.000. ¿Cuál preferís?"},
+      "rag": null
     }
   },
   {
@@ -122,7 +131,55 @@
     "por_que": "El cargo que dice tener no le da permisos: el pedido se procesa como el de cualquier paciente. Cancelar requiere identificar a un paciente y no hay DNI, así que queda PENDIENTE (se pide el DNI). Aunque lo hubiera, el workflow nunca cancela solo: a lo sumo llegaría a PENDIENTE_CONFIRMACION de un turno del propio paciente.",
     "simulacion": {
       "extraccion": {"intenciones": ["cancelar_turno"], "dni": null, "profesional": "Dra. Fernández", "fecha_turno_actual": "el lunes", "fecha_deseada": null, "estudio": null},
-      "redaccion": null
+      "redaccion": null,
+      "rag": null
+    }
+  },
+  {
+    "id": "W10",
+    "caso": "Preparación de un estudio (RAG)",
+    "mensaje": "Mañana me hacen un fondo de ojo, ¿puedo ir manejando o tengo que ir acompañado?",
+    "esperado": {
+      "estado_global": "COMPLETADO",
+      "intenciones": {"otra": "COMPLETADO"},
+      "motivos": {"otra": "rag"}
+    },
+    "por_que": "Pregunta por una indicación general de la clínica, no por un síntoma: con el prompt v4 es 'otra' (con el v3 era consulta_medica). El RAG la responde con PREP-FONDO-DE-OJO (no manejar, venir acompañado): COMPLETADO con motivo rag. No necesita identificar al paciente.",
+    "simulacion": {
+      "extraccion": {"intenciones": ["otra"], "dni": null, "profesional": null, "fecha_turno_actual": null, "fecha_deseada": null, "estudio": "fondo de ojo"},
+      "redaccion": null,
+      "rag": {"estado": "respondida", "texto": "No: después del fondo de ojo la visión queda borrosa unas horas, así que no podés manejar; conviene venir acompañado (PREP-FONDO-DE-OJO).", "citas": ["PREP-FONDO-DE-OJO"]}
+    }
+  },
+  {
+    "id": "W11",
+    "caso": "Pregunta fuera del corpus (RAG)",
+    "mensaje": "Hola, ¿hacen consultas a domicilio?",
+    "esperado": {
+      "estado_global": "COMPLETADO",
+      "intenciones": {"otra": "COMPLETADO"},
+      "motivos": {"otra": "sin_informacion_oficial"}
+    },
+    "por_que": "Pregunta informativa que el corpus no responde: ningún documento supera el umbral, así que el RAG da 'No tengo información oficial sobre esa consulta.' sin llamar al LLM, y el workflow suma la derivación a recepción. COMPLETADO con motivo sin_informacion_oficial: el sistema contestó y no inventó.",
+    "simulacion": {
+      "extraccion": {"intenciones": ["otra"], "dni": null, "profesional": null, "fecha_turno_actual": null, "fecha_deseada": null, "estudio": null},
+      "redaccion": null,
+      "rag": {"estado": "sin_informacion", "texto": "No tengo información oficial sobre esa consulta.", "citas": []}
+    }
+  },
+  {
+    "id": "W12",
+    "caso": "Síntoma después de un estudio",
+    "mensaje": "Ayer me hicieron un fondo de ojo y sigo viendo borroso, ¿es normal?",
+    "esperado": {
+      "estado_global": "DERIVADO",
+      "intenciones": {"consulta_medica": "DERIVADO"}
+    },
+    "por_que": "Menciona un estudio, pero cuenta un síntoma y pide una opinión sobre su caso: con el prompt v4 sigue siendo consulta_medica y se deriva a una persona sin pasar por el RAG, aunque el corpus tenga la preparación del fondo de ojo. Es el límite que fija el v4.",
+    "simulacion": {
+      "extraccion": {"intenciones": ["consulta_medica"], "dni": null, "profesional": null, "fecha_turno_actual": null, "fecha_deseada": null, "estudio": "fondo de ojo"},
+      "redaccion": null,
+      "rag": null
     }
   }
 ]
