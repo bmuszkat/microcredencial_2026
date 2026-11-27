@@ -1,8 +1,9 @@
-"""Workflow (spec `workflow-pedidos`): pasos de mensaje 0 a 5, con un LLM falso (sin API)."""
+"""Workflow (spec `workflow-pedidos`): todos los pasos con un LLM y un RAG falsos (sin API)."""
 
 import copy
 import json
 import urllib.error
+from types import SimpleNamespace
 
 import pytest
 
@@ -93,11 +94,19 @@ def test_el_dni_del_llm_se_descarta(datos, dni_del_llm):
 
 # ── Paso 3 · Enrutar ──────────────────────────────────────────────────────────
 
-def test_otra_registra_motivo_fuera_de_alcance(datos):
+def test_otra_queda_para_el_rag(datos):
     ctx = w.pasos_de_mensaje("¿Hasta qué hora atienden?", LLMFalso(extraccion(intenciones=["otra"])), datos)
-    assert ctx.intenciones == [{"intencion": "otra", "estado": COMPLETADO, "motivo": "fuera_de_alcance"}]
+    assert ctx.intenciones == [{"intencion": "otra", "estado": None}]   # la resuelve el RAG, no una plantilla
     assert not ctx.detenido
+    assert "otra → RAG" in ctx.traza.pasos[-2].resultado   # paso 3
     assert ctx.traza.numeros() == [0, 1, 2, 3, 4]  # el paso 5 no se ejecuta: no hace falta identificar
+
+
+def test_la_extraccion_usa_el_prompt_v4(datos):
+    llm = LLMFalso(extraccion(intenciones=["otra"]))
+    ctx = w.pasos_de_mensaje("¿Puedo manejar después de que me dilaten?", llm, datos)
+    assert "indicación general que publica la clínica" in llm.llamadas[0][0]
+    assert ctx.traza.pasos[1].resultado.startswith("prompt v4:")
 
 
 def test_consulta_medica_queda_derivada(datos):
@@ -298,10 +307,108 @@ def test_crear_turno_sin_dni_queda_pendiente(datos):
     assert (r["estado"], r["paso_detenido"]) == (PENDIENTE, 4)
 
 
-def test_otra_completa_con_motivo(datos):
-    r = procesar("¿Hasta qué hora atienden?", datos, intenciones=["otra"])
+# ── Parte B · "otra" pasa por el RAG (design D11) ─────────────────────────────
+
+class RagFalso:
+    """Registra la pregunta que recibe y devuelve un resultado con el formato de rag.ResultadoRag."""
+
+    def __init__(self, estado="respondida", texto="Los sábados atiende de 8 a 13 horas (SEDE-CENTRO).",
+                 citas=("SEDE-CENTRO",), candidatos=(("SEDE-CENTRO", 0.637, True), ("SEDE-BELGRANO", 0.495, True)),
+                 llamo_llm=True, detalle=None, texto_generado=None, error=None):
+        self.resultado = SimpleNamespace(estado=estado, texto=texto, citas=list(citas), candidatos=list(candidatos),
+                                         llamo_llm=llamo_llm, detalle=detalle, texto_generado=texto_generado or texto)
+        self.error, self.preguntas = error, []
+
+    def __call__(self, pregunta):
+        self.preguntas.append(pregunta)
+        if self.error:
+            raise self.error
+        return self.resultado
+
+
+def procesar_otra(mensaje, datos, rag):
+    llm = LLMFalso(extraccion(intenciones=["otra"]))
+    return w.procesar(mensaje, llm, datos, rag=rag), llm
+
+
+def test_otra_respondida_por_el_rag(datos):
+    r, llm = procesar_otra("¿Hasta qué hora atienden los sábados en Centro?", datos, RagFalso())
     assert r["estado"] == COMPLETADO
-    assert r["intenciones"] == [{"intencion": "otra", "estado": COMPLETADO, "motivo": "fuera_de_alcance"}]
+    assert r["intenciones"] == [{"intencion": "otra", "estado": COMPLETADO, "motivo": "rag", "citas": ["SEDE-CENTRO"]}]
+    assert (r["respuesta"].origen, r["respuesta"].texto) == ("RAG", "Los sábados atiende de 8 a 13 horas (SEDE-CENTRO).")
+    assert r["traza"].numeros() == [0, 1, 2, 3, 4, 7, 10, 11]
+    assert [(p.numero, p.tipo) for p in r["traza"].pasos[-3:]] == [(7, "Sensor"), (10, "LLM"), (11, "Regla")]
+    assert all(p.ok for p in r["traza"].pasos)
+    assert len(llm.llamadas) == 1   # solo la extracción: el redactor de la Parte A no se llama
+
+
+def test_otra_sin_informacion_oficial_no_llama_al_llm(datos):
+    rag = RagFalso(estado="sin_informacion", texto="No tengo información oficial sobre esa consulta.", citas=(),
+                   candidatos=(("COB-PAMI", 0.375, False),), llamo_llm=False)
+    r, _ = procesar_otra("¿Hacen consultas a domicilio?", datos, rag)
+    assert r["estado"] == COMPLETADO
+    assert r["intenciones"] == [{"intencion": "otra", "estado": COMPLETADO, "motivo": "sin_informacion_oficial"}]
+    assert r["traza"].numeros() == [0, 1, 2, 3, 4, 7]   # sin pasos 10 y 11: el LLM no se llamó
+    paso_7 = r["traza"].pasos[-1]
+    assert not paso_7.ok and "ninguno supera el umbral" in paso_7.resultado
+    assert r["respuesta"].plantilla == "sin_informacion_oficial"
+    assert r["respuesta"].texto.startswith("No tengo información oficial sobre esa consulta.")
+    assert "recepción" in r["respuesta"].texto
+
+
+def test_otra_cuando_el_modelo_dice_que_no_sabe(datos):
+    rag = RagFalso(estado="sin_informacion", texto="No tengo información oficial sobre esa consulta.", citas=())
+    r, _ = procesar_otra("¿Hay descuento para estudiantes?", datos, rag)
+    assert r["intenciones"][0]["motivo"] == "sin_informacion_oficial"
+    assert r["traza"].numeros() == [0, 1, 2, 3, 4, 7, 10, 11]
+    assert "nada que verificar" in r["traza"].pasos[-1].resultado
+
+
+def test_otra_no_verificada_queda_para_una_persona(datos):
+    rag = RagFalso(estado="no_verificado", texto=None, detalle="monto sin respaldo en los documentos: $5.000",
+                   texto_generado="Son $5.000 (CAR-CANCELACION-V2).")
+    r, _ = procesar_otra("¿Me cobran si cancelo?", datos, rag)
+    assert r["estado"] == REVISION_HUMANA
+    assert r["intenciones"][0]["motivo"] == "rag_no_verificado"
+    assert r["respuesta"].plantilla == "acuse_revision"   # el texto descartado no llega al paciente
+    paso_11 = r["traza"].pasos[-1]
+    assert (paso_11.numero, paso_11.ok) == (11, False) and "$5.000" in paso_11.resultado
+
+
+def test_otra_con_error_de_la_api(datos):
+    rag = RagFalso(estado="error", texto=None, detalle="ConnectionError: sin red")
+    r, _ = procesar_otra("¿Me cobran si cancelo?", datos, rag)
+    assert r["estado"] == REVISION_HUMANA
+    assert r["traza"].numeros()[-1] == 10 and not r["traza"].pasos[-1].ok
+
+
+def test_si_el_rag_no_esta_disponible_queda_para_una_persona(datos):
+    r, _ = procesar_otra("¿Me cobran si cancelo?", datos, RagFalso(error=ModuleNotFoundError("No module named 'chromadb'")))
+    assert r["estado"] == REVISION_HUMANA
+    assert r["traza"].numeros()[-1] == 7 and "chromadb" in r["traza"].pasos[-1].resultado
+
+
+def test_el_rag_recibe_el_texto_anonimizado(datos):
+    rag = RagFalso()
+    procesar_otra("Soy Juan Pérez, DNI 30.123.456, ¿qué tengo que llevar al turno?", datos, rag)
+    [pregunta] = rag.preguntas
+    assert "[DNI]" in pregunta and "30.123.456" not in pregunta and "30123456" not in pregunta
+
+
+def test_un_mensaje_que_no_es_otra_no_crea_el_rag(datos, monkeypatch):
+    def no_deberia_llamarse():
+        raise AssertionError("se creó el RAG para un mensaje que no es 'otra'")
+    monkeypatch.setattr(w, "rag_por_defecto", no_deberia_llamarse)
+    r = procesar("¿Hay lugar el viernes a la mañana con la Dra. López?", datos,
+                 intenciones=["consultar_disponibilidad"], profesional="Dra. López", fecha_deseada="viernes a la mañana")
+    assert r["rag"] is None and 7 in r["traza"].numeros()
+
+
+def test_sin_rag_inyectado_usa_el_rag_por_defecto(datos, monkeypatch):
+    rag = RagFalso()
+    monkeypatch.setattr(w, "rag_por_defecto", lambda: rag)
+    r = w.procesar("¿Hasta qué hora atienden?", LLMFalso(extraccion(intenciones=["otra"])), datos)
+    assert r["intenciones"][0]["motivo"] == "rag" and rag.preguntas
 
 
 def test_falla_del_llm_da_estado_global_revision_humana(datos):
@@ -365,15 +472,26 @@ LOTE = json.loads(w.RUTA_LOTE.read_text(encoding="utf-8"))
 def test_caso_del_lote_termina_en_el_estado_esperado(caso, datos):
     simulacion = caso["simulacion"]
     llm = w.llm_simulado([simulacion["extraccion"], simulacion["redaccion"]])
-    r = w.procesar(caso["mensaje"], llm, datos)
+    r = w.procesar(caso["mensaje"], llm, datos, rag=w.rag_simulado(simulacion["rag"]))
+    assert w.coincide_con_lo_esperado(r, caso["esperado"])
     assert r["estado"] == caso["esperado"]["estado_global"]
     assert {i["intencion"]: i["estado"] for i in r["intenciones"]} == caso["esperado"]["intenciones"]
     # Si el caso tiene redacción simulada, tiene que pasar el guardrail y llegar al paciente tal cual.
     if simulacion["redaccion"]:
         assert r["respuesta"].origen == "LLM", r["respuesta"].valores_sin_respaldo
         assert r["respuesta"].texto == simulacion["redaccion"]["respuesta"]
+    elif simulacion["rag"] and simulacion["rag"]["estado"] == "respondida":
+        assert (r["respuesta"].origen, r["respuesta"].texto) == ("RAG", simulacion["rag"]["texto"])
     else:
         assert r["respuesta"].origen == "PLANTILLA"
+
+
+def test_coincide_con_lo_esperado_revisa_el_motivo():
+    resultado = {"estado": COMPLETADO, "intenciones": [{"intencion": "otra", "estado": COMPLETADO, "motivo": "rag"}]}
+    esperado = {"estado_global": COMPLETADO, "intenciones": {"otra": COMPLETADO}}
+    assert w.coincide_con_lo_esperado(resultado, esperado)
+    assert w.coincide_con_lo_esperado(resultado, {**esperado, "motivos": {"otra": "rag"}})
+    assert not w.coincide_con_lo_esperado(resultado, {**esperado, "motivos": {"otra": "sin_informacion_oficial"}})
 
 
 # ── Consola ───────────────────────────────────────────────────────────────────
@@ -389,6 +507,24 @@ def test_mensaje_suelto_sin_key_no_corre(monkeypatch, capsys):
     monkeypatch.setattr(w, "llm_real", lambda: None)
     assert w.main(["hola"]) == 1
     assert "API key" in capsys.readouterr().out
+
+
+def test_la_espera_se_comparte_entre_la_extraccion_y_el_rag(monkeypatch):
+    esperas = []
+    monkeypatch.setattr(w.time, "sleep", esperas.append)
+    esperar = w.crear_espera(20)
+    llm = w.llm_con_pausa(lambda system, usuario: "ok", 20, esperar)
+    llm("s", "u")      # primera llamada: no espera
+    esperar()          # una llamada del RAG
+    llm("s", "u")
+    assert esperas == [20, 20]
+
+
+def test_rag_simulado_tiene_el_formato_del_resultado():
+    r = w.rag_simulado({"estado": "respondida", "texto": "Traé el DNI (DOC-TURNO).", "citas": ["DOC-TURNO"]})("¿qué llevo?")
+    assert (r.estado, r.citas, r.llamo_llm) == ("respondida", ["DOC-TURNO"], True)
+    with pytest.raises(RuntimeError):
+        w.rag_simulado(None)("hola")
 
 
 def test_pausa_entre_llamadas_salvo_la_primera(monkeypatch):

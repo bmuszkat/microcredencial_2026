@@ -86,7 +86,9 @@ Si falla 2 o 3, el resultado es `no_verificado` con el detalle. Se reutiliza la 
 - Se reusan los números 7, 10 y 11 porque cumplen el mismo papel que en un pedido administrativo: consultar la fuente, redactar y verificar.
 - Mapeo de estados: `respondida` → `COMPLETADO` + `motivo: "rag"` y `citas`; `sin_informacion` → `COMPLETADO` + `motivo: "sin_informacion_oficial"` y el fallback más "Te derivamos con recepción…"; `no_verificado` o `error` → `REVISION_HUMANA` + `motivo: "rag_no_verificado"` y el acuse fijo.
 - `procesar(mensaje, llm, datos, rag=None)`: `rag` es una función inyectable `pregunta -> ResultadoRag`. Por defecto se crea la real la primera vez que se necesita, así los mensajes que no son `otra` no cargan el modelo de embeddings.
-- En `--simulacion`, la recuperación corre de verdad y la generación es la simulada.
+- En `python entrega_3/workflow.py --simulacion`, el resultado del RAG también sale del lote (`simulacion.rag`), igual que la extracción y la redacción. Así el lote simulado corre sin ChromaDB (por ejemplo en Python 3.15) y sin bajar el modelo. La recuperación real en simulación se puede ver con `python entrega_3/rag.py comparar --simulacion` o `preguntar --simulacion`.
+- La espera entre llamadas (20 s) se comparte entre la extracción y el RAG, así la corrida real respeta el límite de Groq contando todas las llamadas.
+- Si el RAG no está disponible (por ejemplo, falta ChromaDB), `otra` queda en `REVISION_HUMANA` con `motivo: "rag_no_verificado"`: el workflow no se rompe.
 
 ### D12. Prompt de extracción v4
 `entrega_3/prompts/extraccion_v4.txt` = v3 + la regla "una indicación general que publica la clínica (preparación de un estudio, qué llevar, si se puede manejar después de dilatar) es `otra`; si el paciente cuenta un síntoma o pide opinión sobre su caso, es `consulta_medica`". El ejemplo de v3 "¿Puedo manejar después de que me dilaten las pupilas?" pasa a `otra`, y se agrega "Me dilataron ayer y sigo viendo borroso, ¿es normal?" → `consulta_medica`. v3 queda sin cambios (spec `extraccion-mensajes`). El workflow pasa a usar v4.
