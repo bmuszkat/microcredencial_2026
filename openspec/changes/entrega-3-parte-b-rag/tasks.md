@@ -12,7 +12,7 @@
 ## 3. Base de conocimiento
 
 - [x] 3.1 Crear `entrega_3/base_conocimiento.py` (design D2, D4 y D5): embeddings jina con fastembed detrás de la interfaz `Embeddings`, carga del corpus como `Document`, índice Chroma persistido con huella, `buscar(pregunta, k, filtro)` con similitud y `supera_umbral` (umbral provisorio 0.35). Agregar `tests/test_base_conocimiento.py` sobre un índice temporal: reindexa si cambia el corpus y reutiliza si no, k y orden, la política de cargos vigente primero para "¿me cobran si cancelo a último momento?", la derogada excluida con el filtro y presente sin él, y filtro por categoría. Verificar con `pytest` en el venv
-- [ ] 3.2 Crear `entrega_3/rag.py` con la consola de búsqueda (design D15): `indexar`, `ver` y `buscar "pregunta" [--todas]`. Verificar corriendo los tres comandos desde la raíz
+- [x] 3.2 Crear `entrega_3/rag.py` con la consola de búsqueda (design D15): `indexar`, `ver` y `buscar "pregunta" [--todas]`. Verificar corriendo los tres comandos desde la raíz
 
 ## 4. Calibración del umbral
 
