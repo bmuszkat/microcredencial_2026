@@ -91,7 +91,7 @@ Si falla 2 o 3, el resultado es `no_verificado` con el detalle. Se reutiliza la 
 - Si el RAG no está disponible (por ejemplo, falta ChromaDB), `otra` queda en `REVISION_HUMANA` con `motivo: "rag_no_verificado"`: el workflow no se rompe.
 
 ### D12. Prompt de extracción v4
-`entrega_3/prompts/extraccion_v4.txt` = v3 + la regla "una indicación general que publica la clínica (preparación de un estudio, qué llevar, si se puede manejar después de dilatar) es `otra`; si el paciente cuenta un síntoma o pide opinión sobre su caso, es `consulta_medica`". El ejemplo de v3 "¿Puedo manejar después de que me dilaten las pupilas?" pasa a `otra`, y se agrega "Me dilataron ayer y sigo viendo borroso, ¿es normal?" → `consulta_medica`. v3 queda sin cambios (spec `extraccion-mensajes`). El workflow pasa a usar v4.
+`entrega_3/prompts/extraccion_v4.txt` = v3 + la regla "una indicación general que publica la clínica (preparación de un estudio, qué llevar, si se puede manejar después de dilatar) es `otra`; si el paciente cuenta un síntoma o pide opinión sobre su caso, es `consulta_medica`". El ejemplo de v3 "¿Puedo manejar después de que me dilaten las pupilas?" pasa a `otra`, y se agrega "Me dilataron hace dos días y todavía tengo la vista nublada, ¿me tengo que preocupar?" → `consulta_medica` (distinto de W12, para que la corrida mida si el modelo generaliza). v3 queda sin cambios (spec `extraccion-mensajes`). El workflow pasa a usar v4.
 
 ### D13. Casos nuevos en el lote, con el estado esperado fijado antes de correr
 Se agregan a `lote_workflow.json` y se commitean antes de la corrida real:

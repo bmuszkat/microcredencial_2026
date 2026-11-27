@@ -21,7 +21,7 @@ el sistema de turnos.
 |---|---|
 | [Entrega 1](entrega_1/informe.md) | Diagnóstico, ficha de oportunidad y concepto de solución |
 | [Entrega 2](entrega_2/informe.md) | Primer prototipo operativo: prompt versionado, API real y JSON validado ([resultados del lote](entrega_2/resultados_lote.md) · [evaluación sobre 50 mensajes](entrega_2/evaluacion.md)) |
-| [Entrega 3](entrega_3/informe.md) | Workflow encadenado con puntos de control (Parte A, Hito 1: 9/9 casos contra Groq). RAG y agente: en curso |
+| [Entrega 3](entrega_3/informe.md) | Workflow encadenado con puntos de control (Parte A, Hito 1: 9/9 casos contra Groq) y RAG con corpus propio integrado al workflow (Parte B: 12/12 casos contra Groq). Agente: en curso |
 
 ## Cómo correrlo (Entrega 2)
 
@@ -67,13 +67,13 @@ python -m pytest entrega_2       # pruebas automáticas (no usan la API)
 Mismos requisitos y mismo `.env` que la Entrega 2. Desde la raíz del repo:
 
 ```bash
-python entrega_3/workflow.py                   # workflow sobre el lote de 9 casos (~7 min con Groq gratis)
+python entrega_3/workflow.py                   # workflow sobre el lote de 12 casos (~6 min con Groq gratis)
 python entrega_3/workflow.py --simulacion      # el lote con respuestas simuladas, sin llamar a la API
 python entrega_3/workflow.py "mensaje libre"   # un mensaje suelto contra el LLM real
 python -m pytest entrega_3                     # pruebas automáticas (no usan la API)
 ```
 
-**Workflow:** cada caso muestra la traza paso a paso (📏 regla, 🤖 LLM, 🔎 sensor), el estado de cada intención, el estado global y la respuesta al paciente, y al final cuántos casos dieron el estado esperado. Con Groq espera 20 s entre llamadas (`--pausa N` para cambiarlo). Sin ninguna key corre en modo simulación. Los datos de la clínica (padrón, agenda, estudios y política de cargos) son ficticios y están en `entrega_3/datos/`.
+**Workflow:** cada caso muestra la traza paso a paso (📏 regla, 🤖 LLM, 🔎 sensor), el estado de cada intención, el estado global y la respuesta al paciente, y al final cuántos casos dieron el estado esperado. Las preguntas informativas (intención `otra`) las responde el RAG, así que el workflow con Groq necesita el entorno del RAG (ver abajo); si no está disponible, esos mensajes quedan en revisión humana y el resto del lote corre igual. Con Groq espera 20 s entre llamadas (`--pausa N` para cambiarlo). Sin ninguna key corre en modo simulación. Los datos de la clínica (padrón, agenda, estudios y política de cargos) son ficticios y están en `entrega_3/datos/`.
 
 **RAG (Parte B):** necesita el entorno con Python 3.12 y las dependencias de `requirements.txt` (ver arriba). La búsqueda no usa API key: los embeddings se calculan en la compu con el modelo `jinaai/jina-embeddings-v2-base-es`, que **se baja la primera vez que se indexa (unos 640 MB)** y queda en la caché. El índice se guarda en `entrega_3/indice_chroma/` (no se sube: se regenera desde el corpus, y se reindexa solo si el corpus cambió).
 
@@ -124,8 +124,8 @@ python entrega_3/rag.py comparar --simulacion            # lo mismo sin llamar a
 │   ├── evidencia/            ← salidas de las corridas reales contra Groq
 │   └── tests/                ← pruebas automáticas sin API
 ├── entrega_3/
-│   ├── informe.md            ← A.2 (diagrama del workflow) y A.3 (prueba de falla controlada)
-│   ├── workflow.py           ← Parte A: los 12 pasos, la traza y el punto de entrada por consola
+│   ├── informe.md            ← Parte A (diagrama y prueba de falla controlada) y Parte B (corpus, arquitectura, comparación e integración)
+│   ├── workflow.py           ← los 12 pasos, la traza y el punto de entrada por consola; `otra` pasa por el RAG
 │   ├── rag.py                ← Parte B: cadena LCEL, guardrail de citas y montos, y la consola del RAG
 │   ├── base_conocimiento.py  ← embeddings locales (jina) + índice ChromaDB con filtro de vigencia y umbral
 │   ├── corpus/               ← corpus_clinica.json: 15 documentos con texto semántico y metadatos
@@ -134,10 +134,11 @@ python entrega_3/rag.py comparar --simulacion            # lo mismo sin llamar a
 │   ├── redactor.py           ← respuesta al paciente: plantillas, redacción con datos validados y guardrail
 │   ├── prompts/
 │   │   ├── extraccion_v3.txt ← el v2 con el DNI anonimizado y los fallos s12 y p02 corregidos
+│   │   ├── extraccion_v4.txt ← el v3 con el límite entre indicación publicada (otra) y consulta médica
 │   │   ├── redaccion_v1.txt  ← redacción con formato fijo (dd/mm, HH:MM, $12.000)
 │   │   ├── rag_v1.txt        ← responder solo con los documentos recuperados, citando cada uno
 │   │   └── sin_grounding_v1.txt ← el mismo asistente sin contexto, para la comparación B.3
-│   ├── datos/                ← padrón, agenda, estudios y política de cargos (ficticios), el lote de 9 casos y las preguntas del RAG
+│   ├── datos/                ← padrón, agenda, estudios y política de cargos (ficticios), el lote de 12 casos y las preguntas del RAG
 │   ├── evidencia/            ← corridas reales contra Groq y la calibración del umbral
 │   └── tests/                ← pruebas automáticas sin API (clinica/ se importa desde entrega_2)
 └── openspec/                 ← specs y cambios (desarrollo guiado por especificaciones)

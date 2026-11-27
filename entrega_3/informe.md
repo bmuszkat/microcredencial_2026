@@ -5,7 +5,7 @@ Microcredencial #2 — Diseño de Aplicaciones Inteligentes (ORT) · Grupo 1 · 
 | Parte | Estado |
 |---|---|
 | **A — Workflow encadenado (Clase 4, Hito 1)** | ✅ Ejecutable, corrido contra Groq: 9/9 casos con el estado esperado |
-| B — RAG con corpus propio (Clase 5) | En curso: B.1, B.2 y B.3 listos (comparación contra Groq: 5/5 con lo esperado con RAG); falta integrarlo al workflow |
+| **B — RAG con corpus propio (Clase 5)** | ✅ Corpus, arquitectura y comparación contra Groq (5/5 con lo esperado con RAG), integrado al workflow: 12/12 casos con el estado esperado contra Groq |
 | C — Agente con LangGraph (Clase 6, Hito 2) | Pendiente |
 
 ---
@@ -17,11 +17,13 @@ La Entrega 2 convertía un mensaje en un JSON validado y se quedaba ahí. No sab
 Mantiene el principio de las entregas anteriores: **"la IA interpreta, la base de datos es la autoridad"**. El LLM hace dos cosas, extraer y redactar. Todo lo que decide es código: si el paciente existe, cuál es su turno, si hay lugar, cuánto se cobra y qué se le responde.
 
 ```bash
-python entrega_3/workflow.py                   # corre el lote de 9 casos (Groq si hay key; si no, simulación)
+python entrega_3/workflow.py                   # corre el lote (Groq si hay key; si no, simulación)
 python entrega_3/workflow.py --simulacion      # el lote con las respuestas simuladas, aunque haya key
 python entrega_3/workflow.py "mensaje libre"   # un mensaje suelto contra el LLM real
-python -m pytest entrega_3                     # 324 pruebas, sin API
+python -m pytest entrega_3                     # 483 pruebas, sin API
 ```
+
+> Esta parte describe el workflow como se entregó en el Hito 1 (prompt v3, 9 casos). En la Parte B la intención `otra` pasó a responderse con el RAG, el prompt de extracción pasó al v4 y el lote creció a 12 casos: el diagrama y las tablas de abajo ya incluyen esa rama, y la corrida nueva está en [B.4](#b4--integración-con-el-workflow).
 
 ### A.1 — Los pasos
 
@@ -30,7 +32,7 @@ El workflow tiene 12 pasos. Los pasos 0 a 5 se ejecutan **una vez por mensaje**:
 | # | Paso | Tipo | Alcance | Journey B.2 (E1) | Código |
 |---|---|---|---|---|---|
 | 0 | Anonimizar el DNI: el código lo detecta y le manda `[DNI]` al LLM | 📏 Regla | mensaje | privacidad (E2) | `reglas.anonimizar_dni` |
-| 1 | Extraer intenciones y datos (prompt v3) | 🤖 LLM | mensaje | 2 | `workflow.paso_1_extraer` |
+| 1 | Extraer intenciones y datos (prompt v3; v4 desde la Parte B) | 🤖 LLM | mensaje | 2 | `workflow.paso_1_extraer` |
 | 2 | Validar el contrato, reponer el DNI desde el código y validar su formato | 📏 Regla | mensaje | 3 | `workflow.paso_2_validar` |
 | 3 | Enrutar cada intención | 📏 Regla | mensaje | 3 y desvío | `workflow.paso_3_enrutar` |
 | 4 | ¿Alguna intención necesita identificar al paciente? | 📏 Regla | mensaje | 4 | `workflow.paso_4_…` |
@@ -41,6 +43,14 @@ El workflow tiene 12 pasos. Los pasos 0 a 5 se ejecutan **una vez por mensaje**:
 | 9 | Si la operación escribe en la agenda → `PENDIENTE_CONFIRMACION` (no se ejecuta) | 📏 Regla | intención | 11 | `workflow._confirmacion` |
 | 10 | Redactar la respuesta con los datos validados (o plantilla, según el estado) | 🤖 LLM | mensaje | 8 | `redactor.armar_respuesta` |
 | 11 | Verificar que cada horario, fecha y monto del texto esté en los datos | 📏 Regla | mensaje | 9 | `redactor.verificar_texto` |
+
+**La rama de `otra` (Parte B).** Una pregunta informativa no pasa por la agenda: usa los mismos números de paso con otra fuente de datos.
+
+| # | Paso | Tipo | Código |
+|---|---|---|---|
+| 7 | Buscar en el corpus: los 3 documentos vigentes más parecidos y si superan el umbral | 🔎 Sensor | `base_conocimiento.buscar` |
+| 10 | Responder con los documentos (prompt `rag_v1`), solo si alguno superó el umbral | 🤖 LLM | `rag.crear_cadena` |
+| 11 | Verificar que las citas y los montos estén en los documentos recuperados | 📏 Regla | `rag.verificar_respuesta` |
 
 **Balance:** de 12 pasos, 2 son del LLM, 2 son sensores (consultas de solo lectura a los datos) y 8 son reglas. El LLM aparece solo donde hay lenguaje natural, y **las dos veces está rodeado de validaciones en código**: el contrato de la E2 después de extraer, y el contrato de redacción más el guardrail después de redactar.
 
@@ -63,13 +73,19 @@ El workflow tiene 12 pasos. Los pasos 0 a 5 se ejecutan **una vez por mensaje**:
 flowchart TD
     M([Mensaje del paciente]) --> P0["0 · Anonimizar el DNI<br/>el código guarda el DNI; al LLM va #91;DNI#93;"]
     P0 -->|2+ DNI distintos| PEN
-    P0 --> P1[1 · Extraer intenciones y datos<br/>prompt v3]
+    P0 --> P1[1 · Extraer intenciones y datos<br/>prompt v4]
     P1 -->|error de red o 429| RH
     P1 --> P2{2 · ¿Cumple el contrato?<br/>reponer el DNI del código}
     P2 -->|no: FORMATO / CONTRATO| RH
     P2 -->|sí| P3[3 · Enrutar cada intención]
     P3 -->|consulta_medica| DER
-    P3 -->|otra| FA
+    P3 -->|otra| Q7["7 · Buscar en el corpus<br/>k=3, solo vigentes"]
+    Q7 -->|nada supera 0.45| SI([COMPLETADO · sin información oficial<br/>plantilla + derivación a recepción])
+    Q7 -->|sí| Q10[10 · Responder con los documentos<br/>prompt rag_v1]
+    Q10 -->|error de la API| RH
+    Q10 --> Q11{11 · ¿Citas y montos<br/>en los documentos?}
+    Q11 -->|sí| QR([COMPLETADO · respuesta del RAG con citas])
+    Q11 -->|no| RH
     P3 -->|reprogramar y cancelar a la vez| PEN
     P3 -->|administrativas| P4{4 · ¿Hace falta<br/>identificar al paciente?}
     P4 -->|sí, sin DNI| PEN
@@ -101,18 +117,17 @@ flowchart TD
     RH([REVISION_HUMANA<br/>acuse fijo; lo resuelve recepción])
     PEN([PENDIENTE<br/>se le pregunta al paciente])
     DER([DERIVADO<br/>consulta médica → profesional])
-    FA([COMPLETADO · fuera de alcance<br/>plantilla fija])
 
     classDef llm fill:#e8f0fe,stroke:#4a6fd1,color:#1a1a1a
     classDef regla fill:#e9f7ef,stroke:#2e8b57,color:#1a1a1a
     classDef sensor fill:#fff8e1,stroke:#c79100,color:#1a1a1a
     classDef stop fill:#fdecea,stroke:#c0392b,color:#1a1a1a
     classDef fin fill:#f3e5f5,stroke:#7b1fa2,color:#1a1a1a
-    class P1,P10 llm
-    class P0,P2,P3,P4,P6,P8,P9,P11,EG regla
-    class P5,P7 sensor
+    class P1,P10,Q10 llm
+    class P0,P2,P3,P4,P6,P8,P9,P11,EG,Q11 regla
+    class P5,P7,Q7 sensor
     class RH,RH2,PEN,PEN2 stop
-    class DER,FA,PC,OK,R,R2,PL fin
+    class DER,SI,QR,PC,OK,R,R2,PL fin
 ```
 
 Azul: LLM. Verde: reglas. Amarillo: sensores (lectura de la agenda). Rojo: puntos de control que detienen el flujo. Violeta: estados finales y respuestas.
@@ -138,6 +153,8 @@ Hay un criterio único para decidir a dónde va cada caso que se detiene:
 | 7 | Dos turnos posibles, varios estudios o ningún turno libre en lo pedido | `PENDIENTE` | La pregunta, con turnos libres alternativos si los hay |
 | 9 | Crear, reprogramar o cancelar válidos | `PENDIENTE_CONFIRMACION` | Las opciones y el cargo; **nada se ejecuta** |
 | 11 | El texto del LLM menciona un valor que no está en los datos | (no cambia el estado) | La plantilla de respaldo, con los mismos datos |
+| 7 (`otra`) | Ningún documento del corpus supera el umbral | `COMPLETADO` | "No tengo información oficial sobre esa consulta" y la derivación a recepción |
+| 10–11 (`otra`) | Falla la API, o la respuesta cita un documento no recuperado o un monto sin respaldo | `REVISION_HUMANA` | Acuse fijo |
 
 **Por qué un turno que no coincide va a `REVISION_HUMANA` y no se le pregunta al paciente:** la identidad se valida solo con el DNI. Si el sistema contestara "tu turno registrado es el martes a las 15", cualquiera que conozca un DNI ajeno se enteraría de sus turnos. Por eso **ninguna pregunta al paciente muestra turnos ni estudios registrados**: cuando hay dos turnos posibles, se le pregunta "¿qué día era?" en lugar de listarlos.
 
@@ -220,7 +237,7 @@ El flujo se detuvo en el **paso 5**. No consultó estudios, no llamó al redacto
 
 ### Pruebas automáticas
 
-`python -m pytest entrega_3` corre **324 pruebas sin API**. El LLM se reemplaza por respuestas fijas o por funciones que fallan a propósito.
+Al cierre del Hito 1, `python -m pytest entrega_3` corría **324 pruebas sin API** (las de la Parte B están en B.2 y B.4). El LLM se reemplaza por respuestas fijas o por funciones que fallan a propósito.
 
 | Archivo | Pruebas | Qué cubre |
 |---|---|---|
@@ -383,6 +400,84 @@ python entrega_3/rag.py comparar --guardar     # ~3 min con Groq gratis (20 s en
 - La comparación es de una sola corrida. A temperatura 0 las respuestas igual varían entre corridas (ya lo vimos en la Entrega 2): lo que no varía es el contexto que recibe el modelo con RAG ni las verificaciones en código.
 - En C1, con RAG, el modelo escribió «te cobrará» en lugar de un voseo más natural ("te cobran"). Es de estilo y no afecta el dato.
 - En C3 la cita quedó después del punto final: «…llegar 15 minutos antes. (DOC-TURNO)». El guardrail la reconoce igual.
+
+### B.4 — Integración con el workflow
+
+En la Parte A, la intención `otra` cerraba con una plantilla de "fuera de alcance": el workflow no tenía de dónde sacar el horario de una sede o la preparación de un estudio. Ahora esa rama llama al RAG, con los mismos números de paso que el resto del workflow (ver la tabla de la rama `otra` en A.1 y el diagrama de A.2):
+
+- **Paso 7, Sensor: buscar en el corpus.** La traza muestra los 3 candidatos con su similitud, y cuáles superan el umbral (✓).
+- **Paso 10, LLM: responder con los documentos** (prompt `rag_v1`). Solo se ejecuta si algún documento superó el umbral.
+- **Paso 11, Regla: verificar citas y montos.** Es el guardrail de B.2.
+
+El RAG recibe el **texto anonimizado**, el mismo que el paso 1: el DNI no sale hacia la API tampoco por esta rama. El resultado se traduce a los estados del workflow:
+
+| Resultado del RAG | Estado | Motivo | Qué recibe el paciente |
+|---|---|---|---|
+| `respondida` | `COMPLETADO` | `rag` | La respuesta del RAG, con sus citas |
+| `sin_informacion` | `COMPLETADO` | `sin_informacion_oficial` | "No tengo información oficial sobre esa consulta." más la derivación a recepción |
+| `no_verificado` o `error` | `REVISION_HUMANA` | `rag_no_verificado` | El acuse fijo |
+
+El RAG se crea solo cuando llega un `otra`, así que el resto de los mensajes no carga el modelo de embeddings. Si no se puede crear (por ejemplo, falta ChromaDB), ese mensaje queda en `REVISION_HUMANA` y el workflow sigue. La pausa de 20 s entre llamadas se comparte entre la extracción y el RAG.
+
+**Prompt de extracción v4** ([`prompts/extraccion_v4.txt`](prompts/extraccion_v4.txt)). Con el v3, "¿puedo manejar después de que me dilaten las pupilas?" era `consulta_medica` y se derivaba, aunque la respuesta esté publicada en el corpus. El v4 es el v3 con una regla nueva: una indicación general que publica la clínica (cómo prepararse para un estudio, si después se puede manejar, qué llevar) es `otra`, aunque nombre un estudio; si el paciente cuenta un síntoma o pide una opinión sobre lo que le pasa a él, es `consulta_medica`. Los dos ejemplos del prompt hablan de la dilatación y caen de lados distintos del límite. El v3 quedó sin cambios, así la corrida de la Parte A se puede reproducir.
+
+**Método.** Se agregaron tres casos al lote y se cambió lo esperado de W6, todo commiteado **antes** de la corrida real. Ningún mensaje nuevo es un ejemplo del prompt, así la corrida mide si el modelo generaliza la regla. La corrida fue contra Groq (`openai/gpt-oss-20b`, temperatura 0, 20 s entre llamadas) el 27/11/2026: [`evidencia/workflow_groq_2026-11-27.txt`](evidencia/workflow_groq_2026-11-27.txt).
+
+**Resultado: 12 de 12 casos terminaron en el estado esperado.** W1 a W5 y W7 a W9 terminaron igual que en la Parte A, ahora con el prompt v4. Los casos de la Parte B:
+
+| # | Caso | Esperado | Obtenido | ¿Dónde terminó? | Respuesta |
+|---|---|---|---|---|---|
+| W6 | "¿Hasta qué hora atienden los sábados en la sede Centro?" | `COMPLETADO` (`rag`) | `COMPLETADO` (`rag`) ✔ | Paso 11: `SEDE-CENTRO` 0.634 | RAG: «…los sábados atienden hasta las 13:00…» |
+| W10 | "Mañana me hacen un fondo de ojo, ¿puedo ir manejando o tengo que ir acompañado?" | `COMPLETADO` (`rag`) | `COMPLETADO` (`rag`) ✔ | Paso 11: `PREP-FONDO-DE-OJO` 0.576 | RAG: no se puede manejar |
+| W11 | "Hola, ¿hacen consultas a domicilio?" | `COMPLETADO` (`sin_informacion_oficial`) | `COMPLETADO` (`sin_informacion_oficial`) ✔ | **Paso 7**: el mejor, `COB-PAMI` 0.388 | Plantilla y derivación a recepción |
+| W12 | "Ayer me hicieron un fondo de ojo y sigo viendo borroso, ¿es normal?" | `DERIVADO` | `DERIVADO` ✔ | Paso 3 la deriva | Plantilla de derivación |
+
+**Pregunta con respuesta en el corpus — W10:**
+
+```
+✔  0 📏 Regla  Anonimizar el DNI: el mensaje no trae DNI. Se envía: "Mañana me hacen un fondo de ojo, ¿puedo ir manejando o tengo que ir acompañado?"
+✔  1 🤖 LLM    Extraer intenciones y datos: prompt v4: {"intenciones":["otra"],"dni":null,"profesional":null,"fecha_turno_actual":null,"fecha_deseada":null,"estudio":"fondo de ojo"}
+✔  2 📏 Regla  Validar el contrato y el DNI: cumple el contrato; DNI repuesto por el código: no hay
+✔  3 📏 Regla  Enrutar cada intención: otra → RAG
+✔  4 📏 Regla  ¿Hace falta identificar al paciente?: no: ninguna intención lo requiere
+✔  7 🔎 Sensor Buscar en el corpus: PREP-FONDO-DE-OJO 0.576 ✓ · DOC-TURNO 0.393 · COB-OSDE 0.384
+✔ 10 🤖 LLM    Responder con los documentos: prompt rag_v1: No, después de la dilatación la visión queda borrosa y hay sensibilidad a la luz durante 4 a 6 horas, por eso no se puede manejar después del estudio; conviene venir acompañado o usar transporte público y traer anteojos de sol (PREP-FONDO-DE-OJO).
+✔ 11 📏 Regla  Verificar citas y montos: citas PREP-FONDO-DE-OJO recuperadas; montos con respaldo
+⇒ ESTADO: COMPLETADO
+⇒ Respuesta al paciente (RAG): No, después de la dilatación la visión queda borrosa y hay sensibilidad a la luz durante 4 a 6 horas, por eso no se puede manejar después del estudio; conviene venir acompañado o usar transporte público y traer anteojos de sol (PREP-FONDO-DE-OJO).
+```
+
+El extractor clasificó la pregunta como `otra` aunque nombra un estudio: es la regla nueva del v4. Solo un documento superó el umbral, y la respuesta repite lo que dice ese documento.
+
+**Pregunta fuera del corpus — W11:**
+
+```
+✔  0 📏 Regla  Anonimizar el DNI: el mensaje no trae DNI. Se envía: "Hola, ¿hacen consultas a domicilio?"
+✔  1 🤖 LLM    Extraer intenciones y datos: prompt v4: {"intenciones":["otra"],"dni":null,"profesional":null,"fecha_turno_actual":null,"fecha_deseada":null,"estudio":null}
+✔  2 📏 Regla  Validar el contrato y el DNI: cumple el contrato; DNI repuesto por el código: no hay
+✔  3 📏 Regla  Enrutar cada intención: otra → RAG
+✔  4 📏 Regla  ¿Hace falta identificar al paciente?: no: ninguna intención lo requiere
+✘  7 🔎 Sensor Buscar en el corpus: COB-PAMI 0.388 · SEDE-BELGRANO 0.328 · SEDE-CENTRO 0.326 → ninguno supera el umbral: el LLM no se llama
+⇒ ESTADO: COMPLETADO
+⇒ Respuesta al paciente (plantilla sin_informacion_oficial): No tengo información oficial sobre esa consulta. Si querés, escribile a recepción, que te va a poder ayudar con esa consulta.
+```
+
+La traza termina en el paso 7: no hay paso 10 porque el LLM no se llamó. En B.3, la misma pregunta sin grounding terminó con un servicio a domicilio y un teléfono inventados.
+
+**Lo que muestra el lote:**
+
+- **El límite del v4 funcionó en los dos sentidos.** W10 y W12 nombran el mismo estudio: la pregunta por una indicación publicada fue al RAG, y el síntoma se derivó.
+- **W6 ya no es "fuera de alcance".** En la Parte A se le contestaba con una plantilla; ahora recibe el horario del sábado con la cita del documento. `SEDE-BELGRANO` (0.491) también superó el umbral y llegó al contexto, pero el modelo usó solo el de Centro.
+- **El DNI nunca salió hacia la API.** En los 4 casos con DNI (W1, W3, W7 y W8), el paso 0 muestra `[DNI]`, y el LLM devolvió `dni: null` en los 12 casos.
+- **Las 6 respuestas generadas pasaron su guardrail:** las 4 del redactor (W1, W2, W7 y W8) y las 2 del RAG (W6 y W10). Groq no devolvió ningún 429.
+
+**Observaciones de la corrida** (no cambian ningún estado):
+
+- La respuesta de W11 repite "consulta": «…sobre esa consulta. Si querés, escribile a recepción, que te va a poder ayudar con esa consulta.» El fallback es el texto exacto de la consigna, así que hay que cambiar la frase de derivación.
+- En W10 el extractor completó `estudio: "fondo de ojo"` en un `otra`. No afecta: la rama `otra` no usa los campos del JSON, el RAG recibe el texto.
+- En W6 el modelo escribió «dedicándose a consultas de oftalmología general…»: el dato es del documento, la redacción es forzada.
+
+**Pruebas sin API.** `python -m pytest entrega_3` corre **483 pruebas**. Lo nuevo de la integración: `test_prompt_v4.py` (20) controla el v4 contra el contrato, el límite y que el v3 no cambió; `test_workflow.py` (71) usa un RAG falso para los tres resultados, controla que el RAG no recibe el DNI y que un mensaje que no es `otra` no lo crea; `test_lote_workflow.py` (100) controla la estructura de los 12 casos y los motivos esperados.
 
 ## Parte C — Agente con LangGraph
 
