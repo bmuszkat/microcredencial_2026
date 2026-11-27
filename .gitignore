@@ -5,3 +5,6 @@ __pycache__/
 entrega_2/evidencia/*_simulacion.json
 .venv/
 venv/
+
+# Índice del RAG (se regenera con: python entrega_3/rag.py indexar)
+entrega_3/indice_chroma/

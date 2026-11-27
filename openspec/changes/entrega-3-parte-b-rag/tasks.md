@@ -2,7 +2,7 @@
 
 ## 1. Entorno
 
-- [ ] 1.1 Crear el `.venv` con `uv venv --python 3.12`, agregar `.python-version` (`3.12`), sumar a `requirements.txt` `langchain-core`, `langchain-openai`, `langchain-chroma` y `fastembed` con versión mínima y comentario (design D1), y agregar `entrega_3/indice_chroma/` al `.gitignore`. Actualizar el README: "Python 3.10 a 3.13" y cómo crear el entorno (con `uv` o con `python -m venv`). Verificar con `pip install -r requirements.txt` dentro del venv y `python -m pytest` (Entrega 2 y Parte A en verde)
+- [x] 1.1 Crear el `.venv` con `uv venv --python 3.12`, agregar `.python-version` (`3.12`), sumar a `requirements.txt` `langchain-core`, `langchain-openai`, `langchain-chroma` y `fastembed` con versión mínima y comentario (design D1), y agregar `entrega_3/indice_chroma/` al `.gitignore`. Actualizar el README: "Python 3.10 a 3.13" y cómo crear el entorno (con `uv` o con `python -m venv`). Verificar con `pip install -r requirements.txt` dentro del venv y `python -m pytest` (Entrega 2 y Parte A en verde)
 
 ## 2. Corpus
 

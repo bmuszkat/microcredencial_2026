@@ -25,10 +25,27 @@ el sistema de turnos.
 
 ## Cómo correrlo (Entrega 2)
 
-Requisitos: Python 3.10 o superior. Todos los comandos se corren **desde la raíz del repo**.
+Requisitos: **Python 3.10 a 3.13** (el grupo usa 3.12, declarado en `.python-version`). La Parte B de la Entrega 3 usa ChromaDB y fastembed, que dependen de `onnxruntime`, y `onnxruntime` no instala en versiones más nuevas de Python. Todos los comandos se corren **desde la raíz del repo**.
+
+Conviene trabajar en un entorno virtual. Con [uv](https://docs.astral.sh/uv/) (baja Python 3.12 si no está instalado):
 
 ```bash
+uv venv --python 3.12 .venv
+.venv\Scripts\activate        # en Linux o macOS: source .venv/bin/activate
+uv pip install -r requirements.txt
+```
+
+O, si ya hay un Python 3.10 a 3.13 instalado, sin uv:
+
+```bash
+py -3.12 -m venv .venv        # en Linux o macOS: python3.12 -m venv .venv
+.venv\Scripts\activate        # en Linux o macOS: source .venv/bin/activate
 pip install -r requirements.txt
+```
+
+Después, con el entorno activado:
+
+```bash
 cp .env.example .env          # completar la API key del proveedor (ver abajo)
                               # (en el cmd de Windows: copy .env.example .env)
 
@@ -63,6 +80,7 @@ python -m pytest entrega_3                     # pruebas automáticas (no usan l
 ```
 ├── README.md
 ├── requirements.txt          ← dependencias (pip install -r requirements.txt)
+├── .python-version           ← versión de Python del grupo (3.12)
 ├── .env.example              ← variables de entorno SIN valores (el .env real no se sube)
 ├── entrega_1/
 │   ├── informe.md            ← Partes A y B de la Entrega 1
