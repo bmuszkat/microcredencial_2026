@@ -121,3 +121,107 @@ def test_groq_usa_chatopenai_con_la_url_de_groq(monkeypatch):
     assert str(modelo.openai_api_base).rstrip("/") == rag.URL_GROQ
     assert modelo.temperature == 0 and modelo.max_retries == 3
     assert origen == f"groq ({rag.modelo_de('groq')})"
+
+
+# ── Guardrail de citas, montos y porcentajes (tarea 5.2) ──────────────────────
+
+def test_respuesta_respaldada_se_acepta():
+    estado, citas, problemas = rag.verificar_respuesta(
+        "Sí: con menos de 24 horas el cargo es de $12.000 (CAR-CANCELACION-V2).", [CARGOS, TURNO])
+    assert (estado, citas, problemas) == (rag.RESPONDIDA, ["CAR-CANCELACION-V2"], [])
+
+
+def test_cita_de_un_documento_no_recuperado():
+    estado, _, problemas = rag.verificar_respuesta("El cargo es de $12.000 (CAR-CANCELACION-V1).", [CARGOS])
+    assert estado == rag.NO_VERIFICADO
+    assert problemas == ["cita un documento que no se recuperó: CAR-CANCELACION-V1"]
+
+
+def test_cita_de_un_documento_debajo_del_umbral_tampoco_vale():
+    estado, _, problemas = rag.verificar_respuesta("Belgrano abre de 9 a 19 (SEDE-BELGRANO).", [CARGOS, LEJANO])
+    assert estado == rag.NO_VERIFICADO and "SEDE-BELGRANO" in problemas[0]
+
+
+def test_monto_inventado():
+    estado, _, problemas = rag.verificar_respuesta(
+        "Según el Punto 4.2 hay un cargo de $5.000 (CAR-CANCELACION-V2).", [CARGOS])
+    assert estado == rag.NO_VERIFICADO
+    assert problemas == ["monto sin respaldo en los documentos: $5.000"]
+
+
+@pytest.mark.parametrize("forma", ["$12.000", "$ 12000", "12000 pesos"])
+def test_el_mismo_monto_escrito_de_otra_forma_se_acepta(forma):
+    estado, _, problemas = rag.verificar_respuesta(f"El cargo es de {forma} (CAR-CANCELACION-V2).", [CARGOS])
+    assert estado == rag.RESPONDIDA, problemas
+
+
+def test_porcentaje_inventado():
+    estado, _, problemas = rag.verificar_respuesta("OSDE 210 cubre el 100 % del estudio (DOC-TURNO).", [TURNO])
+    assert estado == rag.NO_VERIFICADO
+    assert problemas == ["porcentaje sin respaldo en los documentos: 100 %"]
+
+
+def test_respuesta_sin_citas():
+    estado, citas, problemas = rag.verificar_respuesta("Tenés que traer el DNI y la credencial.", [TURNO])
+    assert (estado, citas) == (rag.NO_VERIFICADO, [])
+    assert problemas == ["la respuesta no cita ningún documento"]
+
+
+def test_varias_citas_juntas():
+    texto = "Traé el DNI (DOC-TURNO) y si cancelás tarde son $12.000 (CAR-CANCELACION-V2, DOC-TURNO)."
+    estado, citas, _ = rag.verificar_respuesta(texto, [CARGOS, TURNO])
+    assert estado == rag.RESPONDIDA and citas == ["DOC-TURNO", "CAR-CANCELACION-V2"]
+
+
+def test_el_fallback_del_modelo_no_se_verifica():
+    estado, citas, problemas = rag.verificar_respuesta(rag.SIN_INFORMACION, [CARGOS])
+    assert (estado, citas, problemas) == (rag.SIN_INFORMACION_OFICIAL, [], [])
+
+
+# ── ResultadoRag ──────────────────────────────────────────────────────────────
+
+def test_resultado_respondida():
+    modelo = ModeloFalso("Sí, el cargo es de $12.000 (CAR-CANCELACION-V2).")
+    r = rag.responder("¿me cobran?", cadena_con([CARGOS, LEJANO], modelo), "falso")
+    assert (r.estado, r.citas, r.llamo_llm, r.origen) == (rag.RESPONDIDA, ["CAR-CANCELACION-V2"], True, "falso")
+    assert r.texto == "Sí, el cargo es de $12.000 (CAR-CANCELACION-V2)."
+    assert r.candidatos == [("CAR-CANCELACION-V2", 0.70, True), ("SEDE-BELGRANO", 0.20, False)]
+
+
+def test_resultado_sin_informacion_sin_llamar_al_llm():
+    modelo = ModeloFalso()
+    r = rag.responder("¿atienden a domicilio?", cadena_con([LEJANO], modelo))
+    assert (r.estado, r.texto, r.llamo_llm) == (rag.SIN_INFORMACION_OFICIAL, rag.SIN_INFORMACION, False)
+    assert modelo.prompts == []
+
+
+def test_resultado_sin_informacion_porque_lo_dijo_el_modelo():
+    r = rag.responder("¿hay descuento?", cadena_con([CARGOS], ModeloFalso(rag.SIN_INFORMACION)))
+    assert (r.estado, r.texto, r.llamo_llm) == (rag.SIN_INFORMACION_OFICIAL, rag.SIN_INFORMACION, True)
+
+
+def test_resultado_no_verificado_no_entrega_texto():
+    inventado = "Según el Punto 4.2, son $5.000 (CAR-CANCELACION-V2)."
+    r = rag.responder("¿me cobran?", cadena_con([CARGOS], ModeloFalso(inventado)))
+    assert (r.estado, r.texto) == (rag.NO_VERIFICADO, None)
+    assert r.texto_generado == inventado and "$5.000" in r.detalle
+
+
+def test_error_de_comunicacion_no_inventa_y_oculta_la_organizacion():
+    def falla(prompt):
+        raise ConnectionError("Rate limit reached for org_01abcXYZ in model")
+    r = rag.responder("¿me cobran?", rag.crear_cadena(lambda p: [CARGOS], RunnableLambda(falla)))
+    assert (r.estado, r.texto) == (rag.ERROR, None)
+    assert r.detalle == "ConnectionError: Rate limit reached for org_[OCULTO] in model"
+
+
+def test_crear_respondedor_usa_la_simulacion_sin_key(monkeypatch):
+    monkeypatch.setattr(rag, "detectar_proveedor", lambda: None)
+
+    class BaseFalsa:
+        pass
+
+    monkeypatch.setattr(rag.bc, "buscar", lambda base, pregunta, filtro, umbral: [CARGOS])
+    r = rag.crear_respondedor(BaseFalsa())("¿me cobran?")
+    assert r.estado == rag.RESPONDIDA and r.origen.startswith("SIMULACIÓN")
+    assert r.citas == ["CAR-CANCELACION-V2"]

@@ -22,7 +22,7 @@
 ## 5. Generación con LCEL
 
 - [x] 5.1 Escribir `entrega_3/prompts/rag_v1.txt` y `sin_grounding_v1.txt` (design D8) y, en `rag.py`, `crear_modelo()` y la cadena LCEL con el fallback antes del LLM (design D7). Agregar `tests/test_rag.py` con un modelo falso: el contexto lleva los ids, sin documentos sobre el umbral el modelo no se llama, y la simulación sin key devuelve el primer documento con su cita. Verificar con `pytest`
-- [ ] 5.2 Implementar el guardrail de citas, montos y porcentajes y el `ResultadoRag` (design D9 y D10). Agregar los tests de los escenarios de la spec `respuesta-rag`: cita no recuperada, monto inventado, sin citas, respuesta respaldada, fallback del modelo y error de comunicación. Verificar con `pytest`
+- [x] 5.2 Implementar el guardrail de citas, montos y porcentajes y el `ResultadoRag` (design D9 y D10). Agregar los tests de los escenarios de la spec `respuesta-rag`: cita no recuperada, monto inventado, sin citas, respuesta respaldada, fallback del modelo y error de comunicación. Verificar con `pytest`
 - [ ] 5.3 Agregar `rag.py preguntar "pregunta"` y documentar en el README los comandos de `rag.py` (indexar, ver, buscar, preguntar) y que la primera indexación baja el modelo. Agregar al informe la sección B.2 (arquitectura: diagrama de la cadena, modelo, k, filtro híbrido con la demo de la derogada, umbral y guardrail). Verificar que los comandos del README corren tal cual
 
 ## 6. Comparación B.3

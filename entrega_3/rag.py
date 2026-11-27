@@ -27,8 +27,10 @@ La búsqueda no usa API key: los embeddings se calculan en la compu (ver base_co
 import argparse
 import io
 import json
+import re
 import sys
 from contextlib import redirect_stdout
+from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 from typing import Optional
@@ -45,6 +47,7 @@ from langchain_core.runnables import (RunnableBranch, RunnableLambda, RunnablePa
 
 import base_conocimiento as bc  # noqa: E402
 from clinica.config import detectar_proveedor, modelo_de  # noqa: E402
+from redactor import valores_del_texto  # noqa: E402   (la misma lectura de montos que el guardrail de la Parte A)
 
 RUTA_CALIBRACION = ENTREGA_3 / "datos" / "preguntas_calibracion.json"
 CARPETA_EVIDENCIA = ENTREGA_3 / "evidencia"
@@ -138,6 +141,102 @@ def buscador_de(base, filtro: Optional[dict] = bc.SOLO_VIGENTES, umbral: float =
 
 def cadena_sin_grounding(modelo):
     return PLANTILLA_SIN_GROUNDING | modelo | StrOutputParser()
+
+
+# ── 4) Guardrail en código (design D9) ────────────────────────────────────────
+# El prompt PIDE citar y no inventar; el código lo VERIFICA. Es la misma idea del paso 11 de la Parte A:
+# lo que llega al paciente tiene que tener respaldo en lo que se recuperó.
+
+RESPONDIDA, SIN_INFORMACION_OFICIAL, NO_VERIFICADO, ERROR = "respondida", "sin_informacion", "no_verificado", "error"
+
+_CITA = re.compile(r"\b[A-Z]{2,}(?:-[A-Z0-9]+)+\b")              # CAR-CANCELACION-V2, DOC-TURNO
+_PORCENTAJE = re.compile(r"(\d+(?:[.,]\d+)?)\s*%")
+
+
+def _montos(texto: str) -> set[int]:
+    return {valor for _, valor in valores_del_texto(texto)[0]}
+
+
+def _porcentajes(texto: str) -> set[str]:
+    return {m.group(1).replace(",", ".") for m in _PORCENTAJE.finditer(texto)}
+
+
+def citas_del_texto(texto: str) -> list[str]:
+    return list(dict.fromkeys(_CITA.findall(texto)))   # sin repetir, en orden de aparición
+
+
+def verificar_respuesta(texto: str, recuperados: list[bc.Recuperado]) -> tuple[str, list[str], list[str]]:
+    """
+    Devuelve (estado, citas, problemas). La respuesta se acepta solo si:
+      1. cita al menos un documento, y todos los citados están entre los que superaron el umbral;
+      2. cada monto y cada porcentaje del texto aparece en alguno de esos documentos.
+    Si el modelo respondió el fallback, no hay nada que verificar: no tenía información.
+    """
+    texto = texto.strip()
+    if texto.startswith(SIN_INFORMACION):
+        return SIN_INFORMACION_OFICIAL, [], []
+
+    usables = [r for r in recuperados if r.supera_umbral]
+    ids_usables = {r.id for r in usables}
+    texto_usables = " ".join(r.texto for r in usables)
+    citas = citas_del_texto(texto)
+    problemas = []
+    if not citas:
+        problemas.append("la respuesta no cita ningún documento")
+    problemas += [f"cita un documento que no se recuperó: {c}" for c in citas if c not in ids_usables]
+    problemas += [f"monto sin respaldo en los documentos: ${m:,}".replace(",", ".")
+                  for m in sorted(_montos(texto) - _montos(texto_usables))]
+    problemas += [f"porcentaje sin respaldo en los documentos: {p} %"
+                  for p in sorted(_porcentajes(texto) - _porcentajes(texto_usables))]
+    return (NO_VERIFICADO if problemas else RESPONDIDA), citas, problemas
+
+
+# ── 5) El resultado que usan la consola y el workflow (design D10) ────────────
+
+@dataclass
+class ResultadoRag:
+    estado: str                         # respondida · sin_informacion · no_verificado · error
+    texto: Optional[str]                # lo que se le puede mostrar al paciente (None si no hay)
+    citas: list[str] = field(default_factory=list)
+    candidatos: list[tuple[str, float, bool]] = field(default_factory=list)   # (id, similitud, supera umbral)
+    llamo_llm: bool = False
+    detalle: Optional[str] = None       # por qué no se verificó o qué error hubo (para la traza, no para el paciente)
+    origen: str = ""
+    texto_generado: Optional[str] = None   # lo que escribió el modelo, aunque se haya descartado
+
+
+def ocultar_org(texto: str) -> str:
+    """Los errores 429 de Groq traen el id de la organización: no se guarda en la evidencia."""
+    return re.sub(r"org_[A-Za-z0-9]+", "org_[OCULTO]", texto)
+
+
+def responder(pregunta: str, cadena, origen: str = "") -> ResultadoRag:
+    """Corre la cadena y aplica el guardrail. Nunca inventa: si algo falla, no hay texto."""
+    try:
+        r = cadena.invoke(pregunta)
+    except Exception as e:   # la API falló después de los reintentos: no inventamos, queda para una persona
+        return ResultadoRag(ERROR, None, detalle=ocultar_org(f"{type(e).__name__}: {e}"), llamo_llm=True, origen=origen)
+
+    candidatos = [(d.id, d.similitud, d.supera_umbral) for d in r["documentos"]]
+    if not hay_contexto(r["documentos"]):
+        return ResultadoRag(SIN_INFORMACION_OFICIAL, SIN_INFORMACION, candidatos=candidatos,
+                            detalle="ningún documento supera el umbral: el LLM no se llamó", origen=origen)
+
+    estado, citas, problemas = verificar_respuesta(r["respuesta"], r["documentos"])
+    if estado == NO_VERIFICADO:
+        return ResultadoRag(estado, None, citas, candidatos, True, "; ".join(problemas), origen, r["respuesta"])
+    return ResultadoRag(estado, r["respuesta"].strip(), citas, candidatos, True,
+                        "el modelo respondió que no tiene la información" if estado == SIN_INFORMACION_OFICIAL else None,
+                        origen, r["respuesta"])
+
+
+def crear_respondedor(base=None, modelo=None, origen: Optional[str] = None):
+    """Arma el RAG completo (índice, filtro, umbral y modelo del .env) y devuelve pregunta → ResultadoRag."""
+    base = base if base is not None else bc.abrir()
+    if modelo is None:
+        modelo, origen = crear_modelo()
+    cadena = crear_cadena(buscador_de(base), modelo)
+    return lambda pregunta: responder(pregunta, cadena, origen or "")
 
 
 # ── Calibración del umbral (design D6) ────────────────────────────────────────
