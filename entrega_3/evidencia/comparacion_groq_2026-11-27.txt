@@ -1,0 +1,57 @@
+Comparación B.3 · 2026-11-27 · modelo groq (openai/gpt-oss-20b) · prompts sin_grounding_v1 y rag_v1
+RAG: k=3 · filtro {'vigente': True} · umbral 0.45 · pausa 20 s entre llamadas
+Preguntas: entrega_3\datos\preguntas_comparacion.json (fijadas antes de correr)
+
+━━━ C1 · ¿Me cobran algo si reprogramo el turno con menos de 24 horas de anticipación?
+  Entrega 1, sin datos (entrega_1/evidencia/a2_gemini_chat_temporal.txt):
+     «Despreocupate, no se realiza ningún cobro ni penalización por reprogramar con menos de 24 horas de anticipación.»
+  Entrega 1, sin datos (entrega_1/evidencia/a2_gemini_con_memoria.txt):
+     «Sí, según el Punto 4.2 de nuestra Política de Cancelaciones y Turnos, reprogramar o cancelar con menos de 24 horas de anticipación genera un cargo administrativo de $5.000»
+  SIN GROUNDING:
+     Sí, si reprogramás el turno con menos de 24 horas de anticipación se aplica una tarifa de reprogramación de 200 pesos, pero si lo haces con más tiempo no hay cargo. Te recomendamos avisar con antelación para evitar el cobro.
+  CON RAG:
+     recuperados: CAR-CANCELACION-V2 0.749 ✓ · DOC-TURNO 0.282 · COB-SWISS-MEDICAL 0.201
+     estado: respondida · citas: CAR-CANCELACION-V2
+     Sí, si reprogramás el turno con menos de 24 horas de anticipación, la clínica te cobrará un cargo de $12.000, el cual se suma al próximo turno y se abona en la recepción de cualquier sede (CAR-CANCELACION-V2).
+  Esperado con RAG: ✓ cumple
+
+━━━ C2 · Tengo OSDE 210, ¿me cubre el estudio de campo visual?
+  Entrega 1, sin datos (entrega_1/evidencia/a2_gemini_chat_temporal.txt):
+     «Tu plan OSDE 210 cubre el 100% del estudio de Campo Visual Computarizado, por lo que no tenés que abonar ningún adicional ni realizar ninguna autorización previa extra.»
+  SIN GROUNDING:
+     Hola, con el plan OSDE 210 el estudio de campo visual está incluido dentro del examen oftalmológico completo, pero es necesario que lo solicites a través de tu médico de referencia y que el laboratorio lo realice en una clínica autorizada por OSDE; te recomiendo que contactes a tu aseguradora para confirmar la cobertura exacta y, si todo está en regla, podemos agendar la cita en nuestra clínica. ¡Quedamos a tu disposición!
+  CON RAG:
+     recuperados: COB-OSDE 0.726 ✓ · RES-PLAZOS-RETIRO 0.448 · COB-SWISS-MEDICAL 0.447
+     estado: respondida · citas: COB-OSDE
+     Sí, con OSDE 210 la clínica cubre el estudio de campo visual, pero tenés que abonar un copago de $4.500 el día del estudio (COB-OSDE).
+  Esperado con RAG: ✓ cumple
+
+━━━ C3 · ¿Qué tengo que llevar el día del turno?
+  SIN GROUNDING:
+     Para tu turno en Visión Sur, tené a mano tu documento de identidad, la tarjeta de seguro o plan de salud, y cualquier historial ocular o exámenes previos que tengas; si usás lentes, traé los armazones y las gafas de lectura; también es útil llevar una lista de medicamentos que tomás y, si tenés alguna duda, anotá las preguntas que quieras plantear. Así el proceso será más ágil y cómodo.
+  CON RAG:
+     recuperados: DOC-TURNO 0.713 ✓ · CAR-CANCELACION-V2 0.300 · COB-PAMI 0.243
+     estado: respondida · citas: DOC-TURNO
+     Debés llevar el DNI y la credencial de obra social o prepaga, la orden médica y la autorización si la obra social la solicita, además de tus anteojos actuales y estudios oftalmológicos anteriores, y llegar 15 minutos antes. (DOC-TURNO)
+  Esperado con RAG: ✓ cumple
+
+━━━ C4 · ¿Puedo ir manejando a hacerme un fondo de ojo?
+  SIN GROUNDING:
+     ¡Hola! Si no tenés síntomas de visión borrosa, mareos o cualquier alteración que te haga sentir inseguro al volante, podés ir manejando sin problema. Sin embargo, si tenés alguna duda sobre tu visión o ya sentís alguna molestia, lo más prudente es que te detengas y tomes un taxi o un servicio de transporte para evitar cualquier riesgo. ¡Nos vemos en la consulta y te damos el mejor cuidado!
+  CON RAG:
+     recuperados: PREP-FONDO-DE-OJO 0.595 ✓ · COB-OSDE 0.408 · COB-SWISS-MEDICAL 0.388
+     estado: respondida · citas: PREP-FONDO-DE-OJO
+     No, no podés manejar después del fondo de ojo porque la dilatación deja la visión borrosa y con sensibilidad a la luz durante 4 a 6 horas, por lo que conviene venir acompañado o usar transporte público y traer anteojos de sol (PREP-FONDO-DE-OJO).
+  Esperado con RAG: ✓ cumple
+
+━━━ C5 · ¿Atienden a domicilio?
+  SIN GROUNDING:
+     Sí, en la Clínica Oftalmológica Visión Sur brindamos consultas y exámenes a domicilio para pacientes con movilidad reducida o que prefieran la comodidad de su hogar. Para coordinar una visita, contactá nuestro número de WhatsApp o llamá al 011‑1234‑5678 y te atenderemos con la mayor prontitud.
+  CON RAG:
+     recuperados: COB-PAMI 0.375 · SEDE-BELGRANO 0.286 · SEDE-CENTRO 0.251
+     estado: sin_informacion (el LLM no se llamó)
+     detalle: ningún documento supera el umbral: el LLM no se llamó
+     No tengo información oficial sobre esa consulta.
+  Esperado con RAG: ✓ cumple
+
+Resultado: 5/5 preguntas con lo esperado con RAG
