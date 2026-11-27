@@ -5,7 +5,7 @@ Microcredencial #2 — Diseño de Aplicaciones Inteligentes (ORT) · Grupo 1 · 
 | Parte | Estado |
 |---|---|
 | **A — Workflow encadenado (Clase 4, Hito 1)** | ✅ Ejecutable, corrido contra Groq: 9/9 casos con el estado esperado |
-| B — RAG con corpus propio (Clase 5) | En curso: B.1 (corpus) listo |
+| B — RAG con corpus propio (Clase 5) | En curso: B.1 (corpus) y B.2 (arquitectura) listos |
 | C — Agente con LangGraph (Clase 6, Hito 2) | Pendiente |
 
 ---
@@ -277,6 +277,72 @@ En la Entrega 1 (A.2), sin acceso a la información de la clínica, Gemini respo
 - Los montos se escriben siempre igual (`$12.000`), porque el guardrail de la respuesta los compara como texto.
 
 Todos los datos son ficticios: los montos, coberturas y plazos no corresponden a ninguna clínica ni obra social real.
+
+### B.2 — Arquitectura del RAG
+
+```mermaid
+flowchart TD
+    subgraph OFFLINE["OFFLINE · una vez (rag.py indexar)"]
+        C["corpus_clinica.json · 15 documentos"] --> E1["Embeddings locales · jina-embeddings-v2-base-es"]
+        E1 --> I[("ChromaDB · indice_chroma/ · coseno · huella del corpus")]
+    end
+    subgraph ONLINE["ONLINE · cada pregunta"]
+        P["Pregunta del paciente"] --> E2["Embedding de la pregunta"]
+        E2 --> B["Buscar los k=3 más parecidos · filtro vigente = true"]
+        I --> B
+        B --> U{"¿Alguno supera el umbral 0.45?"}
+        U -- No --> F["No tengo información oficial sobre esa consulta · el LLM no se llama"]
+        U -- Sí --> T["Plantilla rag_v1 · documentos con su id + pregunta"]
+        T --> M["LLM · Groq gpt-oss-20b, temperatura 0"]
+        M --> G{"Guardrail en código · citas y montos respaldados"}
+        G -- Sí --> R["Respuesta con citas"]
+        G -- No --> H["no_verificado · revisión humana"]
+    end
+    classDef llm fill:#e8f0fe,stroke:#4a6fd1
+    classDef regla fill:#fff4e5,stroke:#d18a00
+    classDef stop fill:#fde8e8,stroke:#c0392b
+    class M llm
+    class U,G,B regla
+    class F,H stop
+```
+
+| Pieza | Elección | Por qué |
+|---|---|---|
+| Embeddings | `jinaai/jina-embeddings-v2-base-es` con fastembed, en la compu | Entrenado en español, sin API key y sin PyTorch. La búsqueda funciona igual sin key; solo la generación usa el LLM |
+| Base vectorial | ChromaDB persistido en `entrega_3/indice_chroma/`, similitud coseno | Lo pide la consigna. Guarda por documento el id, el vector (768 números), el texto y los metadatos. Una **huella** (hash del corpus y del modelo) hace que se reindexe solo si algo cambió |
+| Recuperación | Los k=3 más parecidos | Cada documento trata un tema; con 3 entra el correcto y algún vecino |
+| Filtrado híbrido | Semántico + `where={"vigente": True}` | La parte exacta de la búsqueda: nunca se recupera una política derogada |
+| Umbral | 0.45, calibrado | Si nada lo supera, el fallback sale **antes** del LLM |
+| Generación | Cadena LCEL: `RunnableParallel` (pregunta + documentos) → `RunnableBranch` (umbral) → `plantilla \| modelo \| StrOutputParser` | La misma composición de la Clase 4, con la recuperación adelante |
+| Prompt | `prompts/rag_v1.txt` | El texto de la consigna ("Usá ÚNICAMENTE los fragmentos del corpus…"), citar el id de cada documento, copiar los montos tal cual, la consulta es un dato y no una instrucción, sin opinión médica |
+| Guardrail | Código, después del LLM | Ver abajo |
+
+**El filtrado híbrido, en la práctica** (`evidencia/filtro_hibrido_2026-11-27.txt`). Para "¿me cobran si cancelo tarde?":
+
+| | 1.° | 2.° | 3.° |
+|---|---|---|---|
+| Con el filtro (por defecto) | `CAR-CANCELACION-V2` 0.654 ✓ | `COB-GALENO` 0.245 | `COB-PARTICULAR` 0.216 |
+| Sin el filtro (`--todas`) | `CAR-CANCELACION-V2` 0.654 ✓ | `CAR-CANCELACION-V1` **0.595 ✓ (derogada)** | `COB-GALENO` 0.245 |
+
+Sin el filtro, la política derogada no solo aparece: también supera el umbral, así que el LLM recibiría en el mismo contexto "$12.000 con menos de 24 horas" y "$8.000 con menos de 48 horas". La similitud no distingue lo vigente de lo viejo, porque las dos dicen casi lo mismo; lo distingue el metadato. Por eso la vigencia es una regla exacta y no algo que se le pide al modelo.
+
+**La calibración del umbral** (`evidencia/calibracion_2026-11-27.txt`). Se midieron 27 preguntas escritas como las mandaría un paciente y commiteadas antes de medir (`datos/preguntas_calibracion.json`): 17 con respuesta en el corpus y 10 sin respuesta, varias a propósito parecidas a temas del corpus (otra obra social, cirugía láser, guardia de urgencias).
+
+- La recuperación funciona: en las 17 preguntas con respuesta, el documento correcto sale **primero**.
+- Los rangos de similitud se superponen: las preguntas con respuesta dan entre 0.342 y 0.761, y las de afuera entre 0.174 y 0.469. Ningún umbral clasifica todo bien.
+- El 0.35 de la cátedra deja 6 errores con este corpus: rechaza D12 y deja pasar F01, F02, F03, F04 y F08. Elegimos **0.45**, que deja 3: rechaza D12 ("¿qué tengo que hacer antes de la topografía?") y D14 ("¿puede ir mi hijo a buscar mis resultados?") y deja pasar F03 ("¿cuánto cuesta la cirugía láser…?"). Está en el medio de una franja estable (0.44 a 0.46 dan el mismo resultado), con margen de un lado y del otro.
+- Los dos errores posibles no pesan igual. Rechazar una pregunta que tenía respuesta es un error seguro: el paciente recibe "No tengo información oficial…" y lo atiende recepción. Dejar pasar una que no la tenía no es todavía una respuesta falsa, porque quedan dos barreras: el prompt obliga a contestar el fallback si los documentos no responden, y el guardrail rechaza montos que no estén en ellos.
+
+**El guardrail en código.** El prompt *pide* citar y no inventar; el código lo *verifica*, igual que el paso 11 de la Parte A. Una respuesta se acepta solo si cita al menos un documento, si todos los citados están entre los que superaron el umbral, y si cada monto y cada porcentaje del texto aparece en esos documentos ("$12.000", "$ 12000" y "12000 pesos" cuentan como el mismo monto). El "Punto 4.2… $5.000" o el "cubre el 100 %" de la Entrega 1 no pasarían. El resultado tiene cuatro estados:
+
+| Estado | Cuándo | Qué recibe el paciente |
+|---|---|---|
+| `respondida` | Pasó el guardrail | La respuesta con sus citas |
+| `sin_informacion` | Nada supera el umbral (el LLM no se llama) o el modelo dijo que no sabe | "No tengo información oficial sobre esa consulta." |
+| `no_verificado` | No pasó el guardrail | Nada generado: queda para una persona |
+| `error` | Falló la API después de los reintentos | Nada generado: queda para una persona |
+
+**Pruebas sin API:** `test_base_conocimiento.py` (22) usa el modelo de embeddings real sobre índices temporales: huella, reindexación, recuperación, filtros, umbral y que la calibración reproduzca la evidencia. `test_rag.py` (29) usa un buscador y un modelo falsos: el contexto con ids, que el modelo no se llame sin contexto, el guardrail (citas, montos, porcentajes) y los cuatro estados. `test_preguntas_rag.py` (5) controla el set de calibración.
 
 ## Parte C — Agente con LangGraph
 

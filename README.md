@@ -75,6 +75,20 @@ python -m pytest entrega_3                     # pruebas automáticas (no usan l
 
 **Workflow:** cada caso muestra la traza paso a paso (📏 regla, 🤖 LLM, 🔎 sensor), el estado de cada intención, el estado global y la respuesta al paciente, y al final cuántos casos dieron el estado esperado. Con Groq espera 20 s entre llamadas (`--pausa N` para cambiarlo). Sin ninguna key corre en modo simulación. Los datos de la clínica (padrón, agenda, estudios y política de cargos) son ficticios y están en `entrega_3/datos/`.
 
+**RAG (Parte B):** necesita el entorno con Python 3.12 y las dependencias de `requirements.txt` (ver arriba). La búsqueda no usa API key: los embeddings se calculan en la compu con el modelo `jinaai/jina-embeddings-v2-base-es`, que **se baja la primera vez que se indexa (unos 640 MB)** y queda en la caché. El índice se guarda en `entrega_3/indice_chroma/` (no se sube: se regenera desde el corpus, y se reindexa solo si el corpus cambió).
+
+```bash
+python entrega_3/rag.py indexar                          # arma el índice (la primera vez baja el modelo)
+python entrega_3/rag.py ver                              # qué guarda Chroma: id, metadatos, texto y vector
+python entrega_3/rag.py buscar "¿me cobran si cancelo tarde?"           # los 3 más parecidos, solo vigentes
+python entrega_3/rag.py buscar "¿me cobran si cancelo tarde?" --todas   # sin el filtro: aparece la política derogada
+python entrega_3/rag.py preguntar "¿qué tengo que llevar el día del turno?"  # respuesta con el LLM del .env
+python entrega_3/rag.py preguntar "¿atienden a domicilio?" --simulacion     # sin llamar al LLM
+python entrega_3/rag.py calibrar                         # similitud de las preguntas de calibración del umbral
+```
+
+`preguntar` muestra los documentos recuperados con su similitud, el estado (`respondida`, `sin_informacion`, `no_verificado` o `error`), las citas y la respuesta. Si ningún documento supera el umbral, responde "No tengo información oficial sobre esa consulta." sin llamar al LLM. El RAG usa Groq u OpenAI; sin key (o con `--simulacion`) devuelve el documento recuperado tal cual. El corpus (15 documentos ficticios) está en `entrega_3/corpus/`.
+
 ## Estructura del repo
 
 ```
@@ -110,14 +124,19 @@ python -m pytest entrega_3                     # pruebas automáticas (no usan l
 ├── entrega_3/
 │   ├── informe.md            ← A.2 (diagrama del workflow) y A.3 (prueba de falla controlada)
 │   ├── workflow.py           ← Parte A: los 12 pasos, la traza y el punto de entrada por consola
+│   ├── rag.py                ← Parte B: cadena LCEL, guardrail de citas y montos, y la consola del RAG
+│   ├── base_conocimiento.py  ← embeddings locales (jina) + índice ChromaDB con filtro de vigencia y umbral
+│   ├── corpus/               ← corpus_clinica.json: 15 documentos con texto semántico y metadatos
 │   ├── reglas.py             ← reglas en código: anonimizar el DNI, fechas relativas, cargo, estado global
 │   ├── herramientas.py       ← sensores de solo lectura sobre los datos de la clínica
 │   ├── redactor.py           ← respuesta al paciente: plantillas, redacción con datos validados y guardrail
 │   ├── prompts/
 │   │   ├── extraccion_v3.txt ← el v2 con el DNI anonimizado y los fallos s12 y p02 corregidos
-│   │   └── redaccion_v1.txt  ← redacción con formato fijo (dd/mm, HH:MM, $12.000)
-│   ├── datos/                ← padrón, agenda, estudios y política de cargos (ficticios) y el lote de 9 casos
-│   ├── evidencia/            ← salida de la corrida real contra Groq
+│   │   ├── redaccion_v1.txt  ← redacción con formato fijo (dd/mm, HH:MM, $12.000)
+│   │   ├── rag_v1.txt        ← responder solo con los documentos recuperados, citando cada uno
+│   │   └── sin_grounding_v1.txt ← el mismo asistente sin contexto, para la comparación B.3
+│   ├── datos/                ← padrón, agenda, estudios y política de cargos (ficticios), el lote de 9 casos y las preguntas del RAG
+│   ├── evidencia/            ← corridas reales contra Groq y la calibración del umbral
 │   └── tests/                ← pruebas automáticas sin API (clinica/ se importa desde entrega_2)
 └── openspec/                 ← specs y cambios (desarrollo guiado por especificaciones)
 ```

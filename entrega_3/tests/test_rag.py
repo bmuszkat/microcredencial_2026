@@ -225,3 +225,32 @@ def test_crear_respondedor_usa_la_simulacion_sin_key(monkeypatch):
     r = rag.crear_respondedor(BaseFalsa())("¿me cobran?")
     assert r.estado == rag.RESPONDIDA and r.origen.startswith("SIMULACIÓN")
     assert r.citas == ["CAR-CANCELACION-V2"]
+
+
+# ── Consola (tarea 5.3) ───────────────────────────────────────────────────────
+
+def test_preguntar_en_simulacion_muestra_recuperacion_estado_y_respuesta(monkeypatch, capsys):
+    usados = {}
+
+    def respondedor_falso(modelo=None, origen=None):
+        usados["modelo"], usados["origen"] = modelo, origen
+        return lambda pregunta: rag.ResultadoRag(rag.RESPONDIDA, "Traé el DNI (DOC-TURNO).", ["DOC-TURNO"],
+                                                 [("DOC-TURNO", 0.711, True)], True, None, origen)
+
+    monkeypatch.setattr(rag, "crear_respondedor", respondedor_falso)
+    assert rag.main(["preguntar", "¿qué", "llevo?", "--simulacion"]) == 0
+    salida = capsys.readouterr().out
+    assert usados["modelo"] is rag.modelo_simulado
+    assert "Pregunta:  ¿qué llevo?" in salida and "SIMULACIÓN" in salida
+    assert "0.711  ✓  DOC-TURNO" in salida
+    assert "Estado:    respondida" in salida and "Respuesta: Traé el DNI (DOC-TURNO)." in salida
+
+
+def test_preguntar_muestra_lo_que_descarto_el_guardrail(capsys):
+    r = rag.ResultadoRag(rag.NO_VERIFICADO, None, ["CAR-CANCELACION-V2"], [("CAR-CANCELACION-V2", 0.7, True)],
+                         True, "monto sin respaldo en los documentos: $5.000", "falso", "Son $5.000 (CAR-CANCELACION-V2).")
+    rag.imprimir_resultado(r)
+    salida = capsys.readouterr().out
+    assert "Detalle:   monto sin respaldo" in salida
+    assert "Descartada por el guardrail: Son $5.000" in salida
+    assert "Respuesta:" not in salida

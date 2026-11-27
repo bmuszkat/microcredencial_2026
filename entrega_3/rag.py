@@ -18,6 +18,8 @@ Consola:
     python entrega_3/rag.py ver                     # qué quedó guardado en Chroma
     python entrega_3/rag.py buscar "pregunta"       # los k documentos más parecidos (solo vigentes)
     python entrega_3/rag.py buscar "pregunta" --todas   # lo mismo sin el filtro de vigencia
+    python entrega_3/rag.py preguntar "pregunta"    # respuesta completa: recuperación + LLM + guardrail
+    python entrega_3/rag.py preguntar "pregunta" --simulacion   # lo mismo sin llamar al LLM
     python entrega_3/rag.py calibrar                # similitud de las preguntas de calibración (umbral)
     python entrega_3/rag.py calibrar --guardar      # lo mismo, y lo guarda en entrega_3/evidencia/
 
@@ -335,6 +337,30 @@ def cmd_buscar(args) -> int:
     return 0
 
 
+def imprimir_resultado(r: ResultadoRag) -> None:
+    print("Recuperación:")
+    for id_, similitud, supera in r.candidatos:
+        print(f"   {similitud:>9.3f}  {'✓' if supera else '·'}  {id_}")
+    print(f"Estado:    {r.estado}{'' if r.llamo_llm else '  (el LLM no se llamó)'}")
+    if r.citas:
+        print(f"Citas:     {', '.join(r.citas)}")
+    if r.detalle:
+        print(f"Detalle:   {r.detalle}")
+    if r.texto:
+        print(f"Respuesta: {r.texto}")
+    elif r.texto_generado:
+        print(f"Descartada por el guardrail: {r.texto_generado}")
+
+
+def cmd_preguntar(args) -> int:
+    pregunta = " ".join(args.pregunta)
+    modelo, origen = (modelo_simulado, "SIMULACIÓN (--simulacion)") if args.simulacion else crear_modelo()
+    print(f"Pregunta:  {pregunta}")
+    print(f"Modelo:    {origen} · umbral {bc.UMBRAL_SIMILITUD:g} · k={bc.K} · filtro {bc.SOLO_VIGENTES}\n")
+    imprimir_resultado(crear_respondedor(modelo=modelo, origen=origen)(pregunta))
+    return 0
+
+
 def cmd_calibrar(args) -> int:
     preguntas = json.loads(RUTA_CALIBRACION.read_text(encoding="utf-8"))["preguntas"]
     salida = io.StringIO()
@@ -367,11 +393,15 @@ def main(argv: Optional[list[str]] = None) -> int:
     p_buscar.add_argument("--todas", action="store_true", help="sin el filtro de vigencia (muestra los derogados)")
     p_buscar.add_argument("-k", type=int, default=bc.K, help=f"cuántos documentos recuperar (por defecto {bc.K})")
 
+    p_preguntar = sub.add_parser("preguntar", help="respuesta completa del RAG: recuperación, LLM y guardrail")
+    p_preguntar.add_argument("pregunta", nargs="+")
+    p_preguntar.add_argument("--simulacion", action="store_true", help="sin llamar al LLM, aunque haya key")
     p_calibrar = sub.add_parser("calibrar", help="similitud de las preguntas de calibración y errores por umbral")
     p_calibrar.add_argument("--guardar", action="store_true", help="guardar la tabla en entrega_3/evidencia/")
 
     args = parser.parse_args(argv)
-    comandos = {"indexar": cmd_indexar, "ver": cmd_ver, "buscar": cmd_buscar, "calibrar": cmd_calibrar}
+    comandos = {"indexar": cmd_indexar, "ver": cmd_ver, "buscar": cmd_buscar, "preguntar": cmd_preguntar,
+                "calibrar": cmd_calibrar}
     return comandos[args.comando](args)
 
 

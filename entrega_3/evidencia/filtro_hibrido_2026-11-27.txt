@@ -1,0 +1,22 @@
+Demo del filtrado híbrido · 2026-11-27 · python entrega_3/rag.py buscar ... (con y sin --todas)
+
+$ python entrega_3/rag.py buscar "¿me cobran si cancelo tarde?"
+Pregunta: ¿me cobran si cancelo tarde?
+Filtro:   {'vigente': True} · k=3
+
+   similitud     documento
+       0.654  ✓  CAR-CANCELACION-V2
+       0.245  ·  COB-GALENO
+       0.216  ·  COB-PARTICULAR
+   ✓ supera el umbral de similitud (0.45) · no lo supera
+
+$ python entrega_3/rag.py buscar "¿me cobran si cancelo tarde?" --todas
+Pregunta: ¿me cobran si cancelo tarde?
+Filtro:   ninguno (incluye documentos derogados) · k=3
+
+   similitud     documento
+       0.654  ✓  CAR-CANCELACION-V2
+       0.595  ✓  CAR-CANCELACION-V1  (DEROGADO)
+       0.245  ·  COB-GALENO
+   ✓ supera el umbral de similitud (0.45) · no lo supera
+
