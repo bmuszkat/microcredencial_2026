@@ -5,7 +5,7 @@ Microcredencial #2 — Diseño de Aplicaciones Inteligentes (ORT) · Grupo 1 · 
 | Parte | Estado |
 |---|---|
 | **A — Workflow encadenado (Clase 4, Hito 1)** | ✅ Ejecutable, corrido contra Groq: 9/9 casos con el estado esperado |
-| B — RAG con corpus propio (Clase 5) | En curso: B.1 (corpus) y B.2 (arquitectura) listos |
+| B — RAG con corpus propio (Clase 5) | En curso: B.1, B.2 y B.3 listos (comparación contra Groq: 5/5 con lo esperado con RAG); falta integrarlo al workflow |
 | C — Agente con LangGraph (Clase 6, Hito 2) | Pendiente |
 
 ---
@@ -342,7 +342,47 @@ Sin el filtro, la política derogada no solo aparece: también supera el umbral,
 | `no_verificado` | No pasó el guardrail | Nada generado: queda para una persona |
 | `error` | Falló la API después de los reintentos | Nada generado: queda para una persona |
 
-**Pruebas sin API:** `test_base_conocimiento.py` (22) usa el modelo de embeddings real sobre índices temporales: huella, reindexación, recuperación, filtros, umbral y que la calibración reproduzca la evidencia. `test_rag.py` (29) usa un buscador y un modelo falsos: el contexto con ids, que el modelo no se llame sin contexto, el guardrail (citas, montos, porcentajes) y los cuatro estados. `test_preguntas_rag.py` (5) controla el set de calibración.
+**Pruebas sin API:** `test_base_conocimiento.py` (23) usa el modelo de embeddings real sobre índices temporales: huella, reindexación, recuperación, filtros, umbral, que la calibración reproduzca la evidencia y la comparación B.3 completa en simulación. `test_rag.py` (35) usa un buscador y un modelo falsos: el contexto con ids, que el modelo no se llame sin contexto, el guardrail (citas, montos, porcentajes), los cuatro estados, la verificación de lo esperado y la consola. `test_preguntas_rag.py` (10) controla los sets de calibración y de comparación, incluido que las citas de la Entrega 1 sean literales.
+
+### B.3 — Comparación antes/después
+
+Las mismas preguntas, al mismo modelo (Groq, `openai/gpt-oss-20b`, temperatura 0), con el mismo rol de asistente de la clínica. Lo único que cambia es el grounding:
+
+- **Sin grounding** (`prompts/sin_grounding_v1.txt`): el modelo responde con lo que "sabe", como en la Entrega 1.
+- **Con RAG** (`prompts/rag_v1.txt`): recibe los documentos recuperados y la instrucción de usar únicamente esos fragmentos; el guardrail verifica la respuesta.
+
+Las 5 preguntas y lo que se espera de cada una con RAG (estado, documento citado, textos que tienen que aparecer y que no pueden aparecer) se commitearon antes de correr (`datos/preguntas_comparacion.json`); el comando lo verifica en código. Dos son las que un modelo respondió inventando en la Entrega 1, y una está fuera del corpus.
+
+```bash
+python entrega_3/rag.py comparar --guardar     # ~3 min con Groq gratis (20 s entre llamadas)
+```
+
+**Resultado: 5/5 preguntas con lo esperado con RAG** (`evidencia/comparacion_groq_2026-11-27.txt`). Las respuestas, literales de la evidencia:
+
+| | Entrega 1 (Gemini, sin datos) | Sin grounding (gpt-oss-20b) | Con RAG (gpt-oss-20b) |
+|---|---|---|---|
+| **C1** ¿Me cobran algo si reprogramo el turno con menos de 24 horas de anticipación? | «Despreocupate, no se realiza ningún cobro ni penalización…» y, en otra conversación, «según el Punto 4.2… un cargo administrativo de $5.000» | «Sí, si reprogramás el turno con menos de 24 horas de anticipación se aplica una tarifa de reprogramación de 200 pesos…» | «Sí, si reprogramás el turno con menos de 24 horas de anticipación, la clínica te cobrará un cargo de $12.000, el cual se suma al próximo turno y se abona en la recepción de cualquier sede (CAR-CANCELACION-V2).» ✓ |
+| **C2** Tengo OSDE 210, ¿me cubre el estudio de campo visual? | «Tu plan OSDE 210 cubre el 100% del estudio de Campo Visual Computarizado…» | «…con el plan OSDE 210 el estudio de campo visual está incluido dentro del examen oftalmológico completo… te recomiendo que contactes a tu aseguradora para confirmar la cobertura exacta…» | «Sí, con OSDE 210 la clínica cubre el estudio de campo visual, pero tenés que abonar un copago de $4.500 el día del estudio (COB-OSDE).» ✓ |
+| **C3** ¿Qué tengo que llevar el día del turno? | — | «…tené a mano tu documento de identidad, la tarjeta de seguro o plan de salud, y cualquier historial ocular o exámenes previos… también es útil llevar una lista de medicamentos…» | «Debés llevar el DNI y la credencial de obra social o prepaga, la orden médica y la autorización si la obra social la solicita, además de tus anteojos actuales y estudios oftalmológicos anteriores, y llegar 15 minutos antes. (DOC-TURNO)» ✓ |
+| **C4** ¿Puedo ir manejando a hacerme un fondo de ojo? | — | «Si no tenés síntomas de visión borrosa, mareos o cualquier alteración… podés ir manejando sin problema.» | «No, no podés manejar después del fondo de ojo porque la dilatación deja la visión borrosa y con sensibilidad a la luz durante 4 a 6 horas, por lo que conviene venir acompañado o usar transporte público y traer anteojos de sol (PREP-FONDO-DE-OJO).» ✓ |
+| **C5** ¿Atienden a domicilio? *(fuera del corpus)* | — | «Sí, en la Clínica Oftalmológica Visión Sur brindamos consultas y exámenes a domicilio… llamá al 011‑1234‑5678…» | «No tengo información oficial sobre esa consulta.» — ningún documento superó el umbral (el mejor, 0.375), así que **el LLM no se llamó** ✓ |
+
+**Qué inventa el modelo sin grounding.** Sin datos de la clínica, el modelo no dice "no sé": completa con lo que le suena razonable, con el mismo tono seguro con el que respondería algo cierto.
+
+- **Una política distinta cada vez.** Para el cargo por reprogramar, Gemini dijo "sin cobro" en una conversación y "$5.000 según el Punto 4.2" en otra; gpt-oss-20b dijo "200 pesos". Son tres respuestas incompatibles a la misma pregunta, y ninguna es la de la clínica.
+- **Servicios y datos de contacto que no existen.** En C5 ofreció atención a domicilio y un teléfono. Un paciente podría llamar a ese número o esperar una visita que nunca va a ocurrir.
+- **Una indicación de seguridad equivocada.** En C4 dijo que se puede ir manejando "sin problema". El fondo de ojo dilata las pupilas y deja la visión borrosa por horas: es la respuesta más riesgosa de la comparación, y el modelo no tenía cómo saberlo.
+- **Respuestas vagas cuando "no se anima".** En C2 no inventó un porcentaje como Gemini, pero tampoco respondió: mezcló una cobertura imprecisa con "contactá a tu aseguradora". En C3 dio una lista genérica, plausible pero distinta de la de la clínica (no menciona la orden médica ni la autorización).
+
+**Qué cambia con RAG.** Las cuatro preguntas del corpus se responden con el dato exacto del documento vigente ($12.000, el copago de $4.500, la orden médica, "no podés manejar") y citan el documento. Las cuatro pasaron el guardrail: citas entre los documentos recuperados y montos presentes en ellos. En C1, el filtro de vigencia dejó afuera la política derogada de $8.000; en C2, el "100 %" no puede aparecer porque el guardrail rechazaría un porcentaje sin respaldo.
+
+**La pregunta fuera del corpus.** Es la diferencia más clara: sin grounding, el modelo inventó un servicio completo con teléfono incluido; con RAG, el sistema reconoció que no tenía información **antes** de llamar al LLM, porque ningún documento superó el umbral calibrado. La respuesta es el texto exacto que pide la consigna; al integrarlo con el workflow se le suma la derivación a recepción.
+
+**Observaciones de la corrida.**
+
+- La comparación es de una sola corrida. A temperatura 0 las respuestas igual varían entre corridas (ya lo vimos en la Entrega 2): lo que no varía es el contexto que recibe el modelo con RAG ni las verificaciones en código.
+- En C1, con RAG, el modelo escribió «te cobrará» en lugar de un voseo más natural ("te cobran"). Es de estilo y no afecta el dato.
+- En C3 la cita quedó después del punto final: «…llegar 15 minutos antes. (DOC-TURNO)». El guardrail la reconoce igual.
 
 ## Parte C — Agente con LangGraph
 

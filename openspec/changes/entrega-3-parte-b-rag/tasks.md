@@ -30,7 +30,7 @@
 - [x] 6.1 Escribir `entrega_3/datos/preguntas_comparacion.json` con las 5 preguntas de design D14, lo esperado con RAG y la respuesta de la Entrega 1 cuando existe, y commitearlo **antes de la corrida real**. Verificar con un test de estructura (al menos 2 preguntas con evidencia de la Entrega 1 y al menos 1 fuera del corpus)
 - [x] 6.2 Agregar `rag.py comparar` (con pausa entre llamadas y modo simulación) y un test en simulación. Verificar con `pytest` y corriendo `python entrega_3/rag.py comparar` sin key
 - [x] 6.3 Correr la comparación contra Groq y guardar la salida en `entrega_3/evidencia/comparacion_groq_<fecha>.txt` (con `org_[OCULTO]` si aparece). Registrar qué preguntas dieron lo esperado y cuáles no, sin modificar las preguntas
-- [ ] 6.4 Agregar al informe la sección B.3: tabla antes/después con las respuestas literales de la evidencia y análisis (qué se inventó sin grounding, qué cambió con RAG, la pregunta fuera del corpus). Verificar cada cita contra el archivo de evidencia
+- [x] 6.4 Agregar al informe la sección B.3: tabla antes/después con las respuestas literales de la evidencia y análisis (qué se inventó sin grounding, qué cambió con RAG, la pregunta fuera del corpus). Verificar cada cita contra el archivo de evidencia
 
 ## 7. Integración con el workflow
 
