@@ -41,7 +41,13 @@ CACHE_MODELOS = Path.home() / ".cache" / "fastembed"
 
 K = 3                          # cuántos documentos se recuperan
 SOLO_VIGENTES = {"vigente": True}   # filtrado híbrido por defecto: nunca una política derogada
-UMBRAL_SIMILITUD = 0.35        # PROVISORIO (el de la cátedra con el mismo modelo); se calibra en la tarea 4.2
+# Por debajo de este valor, el mejor documento no se considera relevante: "No tengo información oficial".
+# Calibrado con 27 preguntas fijadas antes de medir (datos/preguntas_calibracion.json); la medición está en
+# evidencia/calibracion_2026-11-27.txt. Las preguntas dentro del corpus dan 0.342 a 0.761 y las de afuera
+# 0.174 a 0.469: se superponen. 0.45 es el que menos errores deja (3: rechaza D12 y D14, deja pasar F03),
+# en el medio de una franja estable (0.44 a 0.46). El 0.35 de la cátedra dejaba 6. Si cambian el corpus
+# o el modelo de embeddings, hay que volver a correr `python entrega_3/rag.py calibrar`.
+UMBRAL_SIMILITUD = 0.45
 
 logging.getLogger("chromadb").setLevel(logging.ERROR)
 

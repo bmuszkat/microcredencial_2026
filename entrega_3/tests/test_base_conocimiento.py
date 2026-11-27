@@ -174,3 +174,39 @@ def test_supera_umbral_segun_el_valor_pedido(base):
     assert all(r.supera_umbral for r in recuperados)
     recuperados = bc.buscar(base, "¿qué tengo que llevar el día del turno?", umbral=1.01)
     assert not any(r.supera_umbral for r in recuperados)
+
+
+# ── Umbral calibrado (tarea 4.2, design D6) ───────────────────────────────────
+
+def test_pregunta_fuera_del_corpus_no_supera_el_umbral(base):
+    recuperados = bc.buscar(base, "¿atienden a domicilio?")
+    assert not any(r.supera_umbral for r in recuperados)
+
+
+def test_pregunta_dentro_del_corpus_supera_el_umbral(base):
+    recuperados = bc.buscar(base, "¿qué tengo que llevar el día del turno?")
+    assert recuperados[0].supera_umbral and recuperados[0].id == "DOC-TURNO"
+
+
+def test_la_calibracion_reproduce_la_evidencia(base):
+    """Con el umbral vigente, las 27 preguntas dan los 3 errores documentados en la evidencia."""
+    import rag
+    preguntas = json.loads(rag.RUTA_CALIBRACION.read_text(encoding="utf-8"))["preguntas"]
+    filas = rag.medir_calibracion(base, preguntas)
+    assert all(f["posicion_esperado"] == 1 for f in filas if f["tipo"] == "dentro")
+    errores = rag.errores_por_umbral(filas, bc.UMBRAL_SIMILITUD)
+    assert errores["dentro_rechazadas"] == ["D12", "D14"]
+    assert errores["fuera_aceptadas"] == ["F03"]
+
+
+def test_errores_por_umbral_cuenta_los_dos_tipos_de_error():
+    import rag
+    filas = [
+        {"id": "D1", "tipo": "dentro", "similitud": 0.70},
+        {"id": "D2", "tipo": "dentro", "similitud": 0.40},
+        {"id": "F1", "tipo": "fuera", "similitud": 0.50},
+        {"id": "F2", "tipo": "fuera", "similitud": 0.20},
+    ]
+    e = rag.errores_por_umbral(filas, 0.45)
+    assert (e["dentro_rechazadas"], e["fuera_aceptadas"], e["errores"]) == (["D2"], ["F1"], 2)
+    assert rag.errores_por_umbral(filas, 0.45)["umbral"] == 0.45

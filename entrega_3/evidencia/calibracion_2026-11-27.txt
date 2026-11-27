@@ -1,0 +1,59 @@
+Calibración del umbral · 2026-11-27 · modelo jinaai/jina-embeddings-v2-base-es · k=3 · filtro {'vigente': True}
+Preguntas: entrega_3\datos\preguntas_calibracion.json (fijadas antes de medir)
+
+DENTRO del corpus (debería superar el umbral)
+   id   similitud  mejor documento        esperado  pregunta
+   D16      0.761  SEDE-BELGRANO                #1  ¿qué médico de retina atiende en Belgrano?
+   D10      0.758  PREP-CAMPO-VISUAL            #1  ¿cuánto tiempo lleva el estudio de campo visual?
+   D04      0.741  COB-SWISS-MEDICAL            #1  ¿trabajan con Swiss Medical para hacer una OCT?
+   D07      0.730  COB-GALENO                   #1  ¿con Galeno plan Azul pago algo en la consulta?
+   D05      0.690  COB-IOMA                     #1  soy afiliado de IOMA, ¿qué papeles necesito para un estudio?
+   D03      0.671  COB-OSDE                     #1  tengo OSDE 210, ¿me cubren el campo visual?
+   D08      0.653  COB-PARTICULAR               #1  no tengo obra social, ¿cuánto me sale la consulta?
+   D13      0.611  RES-PLAZOS-RETIRO            #1  ¿en cuántos días me dan el informe de la OCT?
+   D02      0.605  CAR-CANCELACION-V2           #1  ¿cuánto es la multa por pasar el turno para otro día?
+   D15      0.602  SEDE-CENTRO                  #1  ¿la sede de Centro abre los sábados?
+   D11      0.580  PREP-OCT-TOPOGRAFIA          #1  uso lentes de contacto, ¿qué hago antes de la topografía?
+   D06      0.563  COB-PAMI                     #1  mi mamá es jubilada y tiene PAMI, ¿la pueden atender?
+   D17      0.506  DOC-TURNO                    #1  ¿qué documentación tengo que presentar cuando voy a la consulta?
+   D09      0.474  PREP-FONDO-DE-OJO            #1  me van a dilatar las pupilas, ¿puedo volver solo en el auto?
+   D01      0.463  CAR-CANCELACION-V2           #1  si no voy a poder ir mañana y aviso hoy, ¿tengo que pagar algo?
+   D14      0.369  RES-PLAZOS-RETIRO            #1  ¿puede ir mi hijo a buscar mis resultados?
+   D12      0.342  PREP-OCT-TOPOGRAFIA          #1  ¿qué tengo que hacer antes de la topografía?
+   rango: 0.342 a 0.761
+
+FUERA del corpus (no debería superarlo)
+   id   similitud  mejor documento        esperado  pregunta
+   F03      0.469  COB-PARTICULAR                —  ¿cuánto cuesta la cirugía láser para dejar los anteojos?
+   F02      0.433  COB-OSDE                      —  ¿venden anteojos o hacen los lentes recetados?
+   F04      0.386  SEDE-BELGRANO                 —  ¿tienen guardia de urgencias las 24 horas?
+   F08      0.382  RES-PLAZOS-RETIRO             —  ¿hacen el examen de la vista para el registro de conducir?
+   F01      0.358  COB-PAMI                      —  ¿atienden a domicilio?
+   F05      0.345  RES-PLAZOS-RETIRO             —  ¿se puede hacer la consulta por videollamada?
+   F06      0.321  COB-SWISS-MEDICAL             —  ¿hay estacionamiento en la clínica?
+   F07      0.298  COB-SWISS-MEDICAL             —  ¿aceptan Medifé?
+   F10      0.197  DOC-TURNO                     —  ¿cómo va a estar el clima mañana en Buenos Aires?
+   F09      0.174  SEDE-BELGRANO                 —  ¿atienden a chicos menores de 5 años?
+   rango: 0.174 a 0.469
+
+Recuperación: el documento esperado sale primero en 17/17 preguntas 'dentro'.
+
+Errores por umbral (dentro rechazadas + fuera aceptadas):
+   0.30   7 errores   (F01, F02, F03, F04, F05, F06, F08)
+   0.32   7 errores   (F01, F02, F03, F04, F05, F06, F08)
+   0.34   6 errores   (F01, F02, F03, F04, F05, F08)
+   0.36   5 errores   (D12, F02, F03, F04, F08)
+   0.38   6 errores   (D12, D14, F02, F03, F04, F08)
+   0.40   4 errores   (D12, D14, F02, F03)
+   0.42   4 errores   (D12, D14, F02, F03)
+   0.44   3 errores   (D12, D14, F03)
+   0.46   3 errores   (D12, D14, F03)
+   0.48   4 errores   (D01, D09, D12, D14)
+   0.50   4 errores   (D01, D09, D12, D14)
+   0.52   5 errores   (D01, D09, D12, D14, D17)
+   0.54   5 errores   (D01, D09, D12, D14, D17)
+   0.56   5 errores   (D01, D09, D12, D14, D17)
+   0.58   7 errores   (D01, D06, D09, D11, D12, D14, D17)
+   0.60   7 errores   (D01, D06, D09, D11, D12, D14, D17)
+
+Umbral vigente en base_conocimiento.py: 0.45 → 3 errores (D12, D14, F03)
