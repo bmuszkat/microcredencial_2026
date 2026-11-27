@@ -1,0 +1,75 @@
+{
+  "_nota": "Comparación B.3: las mismas preguntas sin grounding (el LLM responde de memoria, como en la Entrega 1) y con RAG. Las preguntas y lo esperado con RAG se fijaron ANTES de la corrida real y no se cambian después. 'esperado_rag' se verifica en código: estado, documento citado, textos que tienen que aparecer (alcanza con uno) y textos que no pueden aparecer. 'entrega_1' cita literalmente lo que respondió un modelo sin datos en la Entrega 1 (A.2). 'simulacion_sin_grounding' es un ejemplo para correr sin API key.",
+  "preguntas": [
+    {
+      "id": "C1",
+      "pregunta": "¿Me cobran algo si reprogramo el turno con menos de 24 horas de anticipación?",
+      "tipo": "dentro",
+      "esperado_rag": {
+        "estado": "respondida",
+        "documento": "CAR-CANCELACION-V2",
+        "debe_contener": ["$12.000"],
+        "no_debe_contener": ["$5.000", "$8.000", "48 horas"]
+      },
+      "entrega_1": [
+        {"archivo": "entrega_1/evidencia/a2_gemini_chat_temporal.txt", "cita": "Despreocupate, no se realiza ningún cobro ni penalización por reprogramar con menos de 24 horas de anticipación."},
+        {"archivo": "entrega_1/evidencia/a2_gemini_con_memoria.txt", "cita": "Sí, según el Punto 4.2 de nuestra Política de Cancelaciones y Turnos, reprogramar o cancelar con menos de 24 horas de anticipación genera un cargo administrativo de $5.000"}
+      ],
+      "simulacion_sin_grounding": "No te preocupes, reprogramar con menos de 24 horas no tiene ningún costo. Decinos qué día te queda mejor y lo cambiamos."
+    },
+    {
+      "id": "C2",
+      "pregunta": "Tengo OSDE 210, ¿me cubre el estudio de campo visual?",
+      "tipo": "dentro",
+      "esperado_rag": {
+        "estado": "respondida",
+        "documento": "COB-OSDE",
+        "debe_contener": ["$4.500"],
+        "no_debe_contener": ["100 %", "100%"]
+      },
+      "entrega_1": [
+        {"archivo": "entrega_1/evidencia/a2_gemini_chat_temporal.txt", "cita": "Tu plan OSDE 210 cubre el 100% del estudio de Campo Visual Computarizado, por lo que no tenés que abonar ningún adicional ni realizar ninguna autorización previa extra."}
+      ],
+      "simulacion_sin_grounding": "Sí, OSDE 210 cubre el 100 % del campo visual, así que no tenés que pagar nada."
+    },
+    {
+      "id": "C3",
+      "pregunta": "¿Qué tengo que llevar el día del turno?",
+      "tipo": "dentro",
+      "esperado_rag": {
+        "estado": "respondida",
+        "documento": "DOC-TURNO",
+        "debe_contener": ["DNI"],
+        "no_debe_contener": []
+      },
+      "entrega_1": [],
+      "simulacion_sin_grounding": "Traé tu DNI, la credencial de la obra social y, si tenés, los estudios anteriores. Te recomendamos llegar 10 minutos antes."
+    },
+    {
+      "id": "C4",
+      "pregunta": "¿Puedo ir manejando a hacerme un fondo de ojo?",
+      "tipo": "dentro",
+      "esperado_rag": {
+        "estado": "respondida",
+        "documento": "PREP-FONDO-DE-OJO",
+        "debe_contener": ["acompañad", "transporte público", "no podés manejar", "no se puede manejar", "no manejes", "no deberías manejar", "no es recomendable manejar"],
+        "no_debe_contener": []
+      },
+      "entrega_1": [],
+      "simulacion_sin_grounding": "Sí, podés venir manejando sin problema; el estudio es rápido y no requiere preparación especial."
+    },
+    {
+      "id": "C5",
+      "pregunta": "¿Atienden a domicilio?",
+      "tipo": "fuera",
+      "esperado_rag": {
+        "estado": "sin_informacion",
+        "documento": null,
+        "debe_contener": [],
+        "no_debe_contener": []
+      },
+      "entrega_1": [],
+      "simulacion_sin_grounding": "Sí, contamos con atención a domicilio para pacientes con movilidad reducida. Escribinos y coordinamos una visita."
+    }
+  ]
+}

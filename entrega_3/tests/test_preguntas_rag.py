@@ -62,3 +62,55 @@ def test_calibracion_no_copia_las_preguntas_de_ejemplo_del_corpus(calibracion, c
         ejemplos |= {e.strip(" ¿?.").lower() for e in re.findall(r"¿[^?]+\?", d["descripcion_semantica"])}
     for p in calibracion:
         assert p["pregunta"].strip(" ¿?.").lower() not in ejemplos, p["id"]
+
+
+# ── Comparación B.3 (tarea 6.1, design D14) ───────────────────────────────────
+
+RAIZ = ENTREGA_3.parent
+
+
+@pytest.fixture(scope="module")
+def comparacion():
+    return cargar(ENTREGA_3 / "datos" / "preguntas_comparacion.json")["preguntas"]
+
+
+def test_comparacion_estructura(comparacion):
+    ids = [p["id"] for p in comparacion]
+    assert len(ids) == len(set(ids)) and len(ids) >= 2
+    for p in comparacion:
+        assert set(p) == {"id", "pregunta", "tipo", "esperado_rag", "entrega_1", "simulacion_sin_grounding"}, p["id"]
+        assert set(p["esperado_rag"]) == {"estado", "documento", "debe_contener", "no_debe_contener"}, p["id"]
+        assert p["tipo"] in ("dentro", "fuera") and p["simulacion_sin_grounding"].strip(), p["id"]
+
+
+def test_comparacion_tiene_dos_preguntas_de_la_entrega_1_y_una_fuera_del_corpus(comparacion):
+    assert sum(bool(p["entrega_1"]) for p in comparacion) >= 2
+    assert any(p["tipo"] == "fuera" for p in comparacion)
+
+
+def test_las_citas_de_la_entrega_1_son_literales(comparacion):
+    for p in comparacion:
+        for e in p["entrega_1"]:
+            texto = (RAIZ / e["archivo"]).read_text(encoding="utf-8")
+            assert e["cita"] in texto, (p["id"], e["archivo"])
+
+
+def test_lo_esperado_dentro_del_corpus_sale_del_documento_vigente(comparacion, corpus):
+    for p in comparacion:
+        esperado = p["esperado_rag"]
+        if p["tipo"] == "dentro":
+            assert esperado["estado"] == "respondida", p["id"]
+            doc = corpus[esperado["documento"]]
+            assert doc["metadatos"]["vigente"], p["id"]
+            assert esperado["debe_contener"], p["id"]
+            assert any(t in doc["descripcion_semantica"] for t in esperado["debe_contener"]), p["id"]
+            assert not any(t in doc["descripcion_semantica"] for t in esperado["no_debe_contener"]), p["id"]
+        else:
+            assert esperado["estado"] == "sin_informacion" and esperado["documento"] is None, p["id"]
+
+
+def test_la_pregunta_fuera_del_corpus_no_esta_en_la_calibracion_como_dentro(comparacion, calibracion):
+    dentro = {p["pregunta"].lower() for p in calibracion if p["tipo"] == "dentro"}
+    for p in comparacion:
+        if p["tipo"] == "fuera":
+            assert p["pregunta"].lower() not in dentro
