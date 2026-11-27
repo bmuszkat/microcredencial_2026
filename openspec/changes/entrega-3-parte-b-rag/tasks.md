@@ -42,7 +42,7 @@
 
 ## 8. Verificación final
 
-- [ ] 8.1 En el venv: `python -m pytest` (Entrega 2 y Entrega 3 en verde), `python entrega_2/app.py` y `python entrega_3/workflow.py --simulacion` sin key, búsqueda de keys en el historial (`gsk_`, `sk-`, `AIza`, `sk-ant-`, `org_`) y `openspec validate entrega-3-parte-b-rag --strict`
+- [x] 8.1 En el venv: `python -m pytest` (Entrega 2 y Entrega 3 en verde), `python entrega_2/app.py` y `python entrega_3/workflow.py --simulacion` sin key, búsqueda de keys en el historial (`gsk_`, `sk-`, `AIza`, `sk-ant-`, `org_`) y `openspec validate entrega-3-parte-b-rag --strict`
 
 ## Workflow follow-up
 
