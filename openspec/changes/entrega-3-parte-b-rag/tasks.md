@@ -16,7 +16,7 @@
 
 ## 4. Calibración del umbral
 
-- [ ] 4.1 Escribir `entrega_3/datos/preguntas_calibracion.json` (preguntas dentro y fuera del corpus, con lo que se espera de cada una) y commitearlo **antes de medir**. Verificar con un test de estructura
+- [x] 4.1 Escribir `entrega_3/datos/preguntas_calibracion.json` (preguntas dentro y fuera del corpus, con lo que se espera de cada una) y commitearlo **antes de medir**. Verificar con un test de estructura
 - [ ] 4.2 Agregar `rag.py calibrar` (design D6), correrlo, guardar la tabla en `entrega_3/evidencia/calibracion_<fecha>.txt` y fijar el umbral como constante con un comentario que remita a la evidencia. Agregar a los tests de la base los escenarios de umbral de la spec ("¿atienden a domicilio?" no supera; "¿qué tengo que llevar el día del turno?" sí). Verificar con `pytest`
 
 ## 5. Generación con LCEL

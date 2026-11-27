@@ -1,0 +1,32 @@
+{
+  "_nota": "Preguntas para calibrar el umbral de similitud del RAG (design D6). Se escribieron ANTES de medir y no se cambian después de ver los resultados. 'dentro': la respuesta está en el corpus y se espera recuperar ese documento primero. 'fuera': el corpus no la responde y ningún documento debería superar el umbral. Están redactadas como las escribiría un paciente, sin copiar las preguntas de ejemplo de los documentos.",
+  "preguntas": [
+    {"id": "D01", "tipo": "dentro", "pregunta": "si no voy a poder ir mañana y aviso hoy, ¿tengo que pagar algo?", "documento_esperado": "CAR-CANCELACION-V2", "por_que": "Cargo por cancelar con menos de 24 h, sin las palabras 'cancelar' ni 'cargo'"},
+    {"id": "D02", "tipo": "dentro", "pregunta": "¿cuánto es la multa por pasar el turno para otro día?", "documento_esperado": "CAR-CANCELACION-V2", "por_que": "Reprogramar dicho como 'pasar el turno'; tiene que ganar la vigente y no la derogada"},
+    {"id": "D03", "tipo": "dentro", "pregunta": "tengo OSDE 210, ¿me cubren el campo visual?", "documento_esperado": "COB-OSDE", "por_que": "La pregunta de la Entrega 1 que Gemini respondió inventando"},
+    {"id": "D04", "tipo": "dentro", "pregunta": "¿trabajan con Swiss Medical para hacer una OCT?", "documento_esperado": "COB-SWISS-MEDICAL", "por_que": "Cobertura por prepaga para un estudio"},
+    {"id": "D05", "tipo": "dentro", "pregunta": "soy afiliado de IOMA, ¿qué papeles necesito para un estudio?", "documento_esperado": "COB-IOMA", "por_que": "Requisitos de una obra social; compite con el documento de qué llevar"},
+    {"id": "D06", "tipo": "dentro", "pregunta": "mi mamá es jubilada y tiene PAMI, ¿la pueden atender?", "documento_esperado": "COB-PAMI", "por_que": "Obra social nombrada junto a 'jubilada'"},
+    {"id": "D07", "tipo": "dentro", "pregunta": "¿con Galeno plan Azul pago algo en la consulta?", "documento_esperado": "COB-GALENO", "por_que": "Copago por plan"},
+    {"id": "D08", "tipo": "dentro", "pregunta": "no tengo obra social, ¿cuánto me sale la consulta?", "documento_esperado": "COB-PARTICULAR", "por_que": "Aranceles particulares sin decir 'particular'"},
+    {"id": "D09", "tipo": "dentro", "pregunta": "me van a dilatar las pupilas, ¿puedo volver solo en el auto?", "documento_esperado": "PREP-FONDO-DE-OJO", "por_que": "Manejar después de dilatar, sin nombrar el estudio"},
+    {"id": "D10", "tipo": "dentro", "pregunta": "¿cuánto tiempo lleva el estudio de campo visual?", "documento_esperado": "PREP-CAMPO-VISUAL", "por_que": "Duración de un estudio"},
+    {"id": "D11", "tipo": "dentro", "pregunta": "uso lentes de contacto, ¿qué hago antes de la topografía?", "documento_esperado": "PREP-OCT-TOPOGRAFIA", "por_que": "Preparación con lentes de contacto"},
+    {"id": "D12", "tipo": "dentro", "pregunta": "¿qué tengo que hacer antes de la topografía?", "documento_esperado": "PREP-OCT-TOPOGRAFIA", "por_que": "Pregunta corta y general; en la tarea 3.2 dio 0,342, por debajo del umbral provisorio"},
+    {"id": "D13", "tipo": "dentro", "pregunta": "¿en cuántos días me dan el informe de la OCT?", "documento_esperado": "RES-PLAZOS-RETIRO", "por_que": "Plazo de entrega; compite con el documento de preparación de la OCT"},
+    {"id": "D14", "tipo": "dentro", "pregunta": "¿puede ir mi hijo a buscar mis resultados?", "documento_esperado": "RES-PLAZOS-RETIRO", "por_que": "Retiro por un tercero"},
+    {"id": "D15", "tipo": "dentro", "pregunta": "¿la sede de Centro abre los sábados?", "documento_esperado": "SEDE-CENTRO", "por_que": "Horario por sede; compite con la sede Belgrano"},
+    {"id": "D16", "tipo": "dentro", "pregunta": "¿qué médico de retina atiende en Belgrano?", "documento_esperado": "SEDE-BELGRANO", "por_que": "Profesional por especialidad y sede"},
+    {"id": "D17", "tipo": "dentro", "pregunta": "¿qué documentación tengo que presentar cuando voy a la consulta?", "documento_esperado": "DOC-TURNO", "por_que": "Qué llevar, sin la palabra 'llevar'"},
+    {"id": "F01", "tipo": "fuera", "pregunta": "¿atienden a domicilio?", "documento_esperado": null, "por_que": "Pregunta fuera del corpus de la comparación B.3; en la tarea 3.2 dio 0,358"},
+    {"id": "F02", "tipo": "fuera", "pregunta": "¿venden anteojos o hacen los lentes recetados?", "documento_esperado": null, "por_que": "Óptica: del rubro pero no la ofrece la clínica"},
+    {"id": "F03", "tipo": "fuera", "pregunta": "¿cuánto cuesta la cirugía láser para dejar los anteojos?", "documento_esperado": null, "por_que": "Parecida a temas del corpus (cirugía refractiva, aranceles) pero sin respuesta"},
+    {"id": "F04", "tipo": "fuera", "pregunta": "¿tienen guardia de urgencias las 24 horas?", "documento_esperado": null, "por_que": "Horarios, pero de un servicio que no está en el corpus"},
+    {"id": "F05", "tipo": "fuera", "pregunta": "¿se puede hacer la consulta por videollamada?", "documento_esperado": null, "por_que": "Modalidad de atención no documentada"},
+    {"id": "F06", "tipo": "fuera", "pregunta": "¿hay estacionamiento en la clínica?", "documento_esperado": null, "por_que": "Servicio de la sede no documentado"},
+    {"id": "F07", "tipo": "fuera", "pregunta": "¿aceptan Medifé?", "documento_esperado": null, "por_que": "Obra social que no está en el corpus: compite con las coberturas"},
+    {"id": "F08", "tipo": "fuera", "pregunta": "¿hacen el examen de la vista para el registro de conducir?", "documento_esperado": null, "por_que": "Trámite parecido a un estudio, no documentado"},
+    {"id": "F09", "tipo": "fuera", "pregunta": "¿atienden a chicos menores de 5 años?", "documento_esperado": null, "por_que": "Pediatría: no está en el corpus"},
+    {"id": "F10", "tipo": "fuera", "pregunta": "¿cómo va a estar el clima mañana en Buenos Aires?", "documento_esperado": null, "por_que": "Totalmente ajena al dominio: piso de la similitud"}
+  ]
+}
