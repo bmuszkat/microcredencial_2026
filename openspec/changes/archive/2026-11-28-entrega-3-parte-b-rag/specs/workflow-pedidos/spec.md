@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Una resolución por intención
-El workflow SHALL resolver por separado cada intención del mensaje y asignarle su propio estado. `consulta_medica` MUST terminar en `DERIVADO` sin que el asistente opine. `otra` MUST pasar por el RAG y registrar un `motivo` que distinga el resultado: `"rag"` (respondida con documentos oficiales, `COMPLETADO`), `"sin_informacion_oficial"` (ningún documento supera el umbral, `COMPLETADO` con el fallback y la derivación a recepción) o `"rag_no_verificado"` (el LLM falló o la respuesta no pasó el guardrail, `REVISION_HUMANA`).
+El workflow SHALL resolver por separado cada intención y asignarle su propio estado. `consulta_medica` MUST terminar en `DERIVADO` sin que el asistente opine. `otra` MUST pasar por el RAG y registrar un `motivo`: `"rag"` (respondida con documentos oficiales, `COMPLETADO`), `"sin_informacion_oficial"` (nada supera el umbral: `COMPLETADO` con el fallback y la derivación a recepción) o `"rag_no_verificado"` (falló el LLM o el guardrail: `REVISION_HUMANA`).
 
 #### Scenario: Dos pedidos administrativos
 - **WHEN** el mensaje pide reprogramar un turno y consultar un resultado

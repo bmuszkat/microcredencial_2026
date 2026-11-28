@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Detección de consulta médica
-El sistema SHALL clasificar como `consulta_medica` todo pedido de opinión clínica (síntomas, gravedad, diagnóstico, medicación, interpretación de resultados), distinguiéndolo de `otra`. Si el mensaje además trae un pedido administrativo, ambas intenciones MUST aparecer en la lista. Desde el prompt `v4`, una pregunta sobre una indicación general que publica la clínica (cómo prepararse para un estudio, qué llevar al turno), sin síntomas ni pedido de opinión sobre el caso del paciente, SHALL clasificarse como `otra`.
+El sistema SHALL clasificar como `consulta_medica` todo pedido de opinión clínica (síntomas, gravedad, diagnóstico, medicación, interpretación de resultados), distinguiéndolo de `otra`. Si el mensaje además trae un pedido administrativo, ambas intenciones MUST aparecer. Desde el prompt `v4`, una pregunta sobre una indicación general publicada por la clínica (preparación de un estudio, qué llevar), sin síntomas ni pedido de opinión sobre su caso, SHALL clasificarse como `otra`.
 
 #### Scenario: Síntoma sin pedido administrativo
 - **WHEN** el paciente escribe "me arde mucho el ojo desde ayer, ¿es grave?"
@@ -24,7 +24,7 @@ El sistema SHALL clasificar como `consulta_medica` todo pedido de opinión clín
 - **THEN** `intenciones` es `["consulta_medica"]`
 
 ### Requirement: Prompt versionado
-El system prompt de extracción SHALL vivir en un archivo separado del código, identificado por versión (`v1`, `v2`, `v3`, `v4`, …), y cada resultado MUST indicar qué versión de prompt lo generó. Cada versión MUST validarse contra el contrato que le corresponde, de modo que una versión anterior siga siendo reproducible después de que el contrato evolucione. El lote de la Entrega 2 SHALL usar `v2` por defecto, y el workflow de la Entrega 3 SHALL usar `v4`, que valida contra el mismo contrato que `v2`. El prompt `v3` MUST conservarse sin cambios para que la corrida de la Parte A siga siendo reproducible.
+El system prompt de extracción SHALL vivir en un archivo separado del código, identificado por versión (`v1`, `v2`, `v3`, `v4`, …), y cada resultado MUST indicar qué versión lo generó. Cada versión MUST validarse contra su contrato, para que una versión anterior siga siendo reproducible. El lote de la Entrega 2 SHALL usar `v2` por defecto y el workflow de la Entrega 3, `v4` (mismo contrato que `v2`). El `v3` MUST conservarse sin cambios, para reproducir la corrida de la Parte A.
 
 #### Scenario: Correr con otra versión
 - **WHEN** se ejecuta el lote indicando la versión `v1`

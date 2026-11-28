@@ -6,7 +6,7 @@ Genera el texto que recibe el paciente al final del workflow, usando solo datos 
 ## Requirements
 
 ### Requirement: Quién escribe la respuesta según el estado
-La respuesta SHALL redactarla el LLM solo cuando el estado global es `COMPLETADO` o `PENDIENTE_CONFIRMACION` y hay al menos una intención administrativa resuelta. En los demás casos (`PENDIENTE`, `DERIVADO` cuando solo hay una consulta médica, `REVISION_HUMANA` y `otra`), la respuesta MUST ser una plantilla fija.
+La respuesta SHALL redactarla el LLM solo cuando el estado global es `COMPLETADO` o `PENDIENTE_CONFIRMACION` y hay al menos una intención administrativa resuelta. Cuando la única intención es `otra`, la respuesta MUST ser la del RAG: el texto generado con los documentos oficiales o, si no hay información, el fallback con la derivación a recepción. En los demás casos (`PENDIENTE`, `DERIVADO` cuando solo hay una consulta médica y `REVISION_HUMANA`), la respuesta MUST ser una plantilla fija.
 
 #### Scenario: Pedido sin DNI
 - **WHEN** el estado global es `PENDIENTE` porque falta el DNI
@@ -19,6 +19,10 @@ La respuesta SHALL redactarla el LLM solo cuando el estado global es `COMPLETADO
 #### Scenario: Consulta médica sola
 - **WHEN** la única intención es `consulta_medica`
 - **THEN** la respuesta es la plantilla de derivación y no contiene ninguna opinión clínica
+
+#### Scenario: Pregunta informativa
+- **WHEN** la única intención es `otra` y el RAG respondió con documentos oficiales
+- **THEN** la respuesta al paciente es el texto del RAG, sin pasar por el LLM redactor de la Parte A
 
 ### Requirement: Redacción solo con datos validados
 El LLM redactor MUST recibir únicamente los datos validados por el workflow (nombre del paciente, turnos, opciones libres, cargos, estado de estudios y derivaciones), nunca el mensaje original del paciente. El prompt SHALL prohibirle inventar datos, confirmar operaciones que no se hicieron y dar opiniones médicas.

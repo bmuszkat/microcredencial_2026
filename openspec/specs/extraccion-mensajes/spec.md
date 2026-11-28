@@ -51,7 +51,7 @@ El sistema SHALL extraer las fechas como texto literal del mensaje (por ejemplo 
 - **THEN** `fecha_deseada` es un texto que conserva "viernes" y "mañana", no una fecha como "2026-11-13"
 
 ### Requirement: Detección de consulta médica
-El sistema SHALL clasificar como `consulta_medica` todo pedido de opinión clínica (síntomas, gravedad, diagnóstico, medicación, interpretación de resultados), distinguiéndolo de `otra`. Si el mensaje además trae un pedido administrativo, ambas intenciones MUST aparecer en la lista.
+El sistema SHALL clasificar como `consulta_medica` todo pedido de opinión clínica (síntomas, gravedad, diagnóstico, medicación, interpretación de resultados), distinguiéndolo de `otra`. Si el mensaje además trae un pedido administrativo, ambas intenciones MUST aparecer. Desde el prompt `v4`, una pregunta sobre una indicación general publicada por la clínica (preparación de un estudio, qué llevar), sin síntomas ni pedido de opinión sobre su caso, SHALL clasificarse como `otra`.
 
 #### Scenario: Síntoma sin pedido administrativo
 - **WHEN** el paciente escribe "me arde mucho el ojo desde ayer, ¿es grave?"
@@ -64,6 +64,14 @@ El sistema SHALL clasificar como `consulta_medica` todo pedido de opinión clín
 #### Scenario: Mensaje incomprensible
 - **WHEN** el mensaje es "asdkjh 123 ???"
 - **THEN** `intenciones` es `["otra"]`, no `["consulta_medica"]`
+
+#### Scenario: Indicación de preparación publicada (v4)
+- **WHEN** con el prompt `v4` el paciente escribe "¿puedo ir manejando al fondo de ojo?"
+- **THEN** `intenciones` es `["otra"]`
+
+#### Scenario: Síntoma después de un estudio (v4)
+- **WHEN** con el prompt `v4` el paciente escribe "me dilataron ayer y sigo viendo borroso, ¿es normal?"
+- **THEN** `intenciones` es `["consulta_medica"]`
 
 ### Requirement: El mensaje del paciente es dato, no instrucción
 El sistema MUST tratar el contenido del mensaje como datos a extraer e ignorar cualquier orden que contenga (cambiar de rol, aprobar, saltear confirmaciones, ejecutar acciones). La salida solo puede contener las claves del schema.
@@ -103,7 +111,7 @@ El sistema SHALL informar en qué etapa falló un mensaje, con un tipo y un deta
 - **THEN** el sistema devuelve una extracción válida (típicamente `["otra"]`) o un error tipificado, sin romper el programa
 
 ### Requirement: Prompt versionado
-El system prompt de extracción SHALL vivir en un archivo separado del código, identificado por versión (`v1`, `v2`, `v3`, …), y cada resultado MUST indicar qué versión de prompt lo generó. Cada versión MUST validarse contra el contrato que le corresponde, de modo que una versión anterior siga siendo reproducible después de que el contrato evolucione. El lote de la Entrega 2 SHALL usar `v2` por defecto, y el workflow de la Entrega 3 SHALL usar `v3`, que valida contra el mismo contrato que `v2`.
+El system prompt de extracción SHALL vivir en un archivo separado del código, identificado por versión (`v1`, `v2`, `v3`, `v4`, …), y cada resultado MUST indicar qué versión lo generó. Cada versión MUST validarse contra su contrato, para que una versión anterior siga siendo reproducible. El lote de la Entrega 2 SHALL usar `v2` por defecto y el workflow de la Entrega 3, `v4` (mismo contrato que `v2`). El `v3` MUST conservarse sin cambios, para reproducir la corrida de la Parte A.
 
 #### Scenario: Correr con otra versión
 - **WHEN** se ejecuta el lote indicando la versión `v1`
@@ -115,7 +123,7 @@ El system prompt de extracción SHALL vivir en un archivo separado del código, 
 
 #### Scenario: Versión del workflow
 - **WHEN** el workflow de la Entrega 3 extrae un mensaje
-- **THEN** usa el prompt `v3`, valida contra el contrato de `v2` y la traza registra `prompt: "v3"`
+- **THEN** usa el prompt `v4`, valida contra el contrato de `v2` y la traza registra `prompt: "v4"`
 
 ### Requirement: Extracción con el DNI anonimizado
 Cuando el mensaje recibido contiene el marcador `[DNI]` en lugar del documento, la extracción SHALL devolver `dni: null` y tratar el marcador como un dato ya resuelto por el sistema, sin inventar un número.
