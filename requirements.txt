@@ -1,13 +1,7 @@
-# Dependencias del proyecto (instalar con: pip install -r requirements.txt)
-# Requiere Python 3.10 a 3.13 (el grupo usa 3.12): onnxruntime, que usan ChromaDB y fastembed, no instala en versiones más nuevas.
+# Dependencias base del proyecto: alcanzan para las Entregas 1 y 2 (y la Parte A de la Entrega 3).
+# Instalar con: pip install -r requirements.txt   ·   Python 3.10 o superior.
+# La Entrega 3 completa (RAG) suma dependencias propias: pip install -r entrega_3/requirements.txt
 pydantic>=2.0        # contrato de datos: valida el JSON que devuelve el LLM
 python-dotenv>=1.0   # lee las API keys desde el archivo .env
 pytest>=8.0          # pruebas automáticas (no llaman a la API)
 groq>=1.0            # SDK de Groq: solo lo usa entrega_1/main.py (la Entrega 2 llama por HTTP)
-
-# Entrega 3, Parte B (RAG)
-langchain-core>=1.0     # cadena LCEL: plantilla | modelo | parser
-langchain-openai>=1.0   # modelo de chat para la cadena (Groq y OpenAI usan el mismo formato)
-langchain-chroma>=1.0   # base vectorial ChromaDB (instala chromadb)
-fastembed>=0.5          # embeddings locales sin key; el modelo jinaai/jina-embeddings-v2-base-es
-                        # se baja la primera vez que se indexa (unos 640 MB)

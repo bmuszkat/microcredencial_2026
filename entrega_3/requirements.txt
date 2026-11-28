@@ -1,0 +1,11 @@
+# Dependencias de la Entrega 3: las base del proyecto más las del RAG (Parte B).
+# Instalar desde la raíz del repo con: pip install -r entrega_3/requirements.txt
+# Requiere Python 3.10 a 3.13 (el grupo usa 3.12): onnxruntime, que usan ChromaDB y fastembed,
+# no instala en versiones más nuevas.
+-r ../requirements.txt
+
+langchain-core>=1.0     # cadena LCEL: plantilla | modelo | parser
+langchain-openai>=1.0   # modelo de chat para la cadena (Groq y OpenAI usan el mismo formato)
+langchain-chroma>=1.0   # base vectorial ChromaDB (instala chromadb)
+fastembed>=0.5          # embeddings locales sin key; el modelo jinaai/jina-embeddings-v2-base-es
+                        # se baja la primera vez que se indexa (unos 640 MB)

@@ -25,7 +25,7 @@ el sistema de turnos.
 
 ## Cómo correrlo (Entrega 2)
 
-Requisitos: **Python 3.10 a 3.13** (el grupo usa 3.12, declarado en `.python-version`). La Parte B de la Entrega 3 usa ChromaDB y fastembed, que dependen de `onnxruntime`, y `onnxruntime` no instala en versiones más nuevas de Python. Todos los comandos se corren **desde la raíz del repo**.
+Requisitos: **Python 3.10 o superior** (el grupo usa 3.12, declarado en `.python-version`). Las Entregas 1 y 2 solo necesitan las dependencias base de `requirements.txt`. Todos los comandos se corren **desde la raíz del repo**.
 
 Conviene trabajar en un entorno virtual. Con [uv](https://docs.astral.sh/uv/) (baja Python 3.12 si no está instalado):
 
@@ -64,7 +64,15 @@ python -m pytest entrega_2       # pruebas automáticas (no usan la API)
 
 ## Cómo correrlo (Entrega 3)
 
-Mismos requisitos y mismo `.env` que la Entrega 2. Desde la raíz del repo:
+Mismo `.env` que la Entrega 2. La Entrega 3 suma dependencias propias para el RAG (ChromaDB, fastembed y LangChain), declaradas en `entrega_3/requirements.txt`, que ya incluye las base. **Requiere Python 3.10 a 3.13**: ChromaDB y fastembed dependen de `onnxruntime`, que no instala en versiones más nuevas de Python.
+
+```bash
+uv venv --python 3.12 .venv                  # o: py -3.12 -m venv .venv
+.venv\Scripts\activate                       # en Linux o macOS: source .venv/bin/activate
+uv pip install -r entrega_3/requirements.txt # o: pip install -r entrega_3/requirements.txt
+```
+
+Después, desde la raíz del repo:
 
 ```bash
 python entrega_3/workflow.py                   # workflow sobre el lote de 12 casos (~6 min con Groq gratis)
@@ -75,7 +83,7 @@ python -m pytest entrega_3                     # pruebas automáticas (no usan l
 
 **Workflow:** cada caso muestra la traza paso a paso (📏 regla, 🤖 LLM, 🔎 sensor), el estado de cada intención, el estado global y la respuesta al paciente, y al final cuántos casos dieron el estado esperado. Las preguntas informativas (intención `otra`) las responde el RAG, así que el workflow con Groq necesita el entorno del RAG (ver abajo); si no está disponible, esos mensajes quedan en revisión humana y el resto del lote corre igual. Con Groq espera 20 s entre llamadas (`--pausa N` para cambiarlo). Sin ninguna key corre en modo simulación. Los datos de la clínica (padrón, agenda, estudios y política de cargos) son ficticios y están en `entrega_3/datos/`.
 
-**RAG (Parte B):** necesita el entorno con Python 3.12 y las dependencias de `requirements.txt` (ver arriba). La búsqueda no usa API key: los embeddings se calculan en la compu con el modelo `jinaai/jina-embeddings-v2-base-es`, que **se baja la primera vez que se indexa (unos 640 MB)** y queda en la caché. El índice se guarda en `entrega_3/indice_chroma/` (no se sube: se regenera desde el corpus, y se reindexa solo si el corpus cambió).
+**RAG (Parte B):** necesita el entorno con Python 3.10 a 3.13 y las dependencias de `entrega_3/requirements.txt` (ver arriba). La búsqueda no usa API key: los embeddings se calculan en la compu con el modelo `jinaai/jina-embeddings-v2-base-es`, que **se baja la primera vez que se indexa (unos 640 MB)** y queda en la caché. El índice se guarda en `entrega_3/indice_chroma/` (no se sube: se regenera desde el corpus, y se reindexa solo si el corpus cambió).
 
 ```bash
 python entrega_3/rag.py indexar                          # arma el índice (la primera vez baja el modelo)
@@ -95,7 +103,7 @@ python entrega_3/rag.py comparar --simulacion            # lo mismo sin llamar a
 
 ```
 ├── README.md
-├── requirements.txt          ← dependencias (pip install -r requirements.txt)
+├── requirements.txt          ← dependencias base: Entregas 1 y 2 (pip install -r requirements.txt)
 ├── .python-version           ← versión de Python del grupo (3.12)
 ├── .env.example              ← variables de entorno SIN valores (el .env real no se sube)
 ├── entrega_1/
@@ -125,6 +133,7 @@ python entrega_3/rag.py comparar --simulacion            # lo mismo sin llamar a
 │   └── tests/                ← pruebas automáticas sin API
 ├── entrega_3/
 │   ├── informe.md            ← Parte A (diagrama y prueba de falla controlada) y Parte B (corpus, arquitectura, comparación e integración)
+│   ├── requirements.txt      ← dependencias de la Entrega 3: las base + RAG (pip install -r entrega_3/requirements.txt)
 │   ├── workflow.py           ← los 12 pasos, la traza y el punto de entrada por consola; `otra` pasa por el RAG
 │   ├── rag.py                ← Parte B: cadena LCEL, guardrail de citas y montos, y la consola del RAG
 │   ├── base_conocimiento.py  ← embeddings locales (jina) + índice ChromaDB con filtro de vigencia y umbral
