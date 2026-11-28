@@ -359,6 +359,14 @@ Sin el filtro, la política derogada no solo aparece: también supera el umbral,
 | `no_verificado` | No pasó el guardrail | Nada generado: queda para una persona |
 | `error` | Falló la API después de los reintentos | Nada generado: queda para una persona |
 
+**Lo que el guardrail no verifica.** Controla los datos que se pueden comparar con código (qué documentos se citan y cada monto y porcentaje), pero **no si cada frase dice lo mismo que el documento**. Lo vimos en una prueba manual durante la revisión de esta parte (no forma parte de la evidencia guardada). A la pregunta "Tengo IOMA, ¿qué tengo que hacer para hacerme una OCT?", el RAG recuperó `PREP-OCT-TOPOGRAFIA`, `COB-IOMA` y `COB-OSDE`, y respondió citando `COB-IOMA`:
+
+> «Para hacerte una OCT con IOMA, tenés que presentar el bono de consulta de IOMA y contar con una orden médica; además, necesitás la autorización previa en la delegación de IOMA del afiliado […] y los estudios autorizados no tienen copago (COB-IOMA).»
+
+El documento dice que el bono es **para la consulta**: «Para la consulta hay que presentar el bono de consulta de IOMA. Los estudios requieren orden médica y autorización previa…». El modelo mezcló dos requisitos del mismo documento y le pidió al paciente un bono que no necesita para el estudio. El guardrail aceptó la respuesta porque la cita era correcta y no había montos que verificar.
+
+Es un error menor y de una sola corrida, pero muestra el límite: las citas y los montos se verifican con código, y **la fidelidad del texto depende del modelo**. Para medirla y controlarla hace falta otra técnica: un set de preguntas con la respuesta esperada y una revisión de fidelidad (por ejemplo, con un segundo modelo como juez). Queda para la matriz de pruebas de la Entrega 4.
+
 **Pruebas sin API:** `test_base_conocimiento.py` (23) usa el modelo de embeddings real sobre índices temporales: huella, reindexación, recuperación, filtros, umbral, que la calibración reproduzca la evidencia y la comparación B.3 completa en simulación. `test_rag.py` (35) usa un buscador y un modelo falsos: el contexto con ids, que el modelo no se llame sin contexto, el guardrail (citas, montos, porcentajes), los cuatro estados, la verificación de lo esperado y la consola. `test_preguntas_rag.py` (10) controla los sets de calibración y de comparación, incluido que las citas de la Entrega 1 sean literales.
 
 ### B.3 — Comparación antes/después
